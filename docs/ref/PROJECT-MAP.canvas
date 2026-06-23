@@ -1,0 +1,17 @@
+{
+	"nodes":[
+		{"id":"prd","type":"file","file":"docs/ref/PRD.md","x":-520,"y":-120,"width":260,"height":200},
+		{"id":"architecture","type":"file","file":"docs/ref/ARCHITECTURE.md","x":-120,"y":-220,"width":280,"height":180},
+		{"id":"project-plan","type":"file","file":"docs/ref/PROJECT-PLAN.md","x":-120,"y":80,"width":280,"height":180},
+		{"id":"project-status","type":"file","file":"docs/status/PROJECT-STATUS.md","x":300,"y":-120,"width":280,"height":160},
+		{"id":"decision-log","type":"file","file":"docs/status/DECISION-LOG.md","x":300,"y":120,"width":280,"height":160},
+		{"id":"note","type":"text","text":"Start here: PRD defines what/why, Architecture defines stack/boundaries, Project Plan defines phases/files, Status and Decision Log track execution.","x":-520,"y":140,"width":260,"height":140}
+	],
+	"edges":[
+		{"id":"prd-to-architecture","fromNode":"prd","fromSide":"right","toNode":"architecture","toSide":"left","label":"stack and boundaries"},
+		{"id":"prd-to-plan","fromNode":"prd","fromSide":"right","toNode":"project-plan","toSide":"left","label":"scope to execution"},
+		{"id":"architecture-to-plan","fromNode":"architecture","fromSide":"bottom","toNode":"project-plan","toSide":"top","label":"contracts"},
+		{"id":"plan-to-status","fromNode":"project-plan","fromSide":"right","toNode":"project-status","toSide":"left","label":"current work"},
+		{"id":"plan-to-decision-log","fromNode":"project-plan","fromSide":"right","toNode":"decision-log","toSide":"left","label":"decisions"}
+	]
+}

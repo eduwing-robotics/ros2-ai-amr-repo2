@@ -1,0 +1,25 @@
+<!-- MapPanel.uxml — 중앙 맵 패널: 2D/3D 토글 + placeholder. 3D는 Phase 6 안내만. -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="../ControlRoomTokens.uss" />
+    <Style src="../ControlRoomStyle.uss" />
+    <ui:VisualElement name="map-panel" class="map-panel card">
+        <ui:VisualElement class="map-toolbar">
+            <ui:Label text="맵 뷰" class="card-title" />
+            <ui:VisualElement class="spacer" />
+            <ui:Button name="btn-map-rot-ccw" text="⟲" class="btn-map-mode" />
+            <ui:Label name="map-rot-angle" text="0°" class="map-rot-angle" />
+            <ui:Button name="btn-map-rot-cw" text="⟳" class="btn-map-mode" />
+            <ui:Button name="btn-map-2d" text="2D" class="btn-map-mode active" />
+            <ui:Button name="btn-map-3d" text="3D" class="btn-map-mode" />
+        </ui:VisualElement>
+        <!-- 2026-06-16: 목업(격자·보호대상·웨이포인트·로봇점·구역라벨) 제거. 라이브 SLAM 맵만 표시.
+             라이브 맵 레이어(name=map-live-layer)는 MapPanelView가 런타임에 Insert(0)으로 채움.
+             실제 웨이포인트/로봇 마커는 Phase 4/5에서 pose 기반 오버레이로 재도입. -->
+        <ui:VisualElement name="map-2d-container" class="map-2d">
+            <ui:Label name="map-empty-hint" text="SLAM 맵 수신 대기…" class="map-area-label" />
+        </ui:VisualElement>
+        <ui:VisualElement name="map-3d-container" class="map-placeholder map-3d hidden">
+            <ui:Label name="map-3d-overlay" text="3D 맵 — Phase 6 예정 (URDF Importer)" class="map-3d-label" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,0 +1,108 @@
+<!doctype html>
+<!-- 박물관 경비 로봇 시나리오 다이어그램 (D3+dagre). 더블클릭으로 오프라인 동작. 데이터: data/scenarios.js. 엔진: engine/scenario-engine.js -->
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>URHYNIX · 박물관 경비 로봇 시나리오</title>
+<style>
+  :root { --bg:#0a1016; --panel:#0e1722; --line:#22303f; --ink:#e6edf3; --muted:#8aa0b4; --accent:#4ea0ff; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",sans-serif; }
+  #app { display:flex; flex-direction:column; height:100vh; padding:14px 18px 10px; gap:10px; }
+  #board { display:flex; flex-direction:column; flex:1; min-height:0; gap:10px; }
+  h1 { margin:0; font-size:16px; font-weight:700; letter-spacing:.3px; }
+  h1 small { color:var(--muted); font-weight:400; font-size:12px; margin-left:8px; }
+
+  .scn-tabs { display:flex; flex-wrap:wrap; gap:6px; }
+  .scn-tab { background:var(--panel); color:var(--muted); border:1px solid var(--line);
+    border-radius:8px; padding:6px 11px; font-size:12.5px; cursor:pointer; transition:.12s; }
+  .scn-tab:hover { color:var(--ink); border-color:#33485c; }
+  .scn-tab.active { background:#11263d; color:#cfe4ff; border-color:var(--accent); font-weight:600; }
+
+  .scn-legend { display:flex; flex-wrap:wrap; gap:14px; align-items:center;
+    background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:7px 12px; font-size:11.5px; }
+  .scn-legend-item { display:inline-flex; align-items:center; gap:5px; color:var(--muted); }
+  .scn-legend-item b { color:var(--ink); font-size:11px; letter-spacing:.4px; }
+  .scn-dot { width:11px; height:11px; border-radius:50%; display:inline-block; }
+
+  .scn-head { display:flex; justify-content:space-between; align-items:baseline; gap:16px; }
+  .scn-summary { color:#c4d3e2; font-size:13px; }
+  .scn-stepinfo { color:var(--muted); font-size:12px; white-space:nowrap; }
+
+  .scn-stage { flex:1; min-height:0; background:
+    radial-gradient(1200px 600px at 50% -10%, #0f1c2a 0%, var(--panel) 70%);
+    border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .scn-svg { width:100%; height:100%; display:block; }
+
+  .scn-node-text { font-size:12.5px; font-weight:500; pointer-events:none; }
+  .scn-node { cursor:pointer; transition:opacity .25s; }
+  .scn-node .scn-shape { transition:stroke-width .2s, filter .2s, opacity .25s; }
+  .scn-node.dim { opacity:.38; }
+  .scn-node.visited .scn-shape { stroke-width:2.5; }
+  .scn-node.active .scn-shape { stroke-width:4; filter:drop-shadow(0 0 10px currentColor); }
+  .scn-node.active { opacity:1; }
+  .scn-edge { transition:stroke .2s, stroke-width .2s; }
+  .scn-edge.hot { stroke:#ffd54a; stroke-width:3.2; }
+  .scn-edge-label { font-size:11px; fill:#9fb3c6; }
+
+  .scn-ctl { display:flex; gap:10px 18px; justify-content:center; align-items:center; flex-wrap:wrap; }
+  .scn-ctl-grp { display:flex; gap:6px; align-items:center; padding:2px 0; }
+  .scn-ctl-grp + .scn-ctl-grp { border-left:1px solid var(--line); padding-left:18px; }
+  .scn-btn { background:var(--panel); color:var(--ink); border:1px solid var(--line);
+    border-radius:8px; padding:7px 13px; font-size:12.5px; cursor:pointer; transition:.12s; white-space:nowrap; }
+  .scn-btn:hover { border-color:#33485c; background:#13202d; }
+  .scn-btn.on { background:#11263d; border-color:var(--accent); color:#cfe4ff; font-weight:600; }
+  .scn-next { background:#11263d; border-color:var(--accent); color:#cfe4ff; font-weight:600; }
+  .scn-range { display:flex; align-items:center; gap:6px; color:var(--muted); font-size:11.5px; }
+  .scn-range input { accent-color:var(--accent); }
+  .scn-check { display:flex; align-items:center; color:var(--muted); font-size:12px; cursor:pointer; }
+  label.scn-btn { position:relative; overflow:hidden; }
+
+  /* 편집 패널 (editor.js) */
+  .scn-editor-host { display:none; }
+  .scn-editor-host.open { display:block; position:absolute; right:18px; top:120px; width:300px; z-index:20;
+    background:#0c1620; border:1px solid var(--line); border-radius:12px; padding:14px; box-shadow:0 16px 48px rgba(0,0,0,.5); }
+  .scn-svg.editing { cursor:crosshair; }
+  .scn-svg.editing .scn-node { cursor:move; }
+  .scn-svg.linking .scn-node { cursor:crosshair; }
+  .scn-svg.editing .scn-edge { cursor:pointer; }
+  .scn-node.sel .scn-shape { stroke:#ffd54a !important; stroke-width:4 !important; filter:drop-shadow(0 0 8px #ffd54a); }
+  .scn-node.linktarget .scn-shape { stroke:#62e08a !important; stroke-width:4 !important; filter:drop-shadow(0 0 9px #62e08a); }
+  .scn-edge.sel { stroke:#ffd54a !important; stroke-width:3.4 !important; }
+  .scn-editor-host .ed-color { display:flex; gap:6px; align-items:center; }
+  .scn-editor-host input[type=color].ed-in { padding:2px; height:30px; width:54px; cursor:pointer; }
+
+  .scn-editor-host .ed-h { margin:0 0 10px; font-size:14px; color:#ffd54a; }
+  .scn-editor-host .ed-sec { border-top:1px solid var(--line); padding-top:10px; margin-top:10px; }
+  .scn-editor-host .ed-sub { font-size:11px; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px; }
+  .scn-editor-host .ed-field { display:flex; flex-direction:column; gap:3px; margin-bottom:8px; font-size:11.5px; color:var(--muted); }
+  .scn-editor-host .ed-in { background:#0a131c; color:var(--ink); border:1px solid var(--line); border-radius:7px;
+    padding:6px 8px; font-size:12.5px; font-family:inherit; width:100%; }
+  .scn-editor-host textarea.ed-in { resize:vertical; }
+  .scn-editor-host .ed-row { display:flex; gap:6px; margin-top:10px; }
+  .scn-editor-host .ed-edge { display:flex; gap:5px; align-items:center; margin-bottom:6px; }
+  .scn-editor-host .ed-to { font-size:11px; color:var(--accent2); min-width:46px; }
+  .scn-editor-host .ed-x { background:none; border:1px solid var(--line); color:var(--bad,#f87171); border-radius:6px; cursor:pointer; padding:3px 7px; }
+  .scn-editor-host .ed-del { margin-top:8px; color:#f87171; border-color:#5a2330; width:100%; }
+  .scn-editor-host .ed-hint { color:var(--muted); font-size:12px; line-height:1.5; }
+</style>
+</head>
+<body>
+  <div id="app">
+    <h1>URHYNIX · 박물관 경비 로봇 시나리오 <small>← → / Space 단계 진행 · 1~6 전환 · 노드 클릭 점프</small></h1>
+    <div id="board"></div>
+  </div>
+
+  <script src="vendor/d3.v7.min.js"></script>
+  <script src="vendor/dagre.min.js"></script>
+  <script src="data/scenarios.js"></script>
+  <script src="engine/store.js"></script>
+  <script src="engine/render.js"></script>
+  <script src="engine/nav.js"></script>
+  <script src="engine/editor.js"></script>
+  <script src="engine/app.js"></script>
+  <script>ScenarioApp.mount("#board");</script>
+</body>
+</html>

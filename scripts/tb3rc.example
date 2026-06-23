@@ -1,0 +1,14 @@
+# Copy to ~/.tb3rc and edit. Never commit this file with real values.
+#   cp scripts/tb3rc.example ~/.tb3rc
+#   chmod 600 ~/.tb3rc
+
+# Robot SSH password (kim@<robot-ip>)
+export TB3_PASSWORD='change-me'
+
+# TigerVNC password on robot :2
+export TB3_VNC_PASSWORD='change-me'
+
+# Optional overrides
+# export TB3_ROBOT_IP_HINT='192.168.0.138'
+# export TB3_LAN_CIDR='192.168.0'
+# export TB3_UNITY_BIN='/path/to/Unity'      # Linux only; macOS auto-detects

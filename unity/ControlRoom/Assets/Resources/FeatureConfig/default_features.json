@@ -1,0 +1,28 @@
+{
+  "features": [
+    {
+      "featureId": "scan_360",
+      "displayName": "360° 스캔",
+      "isActive": false,
+      "commandTopic": "/feature/scan_360",
+      "iconName": "sensor_badge",
+      "robotId": ""
+    },
+    {
+      "featureId": "boost",
+      "displayName": "가속",
+      "isActive": false,
+      "commandTopic": "/feature/boost",
+      "iconName": "sensor_badge",
+      "robotId": ""
+    },
+    {
+      "featureId": "slam",
+      "displayName": "SLAM",
+      "isActive": true,
+      "commandTopic": "/feature/slam",
+      "iconName": "sensor_badge",
+      "robotId": ""
+    }
+  ]
+}

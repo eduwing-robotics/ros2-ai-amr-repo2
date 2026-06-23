@@ -1,0 +1,24 @@
+{
+  "robots": [
+    {
+      "robotId": "tb3_2",
+      "displayName": "젠지",
+      "role": "sensor",
+      "model": "TurtleBot3 Burger",
+      "hostAddress": "kim@192.168.10.84",
+      "cameraTopic": "/tb3_2/camera/image_raw/compressed",
+      "poseTopic": "/tb3_2/pose",
+      "iconName": "turtlebot_badge"
+    },
+    {
+      "robotId": "tb3_1",
+      "displayName": "티원",
+      "role": "vision",
+      "model": "TurtleBot3 Burger",
+      "hostAddress": "t1@192.168.10.250",
+      "cameraTopic": "/tb3_1/camera/color/image_raw/compressed",
+      "poseTopic": "/tb3_1/pose",
+      "iconName": "turtlebot_badge"
+    }
+  ]
+}

@@ -1,0 +1,603 @@
+/* ControlRoomStyle.uss — ControlRoom 공통 스타일.
+   Tokens 변수만 참조. 레이아웃/카드/버튼/배터리/맵 placeholder/로그 등. */
+
+.root {
+    flex-grow: 1;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+}
+
+/* ─── TopBar ─────────────────────────────── */
+.top-bar {
+    height: 48px;
+    flex-direction: row;
+    background-color: var(--color-surface);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--color-border);
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+    align-items: center;
+}
+
+.logo {
+    -unity-font-style: bold;
+    font-size: 14px;
+    margin-right: var(--space-lg);
+}
+
+.robot-tabs {
+    flex-direction: row;
+}
+
+.robot-tab {
+    margin-right: var(--space-xs);
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+}
+
+.robot-tab.active {
+    background-color: var(--color-accent);
+    color: var(--color-surface);
+}
+
+.spacer { flex-grow: 1; }
+
+.clock {
+    margin-right: var(--space-md);
+    color: var(--color-text-secondary);
+}
+
+.alert-count {
+    margin-right: var(--space-md);
+    color: var(--color-status-danger);
+    -unity-font-style: bold;
+}
+
+.btn-power {
+    background-color: var(--color-status-danger);
+    color: white;
+    border-radius: var(--radius-sm);
+}
+
+/* ─── Body 3-column ─────────────────────── */
+.body {
+    flex-direction: row;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-height: 0;
+    width: 100%;
+}
+
+.left-panel {
+    width: 260px;
+    height: 100%;
+    background-color: var(--color-surface);
+    border-right-width: 1px;
+    border-right-color: var(--color-border);
+    flex-shrink: 0;
+    flex-grow: 0;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.center-panel {
+    flex-grow: 1;
+    flex-direction: column;
+    padding: var(--space-md);
+    min-width: 0;
+    min-height: 0;
+}
+
+.right-panel {
+    width: 280px;
+    height: 100%;
+    background-color: var(--color-surface);
+    border-left-width: 1px;
+    border-left-color: var(--color-border);
+    flex-shrink: 0;
+    flex-grow: 0;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* FR5UNITY PendantV3 성공 패턴: ScrollView 내부 element 명시 패치 */
+.left-panel .unity-scroll-view__content-container,
+.right-panel .unity-scroll-view__content-container {
+    flex-direction: column;
+    min-width: 0;
+    max-width: 100%;
+    padding-bottom: 8px;
+    flex-grow: 1;
+    min-height: 100%;
+}
+
+.left-panel .unity-scroll-view__content-viewport,
+.right-panel .unity-scroll-view__content-viewport {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.left-panel .unity-scroller--horizontal,
+.right-panel .unity-scroller--horizontal,
+.left-panel .unity-scroll-view__horizontal-scroller,
+.right-panel .unity-scroll-view__horizontal-scroller {
+    display: none;
+}
+
+/* ─── Card ─────────────────────────────── */
+.card {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-md);
+    border-width: 1px;
+    border-color: var(--color-border);
+    padding: var(--space-sm);
+    margin-bottom: var(--space-xs);
+    flex-shrink: 0;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.card-title {
+    margin-bottom: var(--space-xs);
+    font-size: 11px;
+}
+
+/* 마지막 카드가 ScrollView 안 남은 공간을 채움.
+   카드 합산이 ScrollView보다 작을 때만 안전하게 늘어남.
+   ScrollView 넘으면 자식 잘림 위험 — 사전에 카드 합산 컴팩트화 필수. */
+.card-fill {
+    flex-grow: 1;
+}
+
+.card-title {
+    -unity-font-style: bold;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-sm);
+}
+
+.muted {
+    color: var(--color-text-secondary);
+    font-size: 11px;
+}
+
+/* ─── Buttons ───────────────────────────── */
+.btn-scenario, .btn-mode, .btn-action, .btn-map-mode {
+    margin-bottom: 2px;
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-text-primary);
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.btn-row {
+    flex-direction: row;
+    margin-bottom: 2px;
+}
+
+.btn-row > .btn-mode,
+.btn-row > .btn-action {
+    flex-grow: 1;
+    flex-basis: 0;
+    margin-left: 1px;
+    margin-right: 1px;
+    margin-bottom: 0;
+}
+
+.toggle-row {
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.toggle-row > .feature-toggle {
+    flex-grow: 1;
+    flex-basis: 0;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.btn-scenario:hover, .btn-mode:hover, .btn-action:hover, .btn-map-mode:hover {
+    background-color: var(--color-bg-primary);
+}
+
+.btn-mode.active, .btn-map-mode.active {
+    background-color: var(--color-accent);
+    color: var(--color-surface);
+    border-color: var(--color-accent);
+}
+
+.btn-action.active {
+    background-color: var(--color-status-ok);
+    color: var(--color-surface);
+    border-color: var(--color-status-ok);
+}
+
+/* ─── Waypoint list ─────────────────────── */
+.btn-waypoint {
+    margin-bottom: 2px;
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-text-primary);
+    padding-top: var(--space-xs);
+    padding-bottom: var(--space-xs);
+    -unity-text-align: middle-left;
+    padding-left: var(--space-sm);
+    font-size: 11px;
+    flex-shrink: 0;
+}
+
+.btn-waypoint:hover {
+    background-color: var(--color-bg-primary);
+    border-color: var(--color-accent);
+}
+
+.btn-waypoint.selected {
+    background-color: var(--color-accent);
+    color: var(--color-surface);
+    border-color: var(--color-accent);
+}
+
+/* ─── Map (center-panel의 압도적 메인) ──── */
+.map-panel {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    margin-bottom: var(--space-md);
+    min-height: 380px;
+}
+
+.map-toolbar {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+}
+
+.map-toolbar .btn-map-mode {
+    margin-left: var(--space-xs);
+}
+
+.map-placeholder {
+    flex-grow: 1;
+    background-color: #d1d8e0;
+    border-radius: var(--radius-sm);
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+    position: relative;
+}
+
+.hidden { display: none; }
+
+/* ─── Map 2D markers ───────────────────── */
+.map-2d {
+    overflow: hidden;
+}
+
+.map-grid-v {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: rgba(30, 41, 59, 0.12);
+}
+
+.map-grid-h {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: rgba(30, 41, 59, 0.12);
+}
+
+.map-area-label {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    -unity-font-style: bold;
+    background-color: rgba(255, 255, 255, 0.7);
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    border-radius: var(--radius-sm);
+}
+
+.map-waypoint {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    margin-left: -12px;
+    margin-top: -12px;
+    background-color: var(--color-surface);
+    border-color: var(--color-accent);
+    border-width: 2px;
+    border-radius: 12px;
+    align-items: center;
+    justify-content: center;
+}
+
+.map-waypoint-num {
+    color: var(--color-accent);
+    -unity-font-style: bold;
+    font-size: 11px;
+}
+
+.map-protected {
+    position: absolute;
+    align-items: center;
+    margin-left: -10px;
+    margin-top: -10px;
+}
+
+.map-protected-icon {
+    width: 16px;
+    height: 16px;
+    background-color: var(--color-status-warn);
+    border-radius: 2px;
+    border-width: 2px;
+    border-color: var(--color-surface);
+}
+
+.map-protected-label {
+    color: var(--color-text-primary);
+    font-size: 10px;
+    background-color: rgba(255, 255, 255, 0.85);
+    padding-left: 4px;
+    padding-right: 4px;
+    border-radius: 2px;
+    margin-top: 2px;
+}
+
+.map-robot-dot {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    margin-left: -14px;
+    margin-top: -14px;
+    border-radius: 14px;
+    align-items: center;
+    justify-content: center;
+    border-width: 3px;
+    border-color: var(--color-surface);
+}
+
+.map-robot-dot.robot-t1 {
+    background-color: var(--color-accent);
+}
+
+.map-robot-dot.robot-genji {
+    background-color: var(--color-status-ok);
+}
+
+.map-robot-label {
+    position: absolute;
+    top: 28px;
+    color: var(--color-text-primary);
+    font-size: 10px;
+    -unity-font-style: bold;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding-left: 4px;
+    padding-right: 4px;
+    border-radius: 2px;
+}
+
+.map-3d {
+    background-color: #334155;
+}
+
+.map-3d-label {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 14px;
+    -unity-font-style: italic;
+}
+
+/* ─── Camera + Log row (240px 고정 — 맵이 나머지 다 차지) ─── */
+.camera-log-row {
+    flex-direction: row;
+    flex-grow: 0;
+    flex-shrink: 0;
+    height: 240px;
+}
+
+.camera-panel {
+    width: 320px;
+    background-color: #1e293b;
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+    margin-right: var(--space-md);
+    align-items: stretch;
+    justify-content: flex-start;
+}
+
+.camera-header {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-xs);
+}
+
+.camera-label {
+    color: white;
+    font-size: 11px;
+    flex-grow: 1;
+}
+
+.camera-live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    background-color: var(--color-status-danger);
+}
+
+.camera-image-placeholder {
+    flex-grow: 1;
+    width: 100%;
+    background-color: #334155;
+    border-radius: var(--radius-sm);
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.camera-crosshair-v {
+    position: absolute;
+    top: 20%;
+    bottom: 20%;
+    left: 50%;
+    width: 1px;
+    background-color: rgba(148, 163, 184, 0.3);
+}
+
+.camera-crosshair-h {
+    position: absolute;
+    left: 20%;
+    right: 20%;
+    top: 50%;
+    height: 1px;
+    background-color: rgba(148, 163, 184, 0.3);
+}
+
+.camera-placeholder-text {
+    color: #94a3b8;
+    font-size: 10px;
+    -unity-font-style: italic;
+}
+
+.camera-hz {
+    color: var(--color-status-ok);
+    font-size: 11px;
+    margin-top: var(--space-xs);
+}
+
+.log-panel {
+    flex-grow: 1;
+    background-color: var(--color-surface);
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+}
+
+.log-panel .card-title {
+    margin-bottom: var(--space-sm);
+}
+
+.log-entry {
+    color: var(--color-text-primary);
+    font-size: 11px;
+    margin-bottom: 2px;
+}
+
+.log-entry-warn { color: var(--color-status-warn); }
+.log-entry-error { color: var(--color-status-danger); }
+
+/* ─── Telemetry / Battery / Sensors ──── */
+.battery-percent {
+    -unity-font-style: bold;
+    font-size: 22px;
+    margin-bottom: var(--space-xs);
+}
+
+.battery-bar-bg {
+    height: 8px;
+    background-color: var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.battery-bar-fill {
+    height: 100%;
+    background-color: var(--color-status-ok);
+    width: 80%;
+}
+
+.sensor-row {
+    flex-direction: row;
+    justify-content: space-between;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--color-border);
+}
+
+.sensor-value {
+    -unity-font-style: bold;
+    color: var(--color-accent);
+}
+
+.sensor-value.sensor-ok { color: var(--color-status-ok); }
+.sensor-value.sensor-warn { color: var(--color-status-warn); }
+.sensor-value.sensor-danger { color: var(--color-status-danger); }
+.sensor-value.sensor-disabled { color: var(--color-text-secondary); -unity-font-style: italic; }
+
+/* ─── Protected target list ─────────────── */
+.target-row {
+    flex-direction: row;
+    align-items: center;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--color-border);
+    flex-shrink: 0;
+}
+
+.target-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    margin-right: var(--space-sm);
+}
+
+.target-dot.target-ok { background-color: var(--color-status-ok); }
+.target-dot.target-warn { background-color: var(--color-status-warn); }
+.target-dot.target-danger { background-color: var(--color-status-danger); }
+
+.target-name {
+    flex-grow: 1;
+    color: var(--color-text-primary);
+    font-size: 11px;
+}
+
+.target-status {
+    font-size: 10px;
+    -unity-font-style: bold;
+}
+
+.target-status-ok { color: var(--color-status-ok); }
+.target-status-warn { color: var(--color-status-warn); }
+.target-status-danger { color: var(--color-status-danger); }
+
+/* ─── Alert popup ──────────────────────── */
+.alert-popup {
+    position: absolute;
+    top: 64px;
+    left: 30%;
+    width: 40%;
+    background-color: var(--color-status-danger);
+    color: white;
+    padding: var(--space-lg);
+    border-radius: var(--radius-md);
+    display: none;
+    align-items: center;
+}
+
+.alert-popup.visible { display: flex; }
+
+.alert-popup-message {
+    color: white;
+    -unity-font-style: bold;
+    font-size: 14px;
+    margin-bottom: var(--space-sm);
+}

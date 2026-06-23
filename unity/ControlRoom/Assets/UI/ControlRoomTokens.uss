@@ -1,0 +1,26 @@
+/* ControlRoomTokens.uss — 디자인 토큰 SSOT. C# UiTokens.cs와 1:1.
+   박물관 고품격 밝은 슬레이트 톤. 색상/간격/라운드 모두 변수로. */
+
+:root {
+    --color-bg-primary: #f1f5f9;
+    --color-surface: #ffffff;
+    --color-border: #e2e8f0;
+
+    --color-text-primary: #1e293b;
+    --color-text-secondary: #64748b;
+
+    --color-accent: #2563eb;
+    --color-status-ok: #10b981;
+    --color-status-warn: #f59e0b;
+    --color-status-danger: #dc2626;
+    --color-status-info: #06b6d4;
+
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 12px;
+    --space-lg: 16px;
+    --space-xl: 24px;
+
+    --radius-sm: 4px;
+    --radius-md: 8px;
+}

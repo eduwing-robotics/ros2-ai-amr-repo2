@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>URHYNIX · 역할 매트릭스</title>
+<style>
+  :root {
+    --bg: #eff6ff;
+    --fg: #1e293b;
+    --muted: #64748b;
+    --accent: #2563eb;
+    --accent-dark: #1e3a8a;
+    --card: #ffffff;
+    --border: #bfdbfe;
+    --hover: #dbeafe;
+
+    --c-juyoung:   #1f6feb;
+    --c-sunil:     #9333ea;
+    --c-taejin:    #f59e0b;
+    --c-hyeonchan: #10b981;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo",
+                 "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.6;
+    font-size: 18px;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 56px 32px 80px; }
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 14px; color: var(--muted); margin-bottom: 40px;
+  }
+  .topbar a { color: var(--accent); text-decoration: none; }
+  .topbar a:hover { text-decoration: underline; }
+
+  .badge {
+    display: inline-block; background: var(--accent); color: #fff;
+    padding: 6px 14px; border-radius: 999px; font-size: 13px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 600; margin-bottom: 16px;
+  }
+  h1 {
+    font-size: 64px; line-height: 1.1; margin: 0 0 16px;
+    letter-spacing: -0.025em; color: var(--accent-dark);
+  }
+  .lead {
+    font-size: 22px; color: var(--muted); margin: 0 0 48px;
+    line-height: 1.55;
+  }
+
+  .person {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 28px 32px; margin-bottom: 22px;
+    border-left: 8px solid #9ca3af;
+  }
+  .person[data-person="김주영"]   { border-left-color: var(--c-juyoung); }
+  .person[data-person="김선일"]   { border-left-color: var(--c-sunil); }
+  .person[data-person="박태진"]   { border-left-color: var(--c-taejin); }
+  .person[data-person="임현찬"]   { border-left-color: var(--c-hyeonchan); }
+
+  .person-head {
+    display: flex; align-items: baseline; gap: 18px;
+    margin-bottom: 8px; flex-wrap: wrap;
+  }
+  .person h2 {
+    font-size: 38px; line-height: 1.15; margin: 0;
+    letter-spacing: -0.015em;
+  }
+  .person .count {
+    font-size: 15px; color: #fff; padding: 4px 12px;
+    border-radius: 999px; background: var(--muted); font-weight: 600;
+  }
+  .person[data-person="김주영"]   .count { background: var(--c-juyoung); }
+  .person[data-person="김선일"]   .count { background: var(--c-sunil); }
+  .person[data-person="박태진"]   .count { background: var(--c-taejin); }
+  .person[data-person="임현찬"]   .count { background: var(--c-hyeonchan); }
+
+  .person .summary {
+    font-size: 20px; line-height: 1.55; margin: 0; color: var(--fg);
+  }
+
+  details {
+    margin-top: 20px;
+    border-top: 1px dashed var(--border);
+    padding-top: 16px;
+  }
+  details summary {
+    cursor: pointer; font-size: 15px; color: var(--accent);
+    font-weight: 600; list-style: none; user-select: none;
+    padding: 6px 0;
+  }
+  details summary:hover { color: var(--accent-dark); }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: "▸ "; margin-right: 4px; }
+  details[open] summary::before { content: "▾ "; }
+  details .body {
+    margin-top: 12px; font-size: 17px; line-height: 1.6;
+  }
+  details .body ul { margin: 4px 0 12px 20px; padding: 0; }
+  details .body code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--hover); padding: 2px 6px;
+    border-radius: 3px; font-size: 15px;
+  }
+
+  .visual-toggle {
+    margin-top: 48px;
+  }
+  .visual-toggle summary {
+    cursor: pointer; font-size: 16px; color: var(--accent);
+    font-weight: 600; list-style: none; padding: 12px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .visual-toggle summary::-webkit-details-marker { display: none; }
+  .visual-toggle summary::before { content: "▸ "; margin-right: 4px; }
+  .visual-toggle[open] summary::before { content: "▾ "; }
+  .visual-toggle .imgs {
+    margin-top: 20px;
+    display: grid; grid-template-columns: 1fr; gap: 16px;
+  }
+  .visual-toggle figure {
+    margin: 0; background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px;
+  }
+  .visual-toggle img { width: 100%; height: auto; display: block; border-radius: 4px; }
+  .visual-toggle figcaption { margin-top: 10px; color: var(--muted); font-size: 13px; }
+
+  .nav-footer {
+    margin-top: 56px; padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; font-size: 16px;
+  }
+  .nav-footer a {
+    color: var(--accent); text-decoration: none;
+    padding: 12px 20px; border: 1px solid var(--border);
+    border-radius: 8px; background: var(--card);
+  }
+  .nav-footer a:hover { background: var(--hover); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <a href="dev-plan.html">← 메인</a>
+    <span>URHYNIX · 디지털트윈경비로봇</span>
+  </div>
+
+  <span class="badge">👥 역할 매트릭스</span>
+  <h1>4명이<br>5개 모듈을<br>나눠 맡는다</h1>
+  <p class="lead">한 사람이 다 하는 프로젝트가 아니다. 각자의 라인을 잡고, 겹치는 곳에서 협업한다. 펼치면 어떤 모듈을 맡는지 보인다.</p>
+
+  <div class="person" data-person="김주영">
+    <div class="person-head">
+      <h2>김주영</h2>
+      <span class="count">모듈 3개</span>
+    </div>
+    <p class="summary">AI · 백엔드 · 임베디드 데이터 라인. 센서 데이터를 받아 분류하고, DB에 쌓고, 발표 지표를 뽑는 사람.</p>
+    <details>
+      <summary>맡은 모듈 보기</summary>
+      <div class="body">
+        <ul>
+          <li><strong>M1</strong> 백엔드 DB / ROS-TCP 라벨링 / AI <em>(공동: 김선일)</em></li>
+          <li><strong>M2</strong> 아두이노 메인 보드·통신 <em>(공동: 박태진, 임현찬)</em></li>
+          <li><strong>M4</strong> 아두이노 센서 <em>(공동: 임현찬, 박태진)</em></li>
+        </ul>
+        <p><strong>주요 협업</strong>: 김선일과는 백엔드/AI 공동, 임현찬·박태진과는 센서 공동, 박태진·임현찬과는 아두이노 메인 공동.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="person" data-person="김선일">
+    <div class="person-head">
+      <h2>김선일</h2>
+      <span class="count">모듈 3개</span>
+    </div>
+    <p class="summary">통신 · 관제 · 로봇 통합 라인. ROS-TCP로 데이터를 끌어와 Unity 관제 화면에 박고, 터틀봇 주행도 같이 챙긴다.</p>
+    <details>
+      <summary>맡은 모듈 보기</summary>
+      <div class="body">
+        <ul>
+          <li><strong>M1</strong> 백엔드 DB / ROS-TCP 라벨링 / AI <em>(공동: 김주영)</em></li>
+          <li><strong>M3</strong> Unity 관제UI · ROS-TCP 통신 · 영상 라이브 <em>(공동: 박태진)</em></li>
+          <li><strong>M5</strong> 터틀봇 LiDAR · 카메라 · SLAM · Nav <em>(공동: 임현찬)</em></li>
+        </ul>
+        <p><strong>주요 협업</strong>: 가장 많은 라인을 잇는다. 김주영과 백엔드, 박태진과 Unity, 임현찬과 터틀봇 — 사실상 통합자 역할.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="person" data-person="박태진">
+    <div class="person-head">
+      <h2>박태진</h2>
+      <span class="count">모듈 3개</span>
+    </div>
+    <p class="summary">하드웨어 ↔ 클라이언트 ↔ 센서 라인. 보드와 카메라를 손으로 만지고, Unity에서 그 결과가 보이도록 화면 쪽을 같이 잡는다.</p>
+    <details>
+      <summary>맡은 모듈 보기</summary>
+      <div class="body">
+        <ul>
+          <li><strong>M2</strong> 아두이노 메인 보드·통신 <em>(공동: 임현찬, 김주영)</em></li>
+          <li><strong>M3</strong> Unity 관제UI · ROS-TCP 통신 · 영상 라이브 <em>(공동: 김선일)</em></li>
+          <li><strong>M4</strong> 아두이노 센서 <em>(공동: 김주영, 임현찬)</em></li>
+        </ul>
+        <p><strong>주요 협업</strong>: 김선일과 Unity 클라이언트, 임현찬·김주영과 아두이노 메인과 센서. 발표 환경 세팅의 핵심.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="person" data-person="임현찬">
+    <div class="person-head">
+      <h2>임현찬</h2>
+      <span class="count">모듈 3개</span>
+    </div>
+    <p class="summary">임베디드 · 로봇 라인. 보드부터 터틀봇 SLAM/Nav2까지 — "움직이는 것"을 책임진다.</p>
+    <details>
+      <summary>맡은 모듈 보기</summary>
+      <div class="body">
+        <ul>
+          <li><strong>M2</strong> 아두이노 메인 보드·통신 <em>(공동: 박태진, 김주영)</em></li>
+          <li><strong>M4</strong> 아두이노 센서 <em>(공동: 김주영, 박태진)</em></li>
+          <li><strong>M5</strong> 터틀봇 LiDAR · 카메라 · SLAM · Nav <em>(공동: 김선일)</em></li>
+        </ul>
+        <p><strong>주요 협업</strong>: 김주영·박태진과 센서, 박태진·김주영과 아두이노 메인, 김선일과 터틀봇. 하드웨어 디버깅의 중심.</p>
+      </div>
+    </details>
+  </div>
+
+  <details class="visual-toggle">
+    <summary>매트릭스 그림으로 보기 (PNG 2장)</summary>
+    <div class="imgs">
+      <figure>
+        <img src="whiteboards/role_matrix.png" alt="역할 매트릭스 — 5 모듈 × 4명" />
+        <figcaption>모듈 × 사람 매트릭스. ● = 담당.</figcaption>
+      </figure>
+      <figure>
+        <img src="whiteboards/role_graph.png" alt="역할 그래프 — 사람 ↔ 모듈" />
+        <figcaption>사람 ↔ 모듈 연결 그래프. 선 색은 담당자 색.</figcaption>
+      </figure>
+    </div>
+  </details>
+
+  <div class="nav-footer">
+    <a href="dev-plan.html">← 메인</a>
+    <a href="dev-plan-modules.html">모듈 카드 →</a>
+  </div>
+
+</div>
+</body>
+</html>

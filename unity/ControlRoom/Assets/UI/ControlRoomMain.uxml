@@ -1,0 +1,30 @@
+<!-- ControlRoomMain.uxml — 관제 화면 최상위 레이아웃.
+     상단바 + 좌230 / 중앙flex / 우240 3열. AlertPopup overlay 1개. Parts 5개 include. -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="ControlRoomTokens.uss" />
+    <Style src="ControlRoomStyle.uss" />
+
+    <ui:Template src="Parts/TopBar.uxml" name="TopBarTpl" />
+    <ui:Template src="Parts/LeftControlPanel.uxml" name="LeftPanelTpl" />
+    <ui:Template src="Parts/MapPanel.uxml" name="MapPanelTpl" />
+    <ui:Template src="Parts/CameraAndLogPanel.uxml" name="CameraLogTpl" />
+    <ui:Template src="Parts/RightStatusPanel.uxml" name="RightPanelTpl" />
+
+    <ui:VisualElement name="root" class="root">
+        <ui:Instance template="TopBarTpl" />
+        <ui:VisualElement name="body" class="body">
+            <ui:Instance template="LeftPanelTpl" />
+            <ui:VisualElement name="center-panel" class="center-panel">
+                <ui:Instance template="MapPanelTpl" />
+                <ui:Instance template="CameraLogTpl" />
+            </ui:VisualElement>
+            <ui:Instance template="RightPanelTpl" />
+        </ui:VisualElement>
+
+        <!-- Alert popup overlay (절대 위치, .visible 토글로 표시) -->
+        <ui:VisualElement name="alert-popup" class="alert-popup">
+            <ui:Label name="alert-popup-message" text="위험 경보" class="alert-popup-message" />
+            <ui:Button name="btn-alert-dismiss" text="확인" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

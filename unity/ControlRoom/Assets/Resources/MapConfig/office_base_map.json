@@ -1,0 +1,78 @@
+{
+  "map": {
+    "mapId": "museum_floor1",
+    "displayName": "박물관 1층",
+    "originX": 0.0,
+    "originY": 0.0,
+    "resolution": 0.05,
+    "widthPx": 800,
+    "heightPx": 600,
+    "displayRotationDeg": 85
+  },
+  "waypoints": [
+    {
+      "waypointId": "wp_1",
+      "displayName": "1번 지점",
+      "x": 1.0,
+      "y": 1.0,
+      "theta": 0.0,
+      "isChargingDock": false
+    },
+    {
+      "waypointId": "wp_2",
+      "displayName": "2번 지점",
+      "x": 3.0,
+      "y": 1.0,
+      "theta": 0.0,
+      "isChargingDock": false
+    },
+    {
+      "waypointId": "wp_3",
+      "displayName": "3번 지점",
+      "x": 3.0,
+      "y": 3.0,
+      "theta": 0.0,
+      "isChargingDock": false
+    },
+    {
+      "waypointId": "wp_4",
+      "displayName": "4번 지점",
+      "x": 1.0,
+      "y": 3.0,
+      "theta": 0.0,
+      "isChargingDock": false
+    },
+    {
+      "waypointId": "wp_charge",
+      "displayName": "충전소",
+      "x": 0.0,
+      "y": 0.0,
+      "theta": 0.0,
+      "isChargingDock": true
+    }
+  ],
+  "protectedTargets": [
+    {
+      "targetId": "frame_a",
+      "displayName": "액자 A",
+      "targetType": "frame",
+      "x": 2.0,
+      "y": 0.5,
+      "theta": 0.0,
+      "status": "safe",
+      "iconName": "protected_frame",
+      "lastSeenAt": ""
+    },
+    {
+      "targetId": "frame_b",
+      "displayName": "액자 B",
+      "targetType": "frame",
+      "x": 0.5,
+      "y": 2.0,
+      "theta": 0.0,
+      "status": "safe",
+      "iconName": "protected_frame",
+      "lastSeenAt": ""
+    }
+  ]
+}

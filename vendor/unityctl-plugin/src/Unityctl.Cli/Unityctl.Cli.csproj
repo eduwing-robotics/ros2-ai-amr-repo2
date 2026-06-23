@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Unityctl.Cli</RootNamespace>
+    <AssemblyName>unityctl</AssemblyName>
+
+    <!-- dotnet tool packaging -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>unityctl</ToolCommandName>
+    <PackageId>unityctl</PackageId>
+    <Description>A deterministic control plane for Unity — CLI, IPC, and MCP server</Description>
+    <Authors>Jason-hub-star</Authors>
+    <PackageProjectUrl>https://github.com/Jason-hub-star/unityctl</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Jason-hub-star/unityctl</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>unity;cli;mcp;gamedev;editor</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Unityctl.Cli.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ConsoleAppFramework" Version="5.3.3" PrivateAssets="all" />
+    <PackageReference Include="Spectre.Console" Version="0.49.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Unityctl.Shared\Unityctl.Shared.csproj" />
+    <ProjectReference Include="..\Unityctl.Core\Unityctl.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\Unityctl.Plugin\package.json">
+      <Link>unityctl-plugin-template\package.json</Link>
+      <Pack>false</Pack>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="..\Unityctl.Plugin\Editor\**\*"
+             Exclude="..\Unityctl.Plugin\Editor\bin\**\*;..\Unityctl.Plugin\Editor\obj\**\*">
+      <Link>unityctl-plugin-template\Editor\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <Pack>false</Pack>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

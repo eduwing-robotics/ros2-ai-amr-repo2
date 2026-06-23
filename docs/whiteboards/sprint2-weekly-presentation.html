@@ -1,0 +1,588 @@
+<!--
+  파일: docs/whiteboards/sprint2-weekly-presentation.html
+  목적: Sprint 2 (2026-06-01 ~ 2026-06-05) 일주일치 진행 내용을 발표용 슬라이드로 정리
+  근거: Confluence Sprint 2 폴더(6914051) 일일회고 + 개발맥락 폴더(1081377) 아키텍처/요구사항
+  조작: ← → 또는 Space / 클릭으로 슬라이드 이동, F11으로 풀스크린
+  생성: 2026-06-08 (Opus 4.7)
+-->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>UR HYNIX · Sprint 2 Weekly Review (2026-06-01 ~ 06-05)</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --bg2: #131a33;
+    --fg: #e9edf7;
+    --muted: #98a2c0;
+    --accent: #6ee7ff;
+    --accent2: #ffb86b;
+    --ok: #4ade80;
+    --warn: #fbbf24;
+    --bad: #f87171;
+    --line: #2a345a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--fg); font-family: -apple-system, "Pretendard", "Apple SD Gothic Neo", "Segoe UI", sans-serif; overflow: hidden; }
+  .deck { position: relative; width: 100vw; height: 100vh; }
+  .slide {
+    position: absolute; inset: 0;
+    padding: 56px 72px;
+    display: none;
+    flex-direction: column;
+    background: radial-gradient(1200px 600px at 80% -10%, rgba(110,231,255,0.10), transparent 60%),
+                radial-gradient(900px 500px at -10% 110%, rgba(255,184,107,0.08), transparent 55%),
+                linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+    animation: fade .35s ease both;
+  }
+  .slide.active { display: flex; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  h1 { font-size: 44px; line-height: 1.2; margin-bottom: 8px; }
+  h2 { font-size: 30px; color: var(--accent); margin-bottom: 14px; letter-spacing: -.3px; }
+  h3 { font-size: 20px; color: var(--accent2); margin: 18px 0 8px; }
+  p, li, td, th { font-size: 17px; line-height: 1.55; }
+  .lead { color: var(--muted); font-size: 18px; margin-bottom: 22px; }
+  .tag {
+    display: inline-block; padding: 3px 10px; border-radius: 999px;
+    background: rgba(110,231,255,0.12); color: var(--accent); border: 1px solid rgba(110,231,255,0.35);
+    font-size: 13px; margin-right: 6px;
+  }
+  .tag.warn { background: rgba(251,191,36,.12); color: var(--warn); border-color: rgba(251,191,36,.35); }
+  .tag.ok   { background: rgba(74,222,128,.12); color: var(--ok); border-color: rgba(74,222,128,.35); }
+  .tag.bad  { background: rgba(248,113,113,.12); color: var(--bad); border-color: rgba(248,113,113,.35); }
+
+  .grid { display: grid; gap: 18px; }
+  .grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+  .card h3 { margin-top: 0; }
+  ul { padding-left: 20px; }
+  li { margin-bottom: 6px; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { color: var(--accent); font-size: 14px; text-transform: uppercase; letter-spacing: .8px; }
+  td.center, th.center { text-align: center; }
+
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 13px; }
+  .pill.r { background: rgba(248,113,113,.18); color: var(--bad); }
+  .pill.d { background: rgba(251,191,36,.18); color: var(--warn); }
+  .pill.o { background: rgba(110,231,255,.18); color: var(--accent); }
+
+  footer {
+    margin-top: auto;
+    display: flex; justify-content: space-between;
+    color: var(--muted); font-size: 13px;
+    border-top: 1px solid var(--line); padding-top: 14px;
+  }
+  .progress {
+    position: fixed; left: 0; top: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width .25s ease;
+  }
+  .nav {
+    position: fixed; right: 18px; bottom: 16px; display: flex; gap: 8px; z-index: 9;
+  }
+  .nav button {
+    background: rgba(255,255,255,0.06); color: var(--fg);
+    border: 1px solid var(--line); border-radius: 8px;
+    padding: 7px 12px; cursor: pointer; font-size: 13px;
+  }
+  .nav button:hover { background: rgba(255,255,255,0.12); }
+
+  /* Title slide */
+  .cover {
+    align-items: flex-start; justify-content: center;
+  }
+  .cover .badge { font-size: 13px; letter-spacing: 2px; color: var(--accent); text-transform: uppercase; }
+  .cover h1 { font-size: 64px; line-height: 1.1; margin: 14px 0; }
+  .cover .sub { color: var(--muted); font-size: 20px; max-width: 900px; }
+  .cover .meta { margin-top: 30px; display: flex; gap: 30px; color: var(--muted); font-size: 14px; }
+  .cover .meta b { color: var(--fg); }
+
+  /* Architecture pre */
+  pre.arch {
+    background: rgba(0,0,0,.35);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 20px;
+    color: #d2deff;
+    font-family: ui-monospace, "JetBrains Mono", "Menlo", monospace;
+    font-size: 13.5px;
+    line-height: 1.5;
+    overflow: auto;
+    max-height: 60vh;
+  }
+
+  .kbd { font-family: ui-monospace, monospace; background: rgba(255,255,255,.08); border: 1px solid var(--line); padding: 1px 6px; border-radius: 5px; font-size: 12px; }
+  .legend { color: var(--muted); font-size: 13px; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="deck" id="deck">
+
+  <!-- 1. COVER -->
+  <section class="slide cover active">
+    <div class="badge">UR HYNIX · Sprint 2 Weekly Review</div>
+    <h1>박물관/미술관 액자 보호형<br/>디지털트윈 경비로봇</h1>
+    <p class="sub">2026-06-01 ~ 2026-06-05 한 주 동안 진행한 결정 · 검증 · 산출물을 한 페이지씩 정리합니다. 일일 회고 5건과 SSOT(소프트웨어 아키텍처 · 하드웨어 아키텍처 · 시스템 요구사항 v3) 사이의 정합성도 함께 점검합니다.</p>
+    <div class="meta">
+      <div><b>팀</b> UR HYNIX · 김주영 · 김선일 · 박태진 · 임현찬</div>
+      <div><b>스프린트</b> Sprint 2</div>
+      <div><b>발표일</b> 2026-06-08</div>
+    </div>
+    <footer>
+      <span>좌/우 화살표 또는 <span class="kbd">Space</span> 로 이동 · 클릭으로 다음 페이지</span>
+      <span>UR HYNIX · 로봇 2조</span>
+    </footer>
+  </section>
+
+  <!-- 2. WEEK AT A GLANCE -->
+  <section class="slide">
+    <h2>이번 주 한눈에</h2>
+    <p class="lead">역할 분리 → 명명 → 아키텍처 → 통합 검증 → 시스템 요구사항 v3 잠금. 한 주 사이에 "기획-아이디어" 수준에서 "Unity 동시 송출 검증" 수준으로 올라왔습니다.</p>
+    <div class="grid cols-3">
+      <div class="card">
+        <h3>06/01 (월)</h3>
+        <p>로봇 1·2 역할 분리(비전 / 센서). Unity 관제 UI 기능 목록 v1 정의. SD 128GB 교체 완료.</p>
+      </div>
+      <div class="card">
+        <h3>06/02 (화)</h3>
+        <p>로봇 명명: <b>티원</b>(비전) · <b>젠지</b>(센서/Pi Cam). 도메인 ID 230. Unity 두 로봇 카메라 동시 송출 검증. Teachable Machine 분류 학습.</p>
+      </div>
+      <div class="card">
+        <h3>06/03 (수)</h3>
+        <p>하드웨어/소프트웨어 아키텍처 문서 작성. 터틀봇 쿨러 추가, Pi Camera 추가.</p>
+      </div>
+      <div class="card">
+        <h3>06/04 (목)</h3>
+        <p>아키텍처 수정. Unity DT 좌표 설정 기능 테스트. RealSense ↔ 라즈베리파이4 연동. RealSense + 일반 카메라에 YOLO 적용.</p>
+      </div>
+      <div class="card">
+        <h3>06/05 (금)</h3>
+        <p>RealSense D435 RGB + Depth 토픽 송수신 안정화(424×240 / 15fps). 통합 뷰어 구성. <b>시스템 요구사항 v3 잠금</b>.</p>
+      </div>
+      <div class="card">
+        <h3>주말 결산</h3>
+        <p>SSOT 정합성 점검 · 다음 주 Sprint 3 진입 준비. <span class="tag ok">아키텍처 잠금</span> <span class="tag warn">SR 재매핑 필요</span></p>
+      </div>
+    </div>
+    <footer><span>Slide 2 / 12</span><span>UR HYNIX · Sprint 2 Weekly</span></footer>
+  </section>
+
+  <!-- 3. MON 06/01 -->
+  <section class="slide">
+    <h2>06/01 (월) · 역할 분리 + UI 요구사항 v1</h2>
+    <p class="lead">단순 자율주행 데모를 넘어 "감지 → 출동 → 확인" 분업 구조로 가는 첫 결정.</p>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>핵심 결정</h3>
+        <ul>
+          <li>로봇 1 = <b>비전 중심</b> → 전면 상단 Depth Camera(RealSense D435) 부착</li>
+          <li>로봇 2 = <b>센서 중심</b> → Arduino + Pi Camera 부착</li>
+          <li>RealSense D435 도착 예정 / SD 128GB 교체 완료</li>
+        </ul>
+        <h3>팀원별 진행</h3>
+        <ul>
+          <li><b>김선일</b> Unity 관제 UI 버튼/기능 정의</li>
+          <li><b>김주영</b> SD 카드 128GB 교체</li>
+          <li><b>박태진</b> Depth Camera 자료조사, 시스템 요구사항 작성, 프리뷰 HTML</li>
+          <li><b>임현찬</b> ROS용 SD 카드 128GB 교체</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Unity 관제 UI v1 (정의)</h3>
+        <ul>
+          <li>지도: 우클릭 좌표 생성/삭제, 좌클릭 좌우 스크롤</li>
+          <li>좌표: 충전 위치, 이름, 차단 지역 스케치, 순회 번호</li>
+          <li>모드: 수동(텔레옵) / 자동(순회 확인 팝업) / 스캔(좌표마다 360°) / 가속</li>
+          <li>표시: 카메라 ON/OFF, 배터리·가스·소리·조도 수치, 위험 알람 팝업</li>
+          <li>변경: "화재 이미지 매칭 UI" 제거 → "조도 센서 상태" 우선</li>
+          <li>좌측 패널/관제 화면 유지, 우측·하단 패널은 로봇별로 동적 변경</li>
+        </ul>
+      </div>
+    </div>
+    <footer><span>Slide 3 / 12</span><span>Confluence page 5111810 + 7077892 회고록</span></footer>
+  </section>
+
+  <!-- 4. TUE 06/02 -->
+  <section class="slide">
+    <h2>06/02 (화) · 명명 + Unity 동시 송출 검증</h2>
+    <p class="lead">로봇에 이름이 생기고, 처음으로 두 카메라가 한 화면에 들어왔습니다.</p>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>네이밍 & 통신 설정</h3>
+        <ul>
+          <li>비전 + 리얼센스 → <b>티원 (tb3_1)</b></li>
+          <li>Pi Camera + 센서 → <b>젠지 (tb3_2)</b></li>
+          <li>ROS_DOMAIN_ID = <b>230</b> 으로 통일</li>
+        </ul>
+        <h3>검증 통과</h3>
+        <ul>
+          <li>Unity에서 <b>두 로봇 카메라 화면 동시 송출 검증 완료</b></li>
+          <li>시스템 요구사항 정의서 작성 및 수정</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>AI 분류 모델 첫 학습</h3>
+        <ul>
+          <li>도구: Google Teachable Machine</li>
+          <li>모델 포맷: TensorFlow / Keras</li>
+          <li>학습 클래스: 빈공간 · 박스 · 마우스(검정/흰색) · 손</li>
+          <li>목적: 로봇 카메라 영상에서 객체 분류 테스트 베이스라인</li>
+        </ul>
+        <p class="legend">※ 본격 인식은 06/04 RealSense + YOLO 로 이어집니다.</p>
+      </div>
+    </div>
+    <footer><span>Slide 4 / 12</span><span>Confluence page 6127617</span></footer>
+  </section>
+
+  <!-- 5. WED 06/03 -->
+  <section class="slide">
+    <h2>06/03 (수) · 아키텍처 문서 v1 작성</h2>
+    <p class="lead">머릿속에 있던 그림을 문서로 굳혀, 다음 주 검증의 기준선을 만든 날.</p>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>산출물</h3>
+        <ul>
+          <li>소프트웨어 아키텍처 문서 (page 7503891)</li>
+          <li>하드웨어 아키텍처 문서 (page 7536649)</li>
+        </ul>
+        <h3>물리 추가</h3>
+        <ul>
+          <li>TurtleBot3 <b>쿨러</b> 추가 (장시간 구동 안정성)</li>
+          <li>Pi Camera 추가 (젠지)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>아키텍처 계층 (SW)</h3>
+        <ul>
+          <li><b>Robot Layer</b> · SLAM, Nav2, Sensor/Camera Node</li>
+          <li><b>Middleware</b> · ROS2 Topic, ROS-TCP Connector</li>
+          <li><b>Digital Twin</b> · Unity 관제, 알람, 제어</li>
+          <li><b>Data Layer</b> · 이벤트 / 출동 / 카메라 확인 로그</li>
+        </ul>
+      </div>
+    </div>
+    <footer><span>Slide 5 / 12</span><span>Confluence page 7503873</span></footer>
+  </section>
+
+  <!-- 6. THU 06/04 -->
+  <section class="slide">
+    <h2>06/04 (목) · RealSense × YOLO × Unity DT</h2>
+    <p class="lead">"디지털 트윈이 실물과 좌표가 맞아야 한다"는 자각이 한 단계 작업을 깊게 만든 날.</p>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>통합 진척</h3>
+        <ul>
+          <li>RealSense ↔ <b>라즈베리파이4</b> 연동 확인</li>
+          <li>RealSense + 일반 카메라에 <b>YOLO</b> 적용</li>
+          <li>Unity DT 작업 — 좌표 설정 기능 테스트</li>
+        </ul>
+        <h3>아키텍처 수정</h3>
+        <ul>
+          <li>HW / SW 아키텍처 v2 수정 반영</li>
+          <li>(SW) RealSense 토픽 라인 명확화</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>인지된 과제</h3>
+        <ul>
+          <li>GUI상 실물 터틀봇과 좌표 <b>일치</b> 필요</li>
+          <li>→ 좌표 설정 기능을 먼저 검증하고 Nav2 명령 라인을 잇는 방향으로 결정</li>
+          <li>다음 단계: 카메라/Depth 토픽 안정화 + Unity 마커 동기화</li>
+        </ul>
+      </div>
+    </div>
+    <footer><span>Slide 6 / 12</span><span>Confluence page 8683522</span></footer>
+  </section>
+
+  <!-- 7. FRI 06/05 -->
+  <section class="slide">
+    <h2>06/05 (금) · RealSense D435 RGB+Depth 안정화</h2>
+    <p class="lead">네트워크 부하·프레임 드롭과 싸워, RGB+Depth가 한 화면에서 끊김 없이 흘러간 첫 결과.</p>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>수행 내용</h3>
+        <ul>
+          <li>ROS2에서 RealSense D435 정상 동작 설정</li>
+          <li>RGB / Depth 토픽 송수신 테스트 완료</li>
+          <li>노트북에서 ROS2 토픽 구독 → 실시간 모니터링 환경 구축</li>
+          <li>Depth Colorizer로 거리 정보 시각화</li>
+          <li>RGB + Depth 통합 뷰어 구성</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>성능 튜닝 결과</h3>
+        <ul>
+          <li>해상도 848×480 → <b>424×240</b> 조정</li>
+          <li>프레임 <b>15 fps</b> 로 안정화</li>
+          <li>네트워크 부하 · 드롭 문제 분석 후 최종 안정</li>
+        </ul>
+        <h3>병행 산출</h3>
+        <ul>
+          <li>시스템 요구사항 정의서 <b>v3 잠금</b> (SR_01 ~ SR_12)</li>
+          <li>HW / SW 아키텍처 수정 반영</li>
+        </ul>
+      </div>
+    </div>
+    <footer><span>Slide 7 / 12</span><span>Confluence page 9043969</span></footer>
+  </section>
+
+  <!-- 8. ARCH SNAPSHOT -->
+  <section class="slide">
+    <h2>주말 기준 아키텍처 스냅샷</h2>
+    <p class="lead">한 주의 작업이 굳어진 결과. 회고 → SSOT 정합성 체크의 기준선입니다.</p>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>하드웨어</h3>
+<pre class="arch">          [Unity PC]
+               │
+         Wi-Fi (ROS_DOMAIN_ID = 230)
+               │
+ ┌─────────────┴─────────────┐
+ ▼                           ▼
+[티원 / tb3_1]           [젠지 / tb3_2]
+ 자율 순찰 · 비전           출동 · 센서/확인
+ ├─ LiDAR                  ├─ LiDAR
+ ├─ RealSense D435         ├─ Pi Camera (IMX219)
+ ├─ OpenCR                 ├─ OpenCR
+ └─ Raspberry Pi 4         ├─ Raspberry Pi 4
+                           └─ Arduino Uno
+                                ├─ PIR
+                                ├─ 조도 (LDR)
+                                ├─ 소리 (KY-038)
+                                └─ 가스/불꽃</pre>
+      </div>
+      <div class="card">
+        <h3>소프트웨어</h3>
+<pre class="arch">[TurtleBot3 · ROS2 Humble]
+  ├─ Nav2
+  ├─ SLAM Toolbox
+  ├─ Sensor Node
+  └─ Camera Node (RGB / Depth)
+        │
+        ▼
+   ROS-TCP Connector
+        │
+        ▼
+[Unity Digital Twin]
+  ├─ 위치 · 이동 경로 시각화
+  ├─ 카메라 영상 (RGB + Depth)
+  ├─ 이벤트 마커 / 알람
+  └─ 수동·자동·스캔 모드 제어
+        │
+        ▼
+[Database]
+  ├─ 이벤트 로그
+  ├─ 출동 로그
+  └─ 카메라 확인 기록</pre>
+      </div>
+    </div>
+    <footer><span>Slide 8 / 12</span><span>HW 7536649 · SW 7503891</span></footer>
+  </section>
+
+  <!-- 9. SR v3 -->
+  <section class="slide">
+    <h2>시스템 요구사항 v3 (06/05 잠금)</h2>
+    <p class="lead">v2(23개)에서 <b>핵심 12개로 축소</b>. MVP 범위를 좁혀 시연/검증을 일관시킨 결정.</p>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>기능</th><th>핵심 동작</th><th class="center">우선순위</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>SR_01</td><td>자동 순찰</td><td>경로 반복 순찰 · 장애물 감지/회피</td><td class="center"><span class="pill r">R</span></td></tr>
+        <tr><td>SR_02</td><td>자동 충전</td><td>배터리 ≤30% 시 충전 위치 이동</td><td class="center"><span class="pill r">R</span></td></tr>
+        <tr><td>SR_03</td><td>출동 요청</td><td>이상 감지 → 위치 전송 → 젠지 출동</td><td class="center"><span class="pill r">R</span></td></tr>
+        <tr><td>SR_04</td><td>데이터 전송</td><td>센서·상태·배터리·로그·카메라 상태</td><td class="center"><span class="pill r">R</span></td></tr>
+        <tr><td>SR_05</td><td>카메라</td><td>Depth 환경 인지 + RGB 현장 촬영</td><td class="center"><span class="pill r">R</span></td></tr>
+        <tr><td>SR_06</td><td>조도 감지</td><td>순찰 모드 기동/해제</td><td class="center"><span class="pill r">R</span></td></tr>
+        <tr><td>SR_07</td><td>외부자 감지</td><td>PIR → 데이터·출동·차단벽</td><td class="center"><span class="pill r">R</span></td></tr>
+        <tr><td>SR_08</td><td>외부자 조치</td><td>전기 충격 · 물리 공격</td><td class="center"><span class="pill o">O</span></td></tr>
+        <tr><td>SR_09</td><td>소음 감지</td><td>임계 dB 초과 → 출동 · 알림</td><td class="center"><span class="pill r">R</span></td></tr>
+        <tr><td>SR_10</td><td>화재 감지</td><td>가스+카메라 → 출동 · 알림 · 119</td><td class="center"><span class="pill r">R</span></td></tr>
+        <tr><td>SR_11</td><td>관리 화면</td><td>상태·센서·로그·수동 조작·신고·DB</td><td class="center"><span class="pill r">R</span></td></tr>
+        <tr><td>SR_12</td><td>DB</td><td>날짜 폴더·검색·이미지·영상·로그</td><td class="center"><span class="pill r">R</span></td></tr>
+      </tbody>
+    </table>
+    <footer><span>Slide 9 / 12</span><span>Confluence page 6750216 (v3)</span></footer>
+  </section>
+
+  <!-- 10. CONSISTENCY MATRIX -->
+  <section class="slide">
+    <h2>정합성 점검 — 회고 ↔ 아키텍처 ↔ 요구사항</h2>
+    <p class="lead">"한 주 사이 결정과 산출물이 SSOT 3종에 모순 없이 박혔는가"를 항목별로 점검.</p>
+    <table>
+      <thead>
+        <tr><th>점검 항목</th><th>Sprint 2 회고</th><th>아키텍처 / SSOT</th><th class="center">판정</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>로봇 명칭 매핑</td>
+          <td>비전=티원, 센서=젠지 (06/02)</td>
+          <td>HW: 티원=RealSense+순찰 / 젠지=PiCam+센서</td>
+          <td class="center"><span class="tag ok">일치</span></td>
+        </tr>
+        <tr>
+          <td>tb3_1 / tb3_2 매핑</td>
+          <td>06/01 "로봇1=비전 / 로봇2=센서"</td>
+          <td>기획안 SSOT: tb3_1=비전=티원 / tb3_2=센서=젠지</td>
+          <td class="center"><span class="tag ok">일치</span></td>
+        </tr>
+        <tr>
+          <td>ROS_DOMAIN_ID</td>
+          <td>230 통일 (06/02)</td>
+          <td>HW/SW 아키텍처에 값 명시 없음</td>
+          <td class="center"><span class="tag warn">아키텍처 미반영</span></td>
+        </tr>
+        <tr>
+          <td>카메라 송출 라인</td>
+          <td>Unity 두 로봇 동시 송출 (06/02), RGB+Depth 안정화 (06/05)</td>
+          <td>SW: ROS-TCP Connector → Unity Camera 표시</td>
+          <td class="center"><span class="tag ok">일치</span></td>
+        </tr>
+        <tr>
+          <td>RealSense 해상도/fps</td>
+          <td>424×240 · 15 fps 안정화 (06/05)</td>
+          <td>SSOT에는 값 미기재</td>
+          <td class="center"><span class="tag warn">SR/아키 반영 필요</span></td>
+        </tr>
+        <tr>
+          <td>SR 항목 수</td>
+          <td>—</td>
+          <td>v3=12개 vs 구버전(5341185)=23개</td>
+          <td class="center"><span class="tag warn">재매핑 매트릭스 없음</span></td>
+        </tr>
+        <tr>
+          <td>자동 충전(SR_02)</td>
+          <td>회고 미언급</td>
+          <td>v3: R · 사용자요구 UR-10: Option · 기획안: 명시 없음</td>
+          <td class="center"><span class="tag warn">우선순위 불일치</span></td>
+        </tr>
+        <tr>
+          <td>외부자 조치(SR_08)</td>
+          <td>회고 미언급</td>
+          <td>v3: O · 기획안 ❌ 제외 명시</td>
+          <td class="center"><span class="tag ok">의도된 보류</span></td>
+        </tr>
+        <tr>
+          <td>화재 감지 119 연락</td>
+          <td>회고 미언급</td>
+          <td>v3 SR_10: "119 연락" 포함 / 시연 가능 여부 불명</td>
+          <td class="center"><span class="tag bad">시연 스코프 충돌 위험</span></td>
+        </tr>
+        <tr>
+          <td>HW 문서 표기</td>
+          <td>—</td>
+          <td>"젠지s" 오타 1건 (page 7536649)</td>
+          <td class="center"><span class="tag warn">사소</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <footer><span>Slide 10 / 12</span><span>회고 5건 × SSOT 3건 교차 검증</span></footer>
+  </section>
+
+  <!-- 11. DRIFT ACTIONS -->
+  <section class="slide">
+    <h2>드리프트 해소 액션</h2>
+    <p class="lead">"검증 없는 완료 선언 금지 / 문서 드리프트 방치 금지" 룰을 그대로 적용.</p>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>이번 주 안에</h3>
+        <ul>
+          <li>HW/SW 아키텍처에 <b>ROS_DOMAIN_ID=230</b> 명시</li>
+          <li>SW 아키텍처에 RealSense <b>424×240 / 15 fps</b> 토픽 스펙 박기</li>
+          <li>HW 문서 "젠지s" 오타 수정</li>
+          <li>SR v2 → v3 <b>재매핑 매트릭스</b> 1페이지 추가</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Sprint 3 진입 전</h3>
+        <ul>
+          <li><b>SR_02 자동 충전</b>: 시연 스코프 결정 → SSOT 3종 우선순위 동기화</li>
+          <li><b>SR_10 화재 119 연락</b>: "모의" 문구로 표기 변경 또는 항목 분리</li>
+          <li>좌표 설정 → Nav2 명령 연결까지 <b>시나리오 1건 E2E</b> 검증 후 evidence 기록</li>
+          <li>회고 페이지에 "오늘 SSOT 갱신 여부" 체크박스 1줄 추가</li>
+        </ul>
+      </div>
+    </div>
+    <footer><span>Slide 11 / 12</span><span>액션 4 + 4 / 담당자는 일일 회고에서 분배</span></footer>
+  </section>
+
+  <!-- 12. CLOSING -->
+  <section class="slide">
+    <h2>닫는 말 · 다음 주 한 줄</h2>
+    <p class="lead">한 주 동안 "두 로봇 카메라가 한 화면에서 동시에 흘러가는" 데까지 왔습니다. 다음 주는 "이벤트 한 건이 감지 → 출동 → 확인 → DB" 까지 한 번 끝까지 흐르게 합니다.</p>
+    <div class="grid cols-3">
+      <div class="card">
+        <h3>잘 된 점</h3>
+        <ul>
+          <li>역할·명칭·도메인 ID가 빠르게 잠김</li>
+          <li>RGB+Depth 안정화 성공</li>
+          <li>SR v3로 MVP 범위 압축</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>아쉬운 점</h3>
+        <ul>
+          <li>회고와 SSOT 사이 동기화 누락 3건</li>
+          <li>v2→v3 SR 매핑 매트릭스 부재</li>
+          <li>시연 스코프(자동 충전·119) 미확정</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>다음 한 줄</h3>
+        <ul>
+          <li>"외부자 1건 E2E 시연 잠그기"</li>
+          <li>SR_07 PIR → SR_03 출동 → SR_05 카메라 → SR_12 DB</li>
+          <li>Sprint 3 데모 시나리오 기준선</li>
+        </ul>
+      </div>
+    </div>
+    <footer><span>Slide 12 / 12</span><span>UR HYNIX · Sprint 2 Weekly · 2026-06-08</span></footer>
+  </section>
+
+</div>
+
+<div class="nav">
+  <button onclick="go(-1)">◀ Prev</button>
+  <button onclick="go(+1)">Next ▶</button>
+  <button onclick="toggleFs()">⛶ Full</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let idx = 0;
+  function show(n) {
+    idx = (n + slides.length) % slides.length;
+    slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+    document.getElementById('progress').style.width = ((idx + 1) / slides.length * 100) + '%';
+  }
+  function go(d) { show(idx + d); }
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight', ' ', 'PageDown'].includes(e.key)) go(+1);
+    else if (['ArrowLeft', 'PageUp'].includes(e.key)) go(-1);
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+  });
+  document.addEventListener('click', e => {
+    if (e.target.closest('.nav') || e.target.closest('button')) return;
+    go(+1);
+  });
+  function toggleFs() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  }
+  show(0);
+</script>
+</body>
+</html>

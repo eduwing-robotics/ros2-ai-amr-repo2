@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>URHYNIX · 위험</title>
+<style>
+  :root {
+    --bg: #fff7ed;
+    --fg: #1c1917;
+    --muted: #78716c;
+    --accent: #d97706;
+    --accent-dark: #92400e;
+    --card: #ffffff;
+    --border: #fed7aa;
+    --hover: #fde68a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo",
+                 "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.6;
+    font-size: 18px;
+  }
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 56px 32px 80px;
+  }
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 40px;
+  }
+  .topbar a { color: var(--accent); text-decoration: none; }
+  .topbar a:hover { text-decoration: underline; }
+
+  .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-size: 64px;
+    line-height: 1.1;
+    margin: 0 0 16px;
+    letter-spacing: -0.025em;
+    color: var(--accent-dark);
+  }
+  .lead {
+    font-size: 22px;
+    color: var(--muted);
+    margin: 0 0 56px;
+    line-height: 1.55;
+  }
+
+  .risk {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px 32px;
+    margin-bottom: 24px;
+  }
+  .risk-head {
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    margin-bottom: 12px;
+  }
+  .risk-num {
+    font-size: 22px;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .risk h2 {
+    font-size: 32px;
+    line-height: 1.25;
+    margin: 0;
+    letter-spacing: -0.015em;
+    color: var(--fg);
+  }
+  .risk .summary {
+    font-size: 20px;
+    line-height: 1.55;
+    margin: 0;
+    color: var(--fg);
+  }
+
+  details {
+    margin-top: 20px;
+    border-top: 1px dashed var(--border);
+    padding-top: 16px;
+  }
+  details summary {
+    cursor: pointer;
+    font-size: 15px;
+    color: var(--accent);
+    font-weight: 600;
+    list-style: none;
+    user-select: none;
+    padding: 6px 0;
+    transition: color 0.1s ease;
+  }
+  details summary:hover { color: var(--accent-dark); }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before {
+    content: "▸ ";
+    display: inline-block;
+    margin-right: 4px;
+    transition: transform 0.15s ease;
+  }
+  details[open] summary::before {
+    content: "▾ ";
+  }
+  details .body {
+    margin-top: 12px;
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--fg);
+  }
+  details .body p { margin: 0 0 10px; }
+  details .body ul { margin: 4px 0 12px 20px; padding: 0; }
+  details .body code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: #fef3c7;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 15px;
+  }
+
+  .nav-footer {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    font-size: 16px;
+  }
+  .nav-footer a {
+    color: var(--accent);
+    text-decoration: none;
+    padding: 12px 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    transition: background 0.1s ease;
+  }
+  .nav-footer a:hover { background: var(--hover); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <a href="dev-plan.html">← 메인</a>
+    <span>URHYNIX · 디지털트윈경비로봇</span>
+  </div>
+
+  <span class="badge">⚠️ 위험</span>
+  <h1>이건<br>깨질 수 있다</h1>
+  <p class="lead">이번 7주 안에 우리를 막을 수 있는 6가지. 미리 안 보면 막판에 폭발한다. 펼쳐서 대응 방법까지.</p>
+
+  <div class="risk">
+    <div class="risk-head">
+      <span class="risk-num">01</span>
+      <h2>아두이노 센서 노이즈</h2>
+    </div>
+    <p class="summary">PIR과 소리 센서가 가짜 신호를 자주 뱉을 수 있다. 발표 도중 오탐이 쏟아지면 끝.</p>
+    <details>
+      <summary>대응 방법 보기</summary>
+      <div class="body">
+        <ul>
+          <li>S2 초반에 센서 임계값을 캘리브레이션. 환경 광량·진동 조건별 두 세트 준비.</li>
+          <li>S3에서 AI 오탐/실탐 분류 보조 모델로 한 번 더 거른다 (SCRUM-21).</li>
+          <li>발표 직전 시연 장소에서 5분 노이즈 측정 후 임계값 재조정.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="risk">
+    <div class="risk-head">
+      <span class="risk-num">02</span>
+      <h2>ROS-Unity 통신 지연</h2>
+    </div>
+    <p class="summary">카메라 스트림이 Unity까지 느리게 오면 관제 화면이 끊긴다. 발표 임팩트가 즉시 무너진다.</p>
+    <details>
+      <summary>대응 방법 보기</summary>
+      <div class="body">
+        <ul>
+          <li>S2 초반에 ROS-TCP-Connector 부하 측정. 토픽별 Hz와 지연 기록.</li>
+          <li>카메라 토픽 다운샘플 (15Hz 이하) + 해상도 축소.</li>
+          <li>Pose 토픽은 별도 빠른 경로로, 이미지는 별도 채널로 분리.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="risk">
+    <div class="risk-head">
+      <span class="risk-num">03</span>
+      <h2>브레드보드 점퍼 빠짐 · LiDAR 시야 가림</h2>
+    </div>
+    <p class="summary">시연 중 점퍼선이 빠지면 센서 신호가 끊긴다. Arduino 층이 너무 높아 LiDAR 시야를 가리면 SLAM이 깨진다.</p>
+    <details>
+      <summary>대응 방법 보기</summary>
+      <div class="body">
+        <ul>
+          <li>발표 직전 점퍼선을 절연테이프로 고정. Arduino + 브레드보드는 양면테이프로 상판 부착.</li>
+          <li>여유 있으면 S3쯤 만능기판(perfboard)으로 이전.</li>
+          <li>M3 스페이서는 <strong>30~40mm 권장</strong>. 그 이상으로 올리면 LiDAR 회전 시 진동·시야 가림 위험.</li>
+          <li>점퍼 케이블이 LiDAR 회전 반경 안으로 들어가지 않도록 케이블 타이로 정리.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="risk">
+    <div class="risk-head">
+      <span class="risk-num">04</span>
+      <h2>TurtleBot3 2대 동시 구동 실패</h2>
+    </div>
+    <p class="summary">하드웨어 2대가 동시에 안정적으로 돌지 못하면 듀얼 로봇 콘셉트 자체가 무너진다.</p>
+    <details>
+      <summary>대응 방법 보기</summary>
+      <div class="body">
+        <ul>
+          <li>S1~S2에 박태진/임현찬이 2대 동시 부팅을 사전 확인. 백업 배터리·부품 확보.</li>
+          <li>축소안: <strong>1대 실기 + 1대 Unity 시뮬레이션 로봇</strong>으로 시연 가능하도록 S3까지 코드 유지.</li>
+          <li>발표 당일은 일찍 도착해 두 대 모두 부팅·SLAM 확인 후 본 시연.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="risk">
+    <div class="risk-head">
+      <span class="risk-num">05</span>
+      <h2>시연 환경 광량 변화 · LiDAR 강화 모드 과다 동작</h2>
+    </div>
+    <p class="summary">조도 센서가 시연장 조명 조건에서 야간 모드 트리거를 못 하거나 너무 자주 트리거할 수 있다. LiDAR 강화 모드는 저속 순찰·pose 로그 빈도 증가로 표현하므로 과다 저장도 리스크다.</p>
+    <details>
+      <summary>대응 방법 보기</summary>
+      <div class="body">
+        <ul>
+          <li>S4 직전 시연 장소에서 조도 임계값 재캘리브레이션 (SCRUM-18).</li>
+          <li>발표 중에는 수동 토글(<code>/unity/manual_dispatch</code>)로 야간 모드 강제 진입 가능하도록 백도어 준비.</li>
+          <li>어두움 유지 중 중복 row 폭주를 막기 위해 edge-trigger + 히스테리시스를 유지.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="risk">
+    <div class="risk-head">
+      <span class="risk-num">06</span>
+      <h2>액자형 사진 타깃 인식 · 미디어 저장 실패</h2>
+    </div>
+    <p class="summary">카메라가 액자형 보호 대상을 못 찾거나 사진/영상/사운드 저장 경로가 끊기면 박물관 컨셉의 설득력이 떨어진다.</p>
+    <details>
+      <summary>대응 방법 보기</summary>
+      <div class="body">
+        <ul>
+          <li>1차 인식은 AprilTag/QR/고대비 프레임 마커로 단순화하고, AI 분류는 보조로 둔다.</li>
+          <li>SCRUM-23 확장 후 DB에는 원본 파일을 직접 넣지 않고 <code>media_artifacts.storage_path</code>와 메타데이터만 저장한다.</li>
+          <li>시연 전 <code>frame_01</code> 샘플 액자와 test image/video/audio path 1건씩 seed.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="risk">
+    <div class="risk-head">
+      <span class="risk-num">07</span>
+      <h2>일정 지연</h2>
+    </div>
+    <p class="summary">7주는 빠듯하다. S3 끝에 v4(2대 실기)가 위태로우면 단순화 결정을 해야 한다.</p>
+    <details>
+      <summary>대응 방법 보기</summary>
+      <div class="body">
+        <ul>
+          <li>S3 종료 시점에 v4 가능성 평가. 어려우면 <strong>2대 실기 → 1대 실기 + 1대 시뮬</strong>로 축소.</li>
+          <li>AI 분류(SCRUM-21)는 임계값 비교로 대체 가능.</li>
+          <li>화재/소리 시나리오는 모의 입력만 시연하고 발표에서 명시.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="nav-footer">
+    <a href="dev-plan-scenarios.html">← 시나리오</a>
+    <a href="dev-plan-exclusions.html">제외 범위 →</a>
+  </div>
+
+</div>
+</body>
+</html>

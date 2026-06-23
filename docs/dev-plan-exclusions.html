@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>URHYNIX · 제외 범위</title>
+<style>
+  :root {
+    --bg: #fef2f2;
+    --fg: #1c1917;
+    --muted: #78716c;
+    --accent: #dc2626;
+    --accent-dark: #991b1b;
+    --card: #ffffff;
+    --border: #fecaca;
+    --hover: #fee2e2;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo",
+                 "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.6;
+    font-size: 18px;
+  }
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 56px 32px 80px;
+  }
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 40px;
+  }
+  .topbar a { color: var(--accent); text-decoration: none; }
+  .topbar a:hover { text-decoration: underline; }
+
+  .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-size: 64px;
+    line-height: 1.1;
+    margin: 0 0 16px;
+    letter-spacing: -0.025em;
+    color: var(--accent-dark);
+  }
+  .lead {
+    font-size: 22px;
+    color: var(--muted);
+    margin: 0 0 56px;
+    line-height: 1.55;
+  }
+
+  .item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px 32px;
+    margin-bottom: 24px;
+  }
+  .item-head {
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    margin-bottom: 12px;
+  }
+  .item-num {
+    font-size: 22px;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .item h2 {
+    font-size: 32px;
+    line-height: 1.25;
+    margin: 0;
+    letter-spacing: -0.015em;
+    color: var(--fg);
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+    text-decoration-color: rgba(220, 38, 38, 0.4);
+  }
+  .item .summary {
+    font-size: 20px;
+    line-height: 1.55;
+    margin: 0;
+    color: var(--fg);
+  }
+
+  details {
+    margin-top: 20px;
+    border-top: 1px dashed var(--border);
+    padding-top: 16px;
+  }
+  details summary {
+    cursor: pointer;
+    font-size: 15px;
+    color: var(--accent);
+    font-weight: 600;
+    list-style: none;
+    user-select: none;
+    padding: 6px 0;
+    transition: color 0.1s ease;
+  }
+  details summary:hover { color: var(--accent-dark); }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before {
+    content: "▸ ";
+    display: inline-block;
+    margin-right: 4px;
+  }
+  details[open] summary::before {
+    content: "▾ ";
+  }
+  details .body {
+    margin-top: 12px;
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--fg);
+  }
+  details .body p { margin: 0 0 10px; }
+  details .body ul { margin: 4px 0 12px 20px; padding: 0; }
+
+  .nav-footer {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    font-size: 16px;
+  }
+  .nav-footer a {
+    color: var(--accent);
+    text-decoration: none;
+    padding: 12px 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    transition: background 0.1s ease;
+  }
+  .nav-footer a:hover { background: var(--hover); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <a href="dev-plan.html">← 메인</a>
+    <span>URHYNIX · 디지털트윈경비로봇</span>
+  </div>
+
+  <span class="badge">🚫 제외 범위</span>
+  <h1>이번엔<br>안 만든다</h1>
+  <p class="lead">발표 7주 안에 다 하려면 잘라야 한다. 이 6가지는 일부러 뺀다. 펼치면 왜 뺐는지 보인다.</p>
+
+  <div class="item">
+    <div class="item-head">
+      <span class="item-num">01</span>
+      <h2>FR5 로봇팔 · 픽앤플레이스</h2>
+    </div>
+    <p class="summary">협동 로봇팔로 물건을 집어 옮기는 작업은 이번에 안 한다.</p>
+    <details>
+      <summary>이유 보기</summary>
+      <div class="body">
+        <p>2026-05-26 결정. 7~8주 일정 안에서는 TurtleBot3 자율주행·Unity 관제·이벤트 대응에 집중하는 편이 성공 가능성이 훨씬 높다. 로봇팔은 별도 학기 또는 후속 프로젝트로.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="item">
+    <div class="item-head">
+      <span class="item-num">02</span>
+      <h2>실시간 사람 추적</h2>
+    </div>
+    <p class="summary">감지된 사람을 따라다니며 좌표 기반으로 follow 하는 동작은 안 한다.</p>
+    <details>
+      <summary>이유 보기</summary>
+      <div class="body">
+        <p>사람 좌표 추정 정확도와 안전 제약을 7주에 풀기 어렵다. 대신 <strong>감지 위치로 출동 + Pi Camera 확인</strong>으로 시나리오를 정의했다. 발표 메시지도 "추적"이 아니라 "대응"으로 잡는다.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="item">
+    <div class="item-head">
+      <span class="item-num">03</span>
+      <h2>실제 화재 테스트</h2>
+    </div>
+    <p class="summary">진짜 불꽃으로 불꽃 센서를 테스트하지 않는다. 모의 입력으로 대체.</p>
+    <details>
+      <summary>이유 보기</summary>
+      <div class="body">
+        <p>실내에서 실제 불꽃을 다루는 건 안전·법적 문제. 모의 입력(버튼·플래그)이나 안전한 발열 소스로만 테스트하고, 발표에서 "안전 우선 설계의 일부"로 명시한다. 센서 자체는 동작하지만 트리거만 모의로.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="item">
+    <div class="item-head">
+      <span class="item-num">04</span>
+      <h2>완전 자동 보안 시스템 수준의 인증·권한</h2>
+    </div>
+    <p class="summary">사용자 인증, 역할 권한, 감사 로그 같은 production 보안 기능은 안 만든다.</p>
+    <details>
+      <summary>이유 보기</summary>
+      <div class="body">
+        <p>이번은 "시연 가능한 디지털 트윈 프로토타입". 시연 영역 안에서는 모든 사용자가 운영자라고 가정. DB도 단일 운영자 모드로 운영. 인증은 후속 단계로.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="item">
+    <div class="item-head">
+      <span class="item-num">05</span>
+      <h2>복잡한 멀티로봇 최적 경로 계획</h2>
+    </div>
+    <p class="summary">두 로봇이 경로를 협상해 최적화하는 알고리즘은 안 넣는다. waypoint 기반 단순 출동만.</p>
+    <details>
+      <summary>이유 보기</summary>
+      <div class="body">
+        <p>Multi-robot path planning은 7주에 풀 깊이가 아니다. tb3_2는 <strong>이벤트 좌표 근처 waypoint로 Nav2 goal</strong> 한 번만 발행. 충돌 회피는 각 로봇의 로컬 Nav2 costmap에 맡긴다.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="item">
+    <div class="item-head">
+      <span class="item-num">06</span>
+      <h2>로봇 간 물리적 협동 작업</h2>
+    </div>
+    <p class="summary">두 로봇이 같이 물건을 들거나 미는 등의 물리 협업은 안 한다.</p>
+    <details>
+      <summary>이유 보기</summary>
+      <div class="body">
+        <p>본 프로젝트의 "협동"은 <strong>역할 분담 협동</strong>(감지 로봇 + 확인 로봇)이지 물리적 동시 작업이 아니다. 발표에서도 이 점을 명확히 한다.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="nav-footer">
+    <a href="dev-plan-risks.html">← 위험</a>
+    <a href="dev-plan.html">메인 →</a>
+  </div>
+
+</div>
+</body>
+</html>

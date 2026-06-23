@@ -1,0 +1,6 @@
+﻿<Solution>
+  <Project Path="UnityctlBridge.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="URHYNIX.ControlRoom.Tests.EditMode.csproj" />
+</Solution>

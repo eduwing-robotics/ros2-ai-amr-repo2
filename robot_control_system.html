@@ -1,0 +1,2728 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로봇 관제 시스템 v1.6.2 (멀티 로봇 협업 & 비상 시뮬레이션)</title>
+    <!-- Tailwind CSS for robust modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Noto Sans KR for precise typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
+            overflow: hidden;
+        }
+        /* Custom scrollbar for clean white-collar aesthetic */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f8fafc;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* 16:9 aspect ratio forced wrapper */
+        .ratio-container {
+            aspect-ratio: 16 / 9;
+            width: 100%;
+            max-width: 1920px;
+            max-height: 1080px;
+        }
+
+        /* Pulse animations for active state indicators */
+        .pulse-green {
+            animation: pulse-green-glow 2s infinite;
+        }
+        @keyframes pulse-green-glow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        .emergency-flash {
+            animation: emergency-red-flash 0.8s infinite alternate;
+        }
+        @keyframes emergency-red-flash {
+            0% { background-color: rgba(239, 68, 68, 0.05); box-shadow: inset 0 0 15px rgba(239, 68, 68, 0.1); }
+            100% { background-color: rgba(239, 68, 68, 0.25); box-shadow: inset 0 0 30px rgba(239, 68, 68, 0.4); }
+        }
+
+        .pulse-orange {
+            animation: pulse-orange-glow 1.5s infinite;
+        }
+        @keyframes pulse-orange-glow {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.4); opacity: 0.2; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 sm:p-4 select-none">
+
+<!-- Main Widescreen Dashboard Container (16:9 Ratio forced - Light Theme Premium) -->
+<div id="app-container" class="ratio-container bg-white border border-slate-200 rounded-2xl flex flex-col overflow-hidden shadow-xl relative w-full h-full">
+    
+    <!-- Top Header -->
+    <header class="bg-slate-50 border-b border-slate-200 px-5 py-3 flex items-center justify-between z-10 shrink-0">
+        <div class="flex items-center space-x-4">
+            <!-- Brand Logo Icon -->
+            <div class="flex items-center space-x-2 text-blue-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                </svg>
+                <span class="font-bold text-base tracking-wider text-slate-800 flex items-center gap-1.5">
+                    로봇 관제 시스템 
+                    <span class="bg-blue-100 border border-blue-300 text-[10px] px-1.5 py-0.5 rounded text-blue-700 font-semibold">v1.6.2 Dual-AI Partner</span>
+                </span>
+            </div>
+            <!-- Tabs for multi-robots -->
+            <div class="flex items-center space-x-2 ml-6">
+                <button onclick="switchRobot('robot1')" id="tab-robot1" class="px-3 py-1 rounded-md text-xs font-semibold transition-all bg-blue-50 border border-blue-200 text-blue-700 shadow-sm">
+                    로봇 1 (T1)
+                </button>
+                <button onclick="switchRobot('robot2')" id="tab-robot2" class="px-3 py-1 rounded-md text-xs font-semibold transition-all bg-slate-100 border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-200">
+                    로봇 2 (Gen.G)
+                </button>
+            </div>
+        </div>
+        
+        <!-- Status Panel -->
+        <div class="flex items-center space-x-5 text-xs">
+            <div class="flex items-center space-x-1.5">
+                <span class="inline-block w-2 h-2 bg-emerald-500 rounded-full pulse-green"></span>
+                <span class="text-slate-600">시스템 모니터 : <span class="text-emerald-600 font-semibold">듀얼 관제 가동 중</span></span>
+                <svg class="w-3.5 h-3.5 text-emerald-600 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-3.08-7.071a8.5 8.5 0 016.162 0M12 10.75V11"></path></svg>
+            </div>
+            <div class="text-slate-500 font-mono tracking-wider text-[11px]" id="digital-clock">2026-06-02 11:52:00</div>
+            <div class="flex items-center space-x-2 text-slate-500">
+                <button onclick="triggerEmergencyAlert()" class="p-1 rounded text-rose-500 hover:text-rose-600 hover:bg-rose-50 transition-all" title="수동 경보 울리기">
+                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </button>
+                <button class="hover:text-slate-800 transition-colors p-1" onclick="toggleFullscreen()"><svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"></path></svg></button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Body -->
+    <main class="flex-1 flex overflow-hidden p-3 gap-3 min-h-0 bg-slate-50">
+        
+        <!-- Left Column: Controls and Waypoint Orders (Scrollable column customized) -->
+        <section class="w-[230px] flex flex-col gap-2.5 shrink-0 overflow-y-auto pr-1">
+            
+            <!-- 1. 위험상황 테스트 제어 (Simulation Scenarios) - HIGHLIGHTED AT THE TOP -->
+            <div class="bg-rose-50 border border-rose-200 rounded-xl p-3 flex flex-col gap-2 shadow-sm shrink-0">
+                <h3 class="text-[11px] font-bold text-rose-700 uppercase tracking-wider flex items-center justify-between">
+                    <span>위험상황 테스트 제어</span>
+                    <span class="inline-block w-2 h-2 bg-rose-500 rounded-full animate-ping"></span>
+                </h3>
+                <div class="grid grid-cols-2 gap-1.5 text-[10px]">
+                    <button onclick="triggerScenario('fire')" class="py-2 px-1.5 bg-white border border-rose-300 hover:bg-rose-600 hover:text-white rounded text-rose-700 font-bold transition-all flex items-center justify-center gap-1">
+                        🔥 화재 발생
+                    </button>
+                    <button onclick="triggerScenario('intruder')" class="py-2 px-1.5 bg-white border border-rose-300 hover:bg-rose-600 hover:text-white rounded text-rose-700 font-bold transition-all flex items-center justify-center gap-1">
+                        👤 외부인 침입
+                    </button>
+                    <button onclick="triggerScenario('sound')" class="py-2 px-1.5 bg-white border border-rose-300 hover:bg-rose-600 hover:text-white rounded text-rose-700 font-bold transition-all flex items-center justify-center gap-1">
+                        🔊 소리 감지
+                    </button>
+                    <button onclick="triggerScenario('theft')" class="py-2 px-1.5 bg-white border border-rose-300 hover:bg-rose-600 hover:text-white rounded text-rose-700 font-bold transition-all flex items-center justify-center gap-1">
+                        💎 중요품도난
+                    </button>
+                </div>
+                <!-- Reset Scenario Button -->
+                <button onclick="resetScenarios()" class="w-full mt-1 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded text-[10px] transition-all">
+                    시뮬레이션 초기화 & 복귀
+                </button>
+            </div>
+
+            <!-- 2. 동작 제어 (Auto & Manual Controls Panel) -->
+            <div class="bg-white border border-slate-200 rounded-xl p-3 flex flex-col gap-2 shadow-sm shrink-0">
+                <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">동작 제어 (T1 기준)</h3>
+                
+                <!-- Teleop Manual Control -->
+                <div id="teleop-panel" class="hidden flex-col items-center py-2 bg-slate-50 border border-slate-200 rounded-lg p-2">
+                    <span class="text-[9px] text-blue-600 font-semibold mb-2 block tracking-tight">수동 조종 (방향키 / WASD)</span>
+                    <div class="grid grid-cols-3 gap-1 w-24">
+                        <div></div>
+                        <button onclick="manualMove('up')" class="bg-slate-200 hover:bg-slate-300 active:bg-blue-600 active:text-white py-2 rounded text-slate-700 transition-colors text-xs font-bold">▲</button>
+                        <div></div>
+                        <button onclick="manualMove('left')" class="bg-slate-200 hover:bg-slate-300 active:bg-blue-600 active:text-white py-2 rounded text-slate-700 transition-colors text-xs font-bold">◀</button>
+                        <button onclick="manualMove('down')" class="bg-slate-200 hover:bg-slate-300 active:bg-blue-600 active:text-white py-2 rounded text-slate-700 transition-colors text-xs font-bold">▼</button>
+                        <button onclick="manualMove('right')" class="bg-slate-200 hover:bg-slate-300 active:bg-blue-600 active:text-white py-2 rounded text-slate-700 transition-colors text-xs font-bold">▶</button>
+                    </div>
+                </div>
+
+                <!-- Auto Patrol Controls -->
+                <div id="patrol-panel" class="flex flex-col gap-1.5">
+                    <button id="btn-patrol-start" onclick="togglePatrol()" class="w-full flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-colors shadow-sm">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span id="patrol-text">순회 시작</span>
+                    </button>
+                    <button id="btn-patrol-stop" onclick="stopPatrol()" class="w-full flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 transition-colors shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6v4H9z"></path></svg>
+                        <span>순회 정지</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 3. 모드 설정 (Operational Mode Setting) -->
+            <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm shrink-0">
+                <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2.5 flex justify-between items-center">
+                    <span>모드 설정</span>
+                    <span id="mode-badge" class="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-semibold">자동모드</span>
+                </h3>
+                <div class="grid grid-cols-2 gap-1.5">
+                    <button id="btn-manual-mode" onclick="setMode('manual')" class="py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all bg-slate-100 text-slate-600 border border-slate-200 hover:text-slate-800 hover:bg-slate-200">수동모드</button>
+                    <button id="btn-auto-mode" onclick="setMode('auto')" class="py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all bg-blue-600 border border-transparent text-white shadow-sm hover:bg-blue-700">자동모드</button>
+                </div>
+            </div>
+
+            <!-- 4. 동작 특수 모드 (Utility Settings) -->
+            <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm shrink-0">
+                <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 flex justify-between items-center">
+                    <span>동작 특수 모드</span>
+                    <span id="scan-badge" class="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-semibold">스캔 비활성</span>
+                </h3>
+                <div class="grid grid-cols-2 gap-1.5">
+                    <button id="btn-scan-mode" onclick="toggleUtility('scan')" class="py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800 border border-slate-200">스캔모드</button>
+                    <button id="btn-turbo-mode" onclick="toggleUtility('turbo')" class="py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800 border border-slate-200">가속모드</button>
+                </div>
+            </div>
+
+            <!-- 5. 지점 순회 정보 -->
+            <div class="bg-white border border-slate-200 rounded-xl p-3 flex flex-col shadow-sm shrink-0">
+                <div class="flex items-center justify-between mb-2 shrink-0">
+                    <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">순회 목록 (<span id="sidebar-robot-label">T1</span>)</h3>
+                    <button onclick="resetWaypoints()" class="text-[9px] text-slate-400 hover:text-rose-500 transition-colors">초기화</button>
+                </div>
+                <div id="waypoint-queue" class="space-y-1.5 overflow-y-auto max-h-[140px] pr-0.5">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Center Column: Main Interactive Map & Bottom Stream/Logs -->
+        <section class="flex-1 flex flex-col gap-3 min-h-0">
+            
+            <!-- Big Map Module -->
+            <div class="flex-1 bg-white border border-slate-200 rounded-2xl flex flex-col overflow-hidden relative shadow-sm">
+                
+                <!-- Map Header Bar with Tooltips -->
+                <div class="flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-200 z-10 shrink-0 text-xs">
+                    <div class="flex items-center space-x-2">
+                        <span class="inline-block w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse"></span>
+                        <span class="font-bold text-slate-700 tracking-wide">실시간 공간 맵 모니터링 (Office Base)</span>
+                        <span id="avoidance-badge" class="hidden text-[9px] bg-sky-100 border border-sky-300 text-sky-700 px-1.5 py-0.5 rounded font-semibold animate-pulse">A* 우회 주행 활성</span>
+                    </div>
+                    <div class="flex items-center space-x-2 text-[10px] text-slate-500 font-medium">
+                        <span id="t1-status-badge" class="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded font-medium">T1: 자동순회 중</span>
+                        <span id="r2-status-badge" class="bg-orange-50 text-orange-700 px-1.5 py-0.5 rounded font-medium">Gen.G: 대기구역 대기</span>
+                    </div>
+                    <!-- Zoom actions -->
+                    <div class="flex items-center space-x-1">
+                        <button onclick="resetMapTransforms()" class="px-2.5 py-1 rounded bg-slate-200 hover:bg-slate-300 text-[10px] text-slate-700 font-semibold transition-colors">초기 뷰</button>
+                    </div>
+                </div>
+
+                <!-- Canvas Display Frame -->
+                <div class="flex-1 relative overflow-hidden bg-[#fafbfc]" id="canvas-container">
+                    <canvas id="map-canvas" class="block w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+                    
+                    <!-- Real m Scaling Indicator overlay -->
+                    <div class="absolute bottom-3 left-3 flex flex-col items-start bg-white/90 backdrop-blur-sm border border-slate-200 px-2 py-1 rounded text-[10px] font-mono pointer-events-none shadow-sm">
+                        <div class="flex items-center space-x-1">
+                            <div class="w-8 h-[1px] bg-slate-500 mr-1.5 relative">
+                                <span class="absolute -top-1 left-0 w-[1px] h-2.5 bg-slate-500"></span>
+                                <span class="absolute -top-1 right-0 w-[1px] h-2.5 bg-slate-500"></span>
+                            </div>
+                            <span class="text-slate-600">2 m</span>
+                        </div>
+                    </div>
+
+                    <!-- Custom Contextual Coordinate Node Editor Popup Overlay -->
+                    <div id="coordinate-modal" class="absolute hidden bg-white border border-slate-200 text-slate-800 rounded-xl p-3 w-[220px] shadow-xl z-20" style="top: 25%; left: 35%;">
+                        <div class="flex items-center justify-between mb-2 border-b border-slate-100 pb-1.5">
+                            <span class="text-[11px] font-bold text-blue-600 flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 bg-blue-600 rounded-full inline-block animate-ping"></span> 
+                                거점 설정 편집
+                            </span>
+                            <button onclick="closeCoordinateModal()" class="text-slate-400 hover:text-slate-700"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                        </div>
+                        <div class="space-y-2.5 text-[11px]">
+                            <div>
+                                <label class="block text-slate-500 mb-0.5">거점 식별명</label>
+                                <input type="text" id="modal-node-name" class="w-full bg-slate-50 border border-slate-200 rounded px-1.5 py-1 text-slate-800 focus:outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-slate-500 mb-0.5">순서 (이동 우선순위)</label>
+                                <input type="number" id="modal-node-order" class="w-full bg-slate-50 border border-slate-200 rounded px-1.5 py-1 text-slate-800 focus:outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-slate-500 mb-0.5">거점 상태 설정</label>
+                                <select id="modal-node-status" class="w-full bg-slate-50 border border-slate-200 rounded px-1 py-1 text-slate-800 focus:outline-none focus:border-blue-500">
+                                    <option value="대기중">대기중</option>
+                                    <option value="작동중">작동중</option>
+                                    <option value="스캔 완료">스캔 완료</option>
+                                    <option value="점검 요망">점검 요망</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Charging Station Toggle Component -->
+                            <div class="flex items-center justify-between py-1 border-t border-b border-slate-100 my-2">
+                                <span class="text-slate-500 font-semibold text-[10px]">⚡ 대기/충전소 존으로 지정</span>
+                                <button id="modal-node-charger" onclick="toggleModalCharger()" class="relative inline-flex h-5 w-9 items-center rounded-full bg-slate-300 transition-colors focus:outline-none">
+                                    <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform translate-x-1"></span>
+                                </button>
+                            </div>
+
+                            <div class="flex items-center gap-1.5 pt-1">
+                                <button onclick="deleteSelectedNode()" class="flex-1 py-1 bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 rounded font-semibold transition-all text-[10px]">거점 삭제</button>
+                                <button onclick="saveSelectedNode()" class="flex-1 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold transition-all text-[10px] shadow-sm">설정 저장</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Bottom Panels: Camera Stream (Left) & Real-time Log Console (Right) -->
+            <div class="h-[180px] grid grid-cols-10 gap-3 shrink-0">
+                
+                <!-- CCTV Viewport Frame -->
+                <div class="col-span-4 bg-white border border-slate-200 rounded-xl flex flex-col overflow-hidden relative shadow-sm">
+                    <div class="px-3 py-1.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-[11px] shrink-0">
+                        <span class="font-semibold text-slate-700 flex items-center gap-1">
+                            <span id="camera-ping-indicator" class="inline-block w-1.5 h-1.5 bg-red-500 rounded-full animate-ping"></span>
+                            실시간 카메라 피드 (<span id="cam-robot-label">T1</span>)
+                        </span>
+                        <div class="flex items-center space-x-1.5">
+                            <span class="font-mono text-slate-400 text-[9px] mr-1">1080p AI-Vision</span>
+                            <button id="btn-camera-toggle" onclick="toggleCameraFeed()" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[9px] px-1.5 py-0.5 rounded font-bold transition-all shadow-sm">FEED ON</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 bg-slate-900 relative overflow-hidden flex items-center justify-center">
+                        <img id="camera-stream" src="https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=600&q=80" alt="CCTV Feed" class="w-full h-full object-cover opacity-90">
+                        
+                        <!-- Screen Capture / Event HUD Banner Overlay -->
+                        <div id="camera-hud-badge" class="absolute top-2 left-2 pointer-events-none text-[8px] text-emerald-700 font-mono bg-white/90 backdrop-blur-sm border border-emerald-200 px-1 py-0.5 rounded uppercase">
+                            FEED ACTIVE
+                        </div>
+                        <div id="camera-hud-target" class="absolute top-2 right-2 pointer-events-none text-[8px] text-rose-600 font-mono bg-white/90 backdrop-blur-sm border border-rose-200 px-1.5 py-0.5 rounded hidden">
+                            🎯 TARGET DETECTED
+                        </div>
+                        <div id="camera-hud-tracking" class="absolute bottom-2 right-2 pointer-events-none text-[8px] text-slate-500 font-mono bg-white/90 backdrop-blur-sm border border-slate-200 px-1 py-0.5 rounded">
+                            AUTO PILOT PTZ
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Incident Log Console -->
+                <div class="col-span-6 bg-white border border-slate-200 rounded-xl flex flex-col overflow-hidden shadow-sm">
+                    <div class="px-3 py-1.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-[11px] shrink-0">
+                        <span class="font-semibold text-slate-700">전체 이벤트 로그 피드</span>
+                        <div class="flex items-center space-x-2 text-[10px]">
+                            <button onclick="clearLogs()" class="text-slate-400 hover:text-slate-600 transition-colors">전체 비우기</button>
+                            <button onclick="exportLogs()" class="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-50 transition-colors">로그 다운로드</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto p-2 font-mono text-[10px] space-y-1 bg-slate-50/50" id="log-console">
+                        <!-- Pushed dynamically -->
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- Right Column: Live Telemetry & Device Info -->
+        <section class="w-[240px] flex flex-col gap-3 shrink-0 overflow-y-auto pl-0.5">
+            
+            <!-- Sensor Diagnostics Panel -->
+            <div class="bg-white border border-slate-200 rounded-xl p-3 flex flex-col gap-3 shrink-0 shadow-sm">
+                <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 pb-1.5 flex justify-between items-center">
+                    <span>원격 상태 계측</span>
+                    <span id="telemetry-badge" class="text-[9px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 font-semibold">정상 가동</span>
+                </h3>
+                
+                <!-- Battery Level Indicator -->
+                <div>
+                    <div class="flex items-center justify-between text-[10px] mb-1">
+                        <span id="battery-label" class="text-slate-500">T1 배터리 잔여용량</span>
+                        <span id="txt-battery-percent" class="text-emerald-600 font-bold font-mono">92%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200 mb-2">
+                        <div id="bar-battery-fill" class="bg-emerald-500 h-full transition-all duration-1000" style="width: 92%;"></div>
+                    </div>
+                    <!-- Quick Trigger test button for low battery simulator -->
+                    <button onclick="forceBatteryLow()" class="w-full py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 font-bold rounded text-[9px] transition-all flex items-center justify-center gap-1">
+                        ⚡ T1 배터리 30%로 강제 설정 (테스트용)
+                    </button>
+                </div>
+
+                <!-- Gas Level sensor widget -->
+                <div class="space-y-1">
+                    <div class="flex justify-between items-end text-[10px]">
+                        <span class="text-slate-500">화학 가스 농도</span>
+                        <span class="font-mono text-amber-600 font-bold text-[11px]"><span id="txt-gas">42</span> <span class="text-[8px] font-normal text-slate-400">ppm</span></span>
+                    </div>
+                    <div class="h-9 bg-slate-50 rounded border border-slate-200 overflow-hidden relative">
+                        <canvas id="chart-gas" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+
+                <!-- Sound sensor widget -->
+                <div class="space-y-1">
+                    <div class="flex justify-between items-end text-[10px]">
+                        <span class="text-slate-500">주변 소음도</span>
+                        <span class="font-mono text-cyan-600 font-bold text-[11px]"><span id="txt-sound">64</span> <span class="text-[8px] font-normal text-slate-400">dB</span></span>
+                    </div>
+                    <div class="h-9 bg-slate-50 rounded border border-slate-200 overflow-hidden relative">
+                        <canvas id="chart-sound" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+
+                <!-- Brightness sensor widget -->
+                <div class="space-y-1">
+                    <div class="flex justify-between items-end text-[10px]">
+                        <span class="text-slate-500">실내 조도 계측</span>
+                        <span class="font-mono text-orange-600 font-bold text-[11px]"><span id="txt-lux">320</span> <span class="text-[8px] font-normal text-slate-400">lux</span></span>
+                    </div>
+                    <div class="h-9 bg-slate-50 rounded border border-slate-200 overflow-hidden relative">
+                        <canvas id="chart-lux" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Hardware Spec Card -->
+            <div class="bg-white border border-slate-200 rounded-xl p-3 flex flex-col shrink-0 shadow-sm">
+                <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">하드웨어 사양</h3>
+                
+                <div class="flex items-center space-x-3 bg-slate-50 p-2.5 rounded-lg border border-slate-200 mb-2.5">
+                    <div class="w-10 h-10 bg-white rounded-md flex items-center justify-center border border-slate-200">
+                        <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 2a2 2 0 012 2v2a2 2 0 01-2 2H8a2 2 0 01-2-2V4a2 2 0 012-2h4zm0 6h4a2 2 0 012 2v6a2 2 0 01-2 2h-4a2 2 0 01-2-2v-6a2 2 0 012-2zm-6 2H4a2 2 0 00-2 2v4a2 2 0 002 2h2m12-8h2a2 2 0 012 2v4a2 2 0 01-2 2h-2M12 18v2m0 0a2 2 0 100 4 2 2 0 000-4z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 text-[10px] space-y-0.5">
+                        <div class="flex justify-between items-center">
+                            <span class="text-slate-400">식별명</span>
+                            <div class="flex items-center space-x-1">
+                                <input type="text" id="spec-name-input" oninput="changeRobotName(this.value)" maxlength="8" class="font-semibold text-slate-700 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-blue-500 focus:outline-none text-right w-24 px-1 py-0.5 transition-all text-[11px]" title="로봇 명칭 변경 (최대 8자)">
+                                <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </div>
+                        </div>
+                        <div class="flex justify-between"><span class="text-slate-400">장치 형태</span><span id="spec-model" class="text-slate-500">TB3 Burger</span></div>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5 text-[10px] border-t border-slate-100 pt-2">
+                    <div class="flex justify-between"><span class="text-slate-400">IP Address</span><span id="spec-ip" class="font-mono text-blue-600">192.168.1.10</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">Firmware</span><span id="spec-sw" class="font-mono text-slate-500">v2.1.0</span></div>
+                    <div class="flex justify-between items-center"><span class="text-slate-400">운행 등급</span><span class="text-emerald-700 bg-emerald-100 border border-emerald-200 px-1 rounded text-[9px] font-semibold">CLASS A</span></div>
+                </div>
+            </div>
+
+            <!-- Interactive Quick Toggle Switches -->
+            <div class="bg-white border border-slate-200 rounded-xl p-3 flex-1 flex flex-col min-h-[140px] shadow-sm">
+                <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">관제 옵션 토글</h3>
+                
+                <div class="space-y-2 text-[10px] overflow-y-auto pr-0.5 font-semibold" id="feature-switches-container">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Danger emergency flash overlay & popup -->
+    <div id="danger-alert-popup" class="hidden absolute inset-0 z-50 bg-rose-950/10 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border-2 border-rose-500 rounded-2xl p-6 w-[410px] shadow-2xl flex flex-col items-center text-center relative overflow-hidden emergency-flash">
+            
+            <div id="danger-icon-container" class="w-14 h-14 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center border-2 border-rose-400 mb-4 animate-bounce">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </div>
+            
+            <h2 id="alert-title" class="text-lg font-bold text-rose-600 tracking-widest uppercase mb-1">DANGER LEVEL BREACHED</h2>
+            <p id="alert-subtitle" class="text-xs text-rose-500 font-semibold mb-1">긴급 가스 누출 또는 위험 임계치 감지</p>
+            <p id="alert-desc" class="text-[11px] text-slate-600 mb-5 leading-normal">
+                현재 관제 구역 내 화학 가스 농도가 안전 최고 기준치를 초과했습니다. 원격 제동 및 자율 대피 안전 루틴의 작동을 권고합니다.
+            </p>
+
+            <div class="flex space-x-2 w-full">
+                <button onclick="dismissEmergencyAlert()" class="flex-1 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg text-xs transition-colors shadow-md">
+                    경보 해제 및 복귀 (Mute)
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// Robot DB & Real-time coordinates
+const robotData = {
+    robot1: {
+        id: 'robot1',
+        name: 'T1',
+        model: 'TB3 Burger',
+        serial: '2024052001',
+        software: 'v2.1.0',
+        ip: '192.168.1.10',
+        status: '정상',
+        battery: 92,
+        gas: 42,
+        sound: 64,
+        lux: 320,
+        isAutoMode: true,
+        cameraOn: true,
+        features: {
+            autodrive: true,
+            avoidance: true,
+            scan360: true,
+            slam: true,
+            gassensor: true,
+            bumper: true
+        },
+        waypoints: [
+            { id: 1, name: '출입구', x: 120, y: 150, type: '특정 좌표', order: 1, status: '대기중', isChargingStation: false },
+            { id: 2, name: '복도 1', x: 300, y: 220, type: '특정 좌표', order: 2, status: '대기중', isChargingStation: false },
+            { id: 3, name: '회의실', x: 550, y: 220, type: '특정 좌표', order: 3, status: '대기중', isChargingStation: false },
+            { id: 4, name: '창고', x: 620, y: 380, type: '특정 좌표', order: 4, status: '대기중', isChargingStation: false },
+            { id: 5, name: '사무실', x: 260, y: 475, type: '특정 좌표', order: 5, status: '대기중', isChargingStation: false },
+            // Pre-registered T1 charging station at start for automated docking
+            { id: 99, name: 'T1 충전소', x: 100, y: 110, type: '충전소', order: 6, status: '대기중', isChargingStation: true }
+        ],
+        blockedAreas: [
+            { id: 101, name: '차단 지역 A', points: [{x: 80, y: 320}, {x: 230, y: 280}, {x: 320, y: 340}, {x: 300, y: 430}, {x: 170, y: 440}] }
+        ],
+        robotPos: { x: 120, y: 150 },
+        cameraUrl: 'https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&w=600&q=80'
+    },
+    robot2: {
+        id: 'robot2',
+        name: 'Gen.G',
+        model: 'Waffle Pi v2',
+        serial: '2024052002',
+        software: 'v2.1.2',
+        ip: '192.168.1.11',
+        status: '정상',
+        battery: 89,
+        gas: 31,
+        sound: 55,
+        lux: 280,
+        isAutoMode: true,
+        cameraOn: true,
+        features: {
+            autodrive: true,
+            avoidance: true,
+            scan360: true,
+            slam: true,
+            gassensor: true,
+            bumper: true
+        },
+        // Gen.G has its standby waypoints near the charger base
+        waypoints: [
+            { id: 201, name: '대기본부', x: 680, y: 150, type: '대기 구역', order: 1, status: '대기중', isChargingStation: true }
+        ],
+        blockedAreas: [],
+        robotPos: { x: 680, y: 150 },
+        cameraUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80'
+    }
+};
+
+let currentRobotId = 'robot1';
+let isPatrolling = false;
+let patrolWaypointIndex = 0;
+let patrolAnimationId = null;
+let patrolSpeed = 0.95;
+let isTurboActive = false;
+let isRobotClipping = false;
+
+// Pathfinding navigation variables
+let activePatrolPath = [];
+let activePatrolPathIndex = 0;
+let isAvoidanceRouteActive = false;
+
+// Robot 2 (Gen.G) Independent movement state
+let r2Path = [];
+let r2PathIndex = 0;
+let r2Speed = 0.95;
+let r2StandbyPos = { x: 680, y: 150 };
+
+// Automated patrol takeover states during T1 charging
+let isR2Patrolling = false;
+let r2PatrolWaypointIndex = 0;
+
+// Scenario state machine
+let currentScenario = 'idle'; // idle, fire, intruder, sound, theft
+let scenarioStep = 0;
+let scenarioTimer = 0;
+let activeIncidentPoint = null; // Coordinates where 🔥, 👤, 🔊 spawns
+let importantItemPos = { x: 300, y: 380 }; // Research Lab Item Pos
+let importantItemExist = true; 
+
+// Scan mode sequence variables
+let isScanModeActive = false;
+let isScanningAnimation = false;
+let scanAngle = 0;
+let scanTimer = 0;
+
+let drawMode = 'idle'; 
+let drawnPolygonPoints = [];
+let activeNodeId = null;
+let currentZoom = 1.0;
+let mapPan = { x: 0, y: 0 };
+let isPanning = false;
+let startPan = { x: 0, y: 0 };
+
+// Vertex dragging parameters
+let draggedArea = null;
+let draggedVertexIndex = -1;
+let hoveredArea = null;
+let hoveredVertexIndex = -1;
+
+// Charging Automation State
+let isHeadingToCharge = false;
+let isCharging = false;
+let modalIsCharger = false;
+
+// Sparkline Diagnostics tracking
+const sparklineHistory = {
+    gas: Array(30).fill(42),
+    sound: Array(30).fill(64),
+    lux: Array(30).fill(320)
+};
+
+// Emergency hazard siren state
+let alertMuted = false;
+let alertActive = false;
+let sirenInterval = null;
+let audioCtx = null;
+
+// Layout Mapping Canvas
+const mapCanvas = document.getElementById('map-canvas');
+const mapCtx = mapCanvas.getContext('2d');
+
+window.onload = function() {
+    initClock();
+    resizeCanvas();
+    renderAll();
+    initEventListeners();
+    
+    // Log setup
+    addLog('system', 'INFO', '관제 시스템 듀얼 AI 파트너 레이아웃 부팅 완료.');
+    addLog('system', 'INFO', '로봇 1(T1) 순회 가동, 로봇 2(Gen.G) 대기국소 인지 성공.');
+    
+    // Periodically update sensor streams
+    setInterval(updateSensors, 1000);
+    setInterval(updateBatteryLevel, 4000); // Trigger battery update tick
+
+    // Initial switch to trigger settings loading
+    const robot = getActiveRobot();
+    updateFeatureSwitches(robot);
+    updateWaypointList();
+    updateCameraUI(robot);
+    setMode('auto');
+    updateRobotNamesDisplay();
+
+    // Start the continuous rendering/update loop!
+    animateLoop();
+};
+
+window.onresize = function() {
+    resizeCanvas();
+    renderAll();
+};
+
+function resizeCanvas() {
+    const container = document.getElementById('canvas-container');
+    mapCanvas.width = container.clientWidth;
+    mapCanvas.height = container.clientHeight;
+}
+
+function initClock() {
+    setInterval(() => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        document.getElementById('digital-clock').innerText = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }, 1000);
+}
+
+function getActiveRobot() {
+    return robotData[currentRobotId];
+}
+
+// Update all UI elements displaying the active/passive robot names dynamically
+function updateRobotNamesDisplay() {
+    const r = getActiveRobot();
+    
+    // 1. Header Navigation tab labels
+    document.getElementById('tab-robot1').innerText = `로봇 1 (${robotData.robot1.name})`;
+    document.getElementById('tab-robot2').innerText = `로봇 2 (${robotData.robot2.name})`;
+    
+    // 2. Hardware Spec input form
+    const specInput = document.getElementById('spec-name-input');
+    if (specInput && document.activeElement !== specInput) {
+        specInput.value = r.name;
+    }
+    
+    // 3. Dynamic layout context headings
+    document.getElementById('sidebar-robot-label').innerText = r.name;
+    document.getElementById('cam-robot-label').innerText = r.name;
+    document.getElementById('battery-label').innerText = `${r.name} 배터리 잔여용량`;
+}
+
+// Set & save modified robot custom name
+function changeRobotName(newName) {
+    if (newName.length > 8) {
+        newName = newName.substring(0, 8);
+    }
+    
+    const r = getActiveRobot();
+    const oldName = r.name;
+    if (oldName === newName) return;
+    
+    r.name = newName || (r.id === 'robot1' ? 'T1' : 'Gen.G');
+    
+    updateRobotNamesDisplay();
+}
+
+// Switching between multiple connected robot platforms (For Config / Camera view)
+function switchRobot(id) {
+    if (id === currentRobotId) return;
+    
+    currentRobotId = id;
+    
+    document.querySelectorAll('[id^="tab-robot"]').forEach(btn => {
+        btn.className = "px-3 py-1 rounded-md text-xs font-semibold transition-all bg-slate-100 border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-200";
+    });
+    document.getElementById(`tab-${id}`).className = "px-3 py-1 rounded-md text-xs font-semibold transition-all bg-blue-50 border border-blue-200 text-blue-700 shadow-sm";
+    
+    const r = getActiveRobot();
+    document.getElementById('spec-model').innerText = r.model;
+    document.getElementById('spec-ip').innerText = r.ip;
+    document.getElementById('spec-sw').innerText = r.software;
+    document.getElementById('camera-stream').src = r.cameraUrl;
+    
+    updateFeatureSwitches(r);
+    updateWaypointList();
+    updateCameraUI(r);
+    updateRobotNamesDisplay();
+    renderAll();
+    
+    addLog('system', 'INFO', `${r.name}의 관제 뷰포트 및 디스크립터가 마운트되었습니다.`);
+}
+
+function updateFeatureSwitches(robot) {
+    const container = document.getElementById('feature-switches-container');
+    container.innerHTML = '';
+    
+    const labels = {
+        autodrive: '자율 주행 (Auto Drive)',
+        avoidance: '장애물 회피 (Avoidance)',
+        scan360: '360° 스캔 (Lidar Scan)',
+        slam: '지도 생성 (SLAM)',
+        gassensor: '가스 센서 (Gas Detection)',
+        bumper: '충돌 보호 (Bumper Sensor)'
+    };
+    
+    Object.keys(robot.features).forEach(key => {
+        const val = robot.features[key];
+        const div = document.createElement('div');
+        div.className = "flex items-center justify-between text-[10px] py-1 border-b border-slate-100 last:border-0";
+        div.innerHTML = `
+            <span class="text-slate-600 font-medium">${labels[key]}</span>
+            <button onclick="toggleSensor('${key}')" class="relative inline-flex h-5 w-9 items-center rounded-full ${val ? 'bg-emerald-500' : 'bg-slate-300'} transition-colors focus:outline-none">
+                <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${val ? 'translate-x-4' : 'translate-x-1'}"></span>
+            </button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function toggleSensor(key) {
+    const r = getActiveRobot();
+    r.features[key] = !r.features[key];
+    updateFeatureSwitches(r);
+    
+    const stateText = r.features[key] ? 'ON' : 'OFF';
+    addLog('control', 'INFO', `${r.name} 센서 가동 갱신 - [${key}]: ${stateText}`);
+
+    if (key === 'autodrive') {
+        const btnPatrolStart = document.getElementById('btn-patrol-start');
+        if (!r.features.autodrive) {
+            if (isPatrolling) {
+                stopPatrol();
+                addLog('control', 'WARN', '자율 주행(Auto Drive)이 정지되었습니다.');
+            }
+            btnPatrolStart.setAttribute('disabled', 'true');
+            btnPatrolStart.classList.add('opacity-40', 'cursor-not-allowed');
+        } else {
+            btnPatrolStart.removeAttribute('disabled');
+            btnPatrolStart.classList.remove('opacity-40', 'cursor-not-allowed');
+        }
+    }
+    
+    renderAll();
+}
+
+function setMode(mode) {
+    const r = getActiveRobot();
+    r.isAutoMode = (mode === 'auto');
+    
+    const btnManual = document.getElementById('btn-manual-mode');
+    const btnAuto = document.getElementById('btn-auto-mode');
+    const modeBadge = document.getElementById('mode-badge');
+    const teleopPanel = document.getElementById('teleop-panel');
+    const patrolPanel = document.getElementById('patrol-panel');
+
+    if (mode === 'auto') {
+        btnManual.className = "py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200";
+        btnAuto.className = "py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all bg-blue-600 border border-transparent text-white shadow-sm hover:bg-blue-700";
+        modeBadge.innerText = '자동모드';
+        modeBadge.className = "text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-semibold";
+        teleopPanel.style.display = 'none';
+        patrolPanel.style.display = 'flex';
+        stopPatrol();
+    } else {
+        btnManual.className = "py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all bg-blue-600 border border-transparent text-white shadow-sm hover:bg-blue-700";
+        btnAuto.className = "py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200";
+        modeBadge.innerText = '수동모드';
+        modeBadge.className = "text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-semibold border border-amber-200";
+        teleopPanel.style.display = 'flex';
+        patrolPanel.style.display = 'none';
+        stopPatrol();
+    }
+}
+
+function toggleUtility(type) {
+    const btn = document.getElementById(`btn-${type}-mode`);
+    if (type === 'scan') {
+        isScanModeActive = !isScanModeActive;
+        const scanBadge = document.getElementById('scan-badge');
+        if (isScanModeActive) {
+            btn.className = "py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all bg-blue-600 border-transparent text-white shadow-sm hover:bg-blue-700";
+            scanBadge.innerText = '스캔 활성';
+            scanBadge.className = "text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-semibold";
+            addLog('control', 'INFO', '360° 자동 지연 스캔 순회가 인가되었습니다.');
+        } else {
+            btn.className = "py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200";
+            scanBadge.innerText = '스캔 비활성';
+            scanBadge.className = "text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-semibold";
+        }
+    } else if (type === 'turbo') {
+        isTurboActive = !isTurboActive;
+        if (isTurboActive) {
+            btn.className = "py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all bg-orange-500 border-transparent text-white shadow-sm hover:bg-orange-600";
+            patrolSpeed = 2.0;
+            addLog('control', 'WARN', 'T1 모터 동적 가속 오버클러킹 승인.');
+        } else {
+            btn.className = "py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200";
+            patrolSpeed = 0.95;
+        }
+    }
+    if (isPatrolling) {
+        computePatrolPathToTarget();
+    }
+}
+
+function manualMove(direction) {
+    const r = robotData.robot1; // Manual move targets T1
+    const moveStep = isTurboActive ? 25 : 12;
+    if (direction === 'up') r.robotPos.y -= moveStep;
+    if (direction === 'down') r.robotPos.y += moveStep;
+    if (direction === 'left') r.robotPos.x -= moveStep;
+    if (direction === 'right') r.robotPos.x += moveStep;
+    
+    r.robotPos.x = Math.max(60, Math.min(740, r.robotPos.x));
+    r.robotPos.y = Math.max(90, Math.min(580, r.robotPos.y));
+    
+    renderAll();
+}
+
+// Geometry utilities
+function isPointInPolygon(p, polygon) {
+    let isInside = false;
+    const points = polygon.points;
+    const n = points.length;
+    for (let i = 0, j = n - 1; i < n; j = i++) {
+        if (((points[i].y > p.y) !== (points[j].y > p.y)) &&
+            (p.x < (points[j].x - points[i].x) * (p.y - points[i].y) / (points[j].y - points[i].y) + points[i].x)) {
+            isInside = !isInside;
+        }
+    }
+    return isInside;
+}
+
+function distToSegment(p, v, w) {
+    const l2 = Math.hypot(v.x - w.x, v.y - w.y) ** 2;
+    if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+    let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
+}
+
+function isLocationBlocked(x, y) {
+    if (x < 65 || x > 735 || y < 95 || y > 545) return true;
+    
+    const p = { x, y };
+    const innerWalls = [
+        [{ x: 320, y: 80 }, { x: 320, y: 260 }],
+        [{ x: 320, y: 260 }, { x: 520, y: 260 }],
+        [{ x: 520, y: 260 }, { x: 520, y: 80 }],
+        [{ x: 180, y: 440 }, { x: 400, y: 440 }],
+        [{ x: 400, y: 440 }, { x: 400, y: 560 }],
+        [{ x: 640, y: 380 }, { x: 640, y: 560 }]
+    ];
+    for (const wall of innerWalls) {
+        if (distToSegment(p, wall[0], wall[1]) < 10) return true;
+    }
+    
+    const pillars = [
+        { x: 320, y: 250, w: 20, h: 20 },
+        { x: 510, y: 250, w: 20, h: 20 },
+        { x: 390, y: 430, w: 20, h: 20 }
+    ];
+    for (const pil of pillars) {
+        const cx = pil.x + pil.w / 2;
+        const cy = pil.y + pil.h / 2;
+        if (Math.hypot(x - cx, y - cy) < 15) return true;
+    }
+
+    const r = robotData.robot1;
+    for (const area of r.blockedAreas) {
+        if (isPointInPolygon(p, area)) return true;
+        const pts = area.points;
+        const n = pts.length;
+        for (let i = 0; i < n; i++) {
+            const next = pts[(i + 1) % n];
+            if (distToSegment(p, pts[i], next) < 12) return true;
+        }
+    }
+    return false;
+}
+
+function isPathCollided(p1, p2) {
+    const steps = 30;
+    for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const cx = p1.x + (p2.x - p1.x) * t;
+        const cy = p1.y + (p2.y - p1.y) * t;
+        if (isLocationBlocked(cx, cy)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// A* Pathfinder
+function findPathAStar(start, goal) {
+    const gridSize = 14; 
+    
+    function snapToGrid(val) {
+        return Math.round(val / gridSize) * gridSize;
+    }
+    
+    let startNode = { x: snapToGrid(start.x), y: snapToGrid(start.y) };
+    let goalNode = { x: snapToGrid(goal.x), y: snapToGrid(goal.y) };
+    
+    function findClearGridNode(node) {
+        if (!isLocationBlocked(node.x, node.y)) return node;
+        const searchDirs = [
+            {x:0, y:-1}, {x:1, y:0}, {x:0, y:1}, {x:-1, y:0},
+            {x:-1, y:-1}, {x:1, y:-1}, {x:1, y:1}, {x:-1, y:1}
+        ];
+        for (let radius = 1; radius <= 5; radius++) {
+            for (const d of searchDirs) {
+                const testX = node.x + d.x * radius * gridSize;
+                const testY = node.y + d.y * radius * gridSize;
+                if (!isLocationBlocked(testX, testY)) {
+                    return { x: testX, y: testY };
+                }
+            }
+        }
+        return node;
+    }
+    
+    startNode = findClearGridNode(startNode);
+    goalNode = findClearGridNode(goalNode);
+
+    let openSet = [{ 
+        x: startNode.x, 
+        y: startNode.y, 
+        g: 0, 
+        f: Math.hypot(startNode.x - goalNode.x, startNode.y - goalNode.y), 
+        parent: null 
+    }];
+    let closedSet = new Set();
+    
+    function keyOf(p) { return `${p.x},${p.y}`; }
+    let iter = 0;
+    
+    while (openSet.length > 0 && iter++ < 1500) {
+        openSet.sort((a, b) => a.f - b.f);
+        const current = openSet.shift();
+        
+        if (Math.hypot(current.x - goalNode.x, current.y - goalNode.y) < gridSize * 1.5) {
+            let path = [];
+            let temp = current;
+            while (temp !== null) {
+                path.push({ x: temp.x, y: temp.y });
+                temp = temp.parent;
+            }
+            path.reverse();
+            path.unshift({ x: Math.round(start.x), y: Math.round(start.y) });
+            path.push({ x: Math.round(goal.x), y: Math.round(goal.y) });
+            return smoothPath(path);
+        }
+        
+        closedSet.add(keyOf(current));
+        const dirs = [
+            { dx: 1, dy: 0, cost: 1 }, { dx: -1, dy: 0, cost: 1 },
+            { dx: 0, dy: 1, cost: 1 }, { dx: 0, dy: -1, cost: 1 },
+            { dx: 1, dy: 1, cost: 1.4 }, { dx: -1, dy: 1, cost: 1.4 },
+            { dx: 1, dy: -1, cost: 1.4 }, { dx: -1, dy: -1, cost: 1.4 }
+        ];
+        for (const d of dirs) {
+            const nx = current.x + d.dx * gridSize;
+            const ny = current.y + d.dy * gridSize;
+            if (nx < 50 || nx > 750 || ny < 80 || ny > 560) continue;
+            
+            const neighborKey = `${nx},${ny}`;
+            if (closedSet.has(neighborKey)) continue;
+            if (isLocationBlocked(nx, ny)) continue;
+            
+            const g = current.g + d.cost * gridSize;
+            const h = Math.hypot(nx - goalNode.x, ny - goalNode.y);
+            const f = g + h;
+            
+            const existing = openSet.find(o => o.x === nx && o.y === ny);
+            if (existing) {
+                if (g < existing.g) {
+                    existing.g = g;
+                    existing.f = f;
+                    existing.parent = current;
+                }
+            } else {
+                openSet.push({ x: nx, y: ny, g, f, parent: current });
+            }
+        }
+    }
+    return [start, goal];
+}
+
+function smoothPath(path) {
+    if (path.length <= 2) return path;
+    let smoothed = [path[0]];
+    let currentIdx = 0;
+    while (currentIdx < path.length - 1) {
+        let nextIdx = path.length - 1;
+        while (nextIdx > currentIdx + 1) {
+            if (!isPathCollided(path[currentIdx], path[nextIdx])) {
+                break;
+            }
+            nextIdx--;
+        }
+        smoothed.push(path[nextIdx]);
+        currentIdx = nextIdx;
+    }
+    return smoothed;
+}
+
+// Compute path avoiding dynamic obstacles (For Robot 1 / T1)
+function computePatrolPathToTarget() {
+    const r = robotData.robot1;
+    const sorted = [...r.waypoints].filter(w => !w.isChargingStation).sort((a, b) => a.order - b.order);
+    
+    if (sorted.length === 0) {
+        activePatrolPath = [];
+        activePatrolPathIndex = 0;
+        return;
+    }
+
+    if (patrolWaypointIndex >= sorted.length) {
+        patrolWaypointIndex = 0;
+    }
+
+    const targetNode = sorted[patrolWaypointIndex];
+    if (!targetNode) return;
+
+    if (r.features.avoidance) {
+        const collided = isPathCollided(r.robotPos, targetNode);
+        if (collided) {
+            isAvoidanceRouteActive = true;
+            document.getElementById('avoidance-badge').classList.remove('hidden');
+            activePatrolPath = findPathAStar(r.robotPos, targetNode);
+        } else {
+            isAvoidanceRouteActive = false;
+            document.getElementById('avoidance-badge').classList.add('hidden');
+            activePatrolPath = [r.robotPos, targetNode];
+        }
+    } else {
+        isAvoidanceRouteActive = false;
+        document.getElementById('avoidance-badge').classList.add('hidden');
+        activePatrolPath = [r.robotPos, targetNode];
+    }
+    activePatrolPathIndex = 0;
+}
+
+// Compute path for Robot 2 / Gen.G
+function computeR2PathTo(target) {
+    const r2 = robotData.robot2;
+    if (r2.features.avoidance) {
+        r2Path = findPathAStar(r2.robotPos, target);
+    } else {
+        r2Path = [r2.robotPos, target];
+    }
+    r2PathIndex = 0;
+}
+
+// Real-time canvas drawings
+function renderAll() {
+    mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+    mapCtx.save();
+    
+    // Pan & Zoom Transform operations
+    mapCtx.translate(mapPan.x, mapPan.y);
+    mapCtx.scale(currentZoom, currentZoom);
+
+    // Grid System
+    drawBlueprintGrid();
+    
+    // Office Inner Structures
+    drawOfficeStructures();
+
+    const r = getActiveRobot();
+
+    // Check SLAM mapping feature
+    if (!r.features.slam) {
+        mapCtx.fillStyle = 'rgba(248, 250, 252, 0.96)';
+        mapCtx.fillRect(50, 80, 700, 480);
+        
+        mapCtx.strokeStyle = 'rgba(239, 68, 68, 0.05)';
+        mapCtx.lineWidth = 1;
+        for (let i = 85; i < 560; i += 12) {
+            mapCtx.beginPath();
+            mapCtx.moveTo(50, i);
+            mapCtx.lineTo(750, i);
+            mapCtx.stroke();
+        }
+
+        if (Math.floor(Date.now() / 500) % 2 === 0) {
+            mapCtx.fillStyle = '#ef4444';
+            mapCtx.font = 'bold 15px Inter';
+            mapCtx.textBaseline = 'middle';
+            mapCtx.textAlign = 'center';
+            mapCtx.fillText('⚠️ SLAM MAP STREAM DISCONNECTED', 400, 300);
+        }
+
+        // Render minimal signals
+        mapCtx.fillStyle = '#ef4444';
+        mapCtx.beginPath();
+        mapCtx.arc(robotData.robot1.robotPos.x, robotData.robot1.robotPos.y, 4, 0, Math.PI * 2);
+        mapCtx.arc(robotData.robot2.robotPos.x, robotData.robot2.robotPos.y, 4, 0, Math.PI * 2);
+        mapCtx.fill();
+        mapCtx.restore();
+        return;
+    }
+
+    // Blocked Area Drawing with Handles
+    r.blockedAreas.forEach(area => {
+        drawBlockedArea(area);
+    });
+
+    if (drawMode === 'draw' && drawnPolygonPoints.length > 0) {
+        drawActiveSketchedPolygon();
+    }
+
+    // Dynamic sequential route line mapping
+    drawWaypointConnections(robotData.robot1);
+
+    // Render T1 active path (Normal / Charging)
+    if ((isPatrolling || isHeadingToCharge) && activePatrolPath.length > 0) {
+        drawActiveBypassRoute();
+    }
+
+    // Render Gen.G active path
+    if (r2Path.length > 0 && r2PathIndex < r2Path.length) {
+        drawR2Route();
+    }
+
+    // Waypoint coordinates pin mapping
+    robotData.robot1.waypoints.forEach(wp => {
+        drawWaypointPin(wp);
+    });
+
+    // Drawing Standby Base Marker for Robot 2 / Gen.G
+    drawStandbyBaseMarker();
+
+    // Draw active scenario markers
+    drawScenarioMarkers();
+
+    // 360 Scan LIDAR simulation effects (Purple for Gen.G during takeover/scenario, Blue for T1 normal)
+    if (isScanningAnimation) {
+        if (currentScenario === 'fire' || currentScenario === 'sound' || currentScenario === 'theft') {
+            drawScanningSweep(robotData.robot2.robotPos, scanAngle, scenarioTimer, '#a855f7');
+        } else if (isR2Patrolling) {
+            drawScanningSweep(robotData.robot2.robotPos, scanAngle, scanTimer, '#a855f7'); // Purple LiDAR sweep for backup Gen.G
+        } else if (isPatrolling) {
+            drawScanningSweep(robotData.robot1.robotPos, scanAngle, scanTimer, '#0ea5e9'); // Blue LiDAR sweep for T1
+        }
+    }
+
+    // Drawing BOTH connected Robot Markers (T1 & Gen.G)
+    drawRobotMarker(robotData.robot1, '#0ea5e9', 'T1');
+    drawRobotMarker(robotData.robot2, '#a855f7', 'Gen.G');
+
+    mapCtx.restore();
+}
+
+function drawScanningSweep(pos, angle, timer, color) {
+    const maxRadius = 75;
+    const sweepAngle = Math.PI / 3; // 60 degrees cone sweep
+
+    // 1. Draw rotating semi-transparent radar cone
+    mapCtx.save();
+    mapCtx.translate(pos.x, pos.y);
+    mapCtx.rotate(angle);
+
+    const grad = mapCtx.createRadialGradient(0, 0, 0, 0, 0, maxRadius);
+    grad.addColorStop(0, color + '55'); // Semi-opaque at center
+    grad.addColorStop(0.5, color + '22');
+    grad.addColorStop(1, color + '00'); // Fades completely at edge
+
+    mapCtx.fillStyle = grad;
+    mapCtx.beginPath();
+    mapCtx.moveTo(0, 0);
+    mapCtx.arc(0, 0, maxRadius, -sweepAngle / 2, sweepAngle / 2);
+    mapCtx.closePath();
+    mapCtx.fill();
+
+    // High-contrast rotating laser sweep edge line
+    mapCtx.strokeStyle = color;
+    mapCtx.lineWidth = 1.5;
+    mapCtx.beginPath();
+    mapCtx.moveTo(0, 0);
+    mapCtx.lineTo(maxRadius * Math.cos(sweepAngle / 2), maxRadius * Math.sin(sweepAngle / 2));
+    mapCtx.stroke();
+    mapCtx.restore();
+
+    // 2. Draw expanding ripple circles (3 concentric ripples)
+    const rippleCount = 3;
+    for (let i = 0; i < rippleCount; i++) {
+        const rippleProgress = ((timer * 2 + i * (180 / rippleCount)) % 180) / 180;
+        const r = maxRadius * rippleProgress;
+        const alpha = Math.max(0, Math.min(255, Math.floor((1 - rippleProgress) * 220)));
+        const hexAlpha = alpha.toString(16).padStart(2, '0');
+        
+        mapCtx.strokeStyle = color + hexAlpha;
+        mapCtx.lineWidth = 1.2;
+        mapCtx.beginPath();
+        mapCtx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+        mapCtx.stroke();
+    }
+}
+
+function drawBlueprintGrid() {
+    const size = 30;
+    mapCtx.strokeStyle = 'rgba(226, 232, 240, 0.8)'; 
+    mapCtx.lineWidth = 0.5;
+    for (let x = -500; x < mapCanvas.width + 1000; x += size) {
+        mapCtx.beginPath();
+        mapCtx.moveTo(x, -500);
+        mapCtx.lineTo(x, mapCanvas.height + 1000);
+        mapCtx.stroke();
+    }
+    for (let y = -500; y < mapCanvas.height + 1000; y += size) {
+        mapCtx.beginPath();
+        mapCtx.moveTo(-500, y);
+        mapCtx.lineTo(mapCanvas.width + 1000, y);
+        mapCtx.stroke();
+    }
+}
+
+function drawOfficeStructures() {
+    mapCtx.fillStyle = 'rgba(241, 245, 249, 0.7)';
+    mapCtx.strokeStyle = '#94a3b8'; 
+    mapCtx.lineWidth = 3;
+
+    mapCtx.beginPath();
+    mapCtx.rect(50, 80, 700, 480);
+    mapCtx.fill();
+    mapCtx.stroke();
+
+    mapCtx.beginPath();
+    mapCtx.moveTo(320, 80);
+    mapCtx.lineTo(320, 260);
+    mapCtx.lineTo(520, 260);
+    mapCtx.lineTo(520, 80);
+
+    mapCtx.moveTo(180, 440);
+    mapCtx.lineTo(400, 440);
+    mapCtx.lineTo(400, 560);
+    
+    mapCtx.moveTo(640, 380);
+    mapCtx.lineTo(640, 560);
+    mapCtx.stroke();
+
+    mapCtx.fillStyle = '#64748b';
+    mapCtx.fillRect(310, 250, 20, 20);
+    mapCtx.fillRect(510, 250, 20, 20);
+    mapCtx.fillRect(390, 430, 20, 20);
+}
+
+function drawBlockedArea(area) {
+    if (area.points.length === 0) return;
+    const isHovered = (hoveredArea === area);
+    
+    mapCtx.fillStyle = isHovered ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.06)';
+    mapCtx.strokeStyle = isHovered ? '#f87171' : 'rgba(239, 68, 68, 0.5)';
+    mapCtx.lineWidth = 1.5;
+
+    mapCtx.beginPath();
+    mapCtx.moveTo(area.points[0].x, area.points[0].y);
+    for (let i = 1; i < area.points.length; i++) {
+        mapCtx.lineTo(area.points[i].x, area.points[i].y);
+    }
+    mapCtx.closePath();
+    mapCtx.fill();
+    mapCtx.stroke();
+
+    area.points.forEach((p, idx) => {
+        const isVertexHovered = (isHovered && hoveredVertexIndex === idx);
+        mapCtx.fillStyle = isVertexHovered ? '#ef4444' : 'rgba(239, 68, 68, 0.8)';
+        mapCtx.beginPath();
+        mapCtx.arc(p.x, p.y, isVertexHovered ? 6 : 4, 0, Math.PI * 2);
+        mapCtx.fill();
+        mapCtx.strokeStyle = '#ffffff';
+        mapCtx.lineWidth = 1;
+        mapCtx.stroke();
+    });
+
+    let cx = 0, cy = 0;
+    area.points.forEach(p => { cx += p.x; cy += p.y; });
+    cx /= area.points.length;
+    cy /= area.points.length;
+
+    mapCtx.fillStyle = '#dc2626';
+    mapCtx.font = 'bold 9px "Noto Sans KR"';
+    mapCtx.textAlign = 'center';
+    mapCtx.textBaseline = 'middle';
+    mapCtx.fillText(area.name, cx, cy);
+}
+
+function drawActiveSketchedPolygon() {
+    mapCtx.strokeStyle = 'rgba(217, 119, 6, 0.8)';
+    mapCtx.fillStyle = 'rgba(217, 119, 6, 0.05)';
+    mapCtx.lineWidth = 2;
+
+    mapCtx.beginPath();
+    mapCtx.moveTo(drawnPolygonPoints[0].x, drawnPolygonPoints[0].y);
+    for (let i = 1; i < drawnPolygonPoints.length; i++) {
+        mapCtx.lineTo(drawnPolygonPoints[i].x, drawnPolygonPoints[i].y);
+    }
+    mapCtx.stroke();
+
+    drawnPolygonPoints.forEach(p => {
+        mapCtx.beginPath();
+        mapCtx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        mapCtx.fillStyle = '#d97706';
+        mapCtx.fill();
+    });
+}
+
+function drawWaypointConnections(robot) {
+    const activeWaypoints = robot.waypoints.filter(w => !w.isChargingStation);
+    if (activeWaypoints.length < 2) return;
+    
+    mapCtx.strokeStyle = 'rgba(37, 99, 235, 0.15)';
+    mapCtx.lineWidth = 1.2;
+    mapCtx.setLineDash([3, 3]);
+
+    const sorted = [...activeWaypoints].sort((a,b) => a.order - b.order);
+    mapCtx.beginPath();
+    mapCtx.moveTo(sorted[0].x, sorted[0].y);
+    for (let i = 1; i < sorted.length; i++) {
+        mapCtx.lineTo(sorted[i].x, sorted[i].y);
+    }
+    mapCtx.stroke();
+    mapCtx.setLineDash([]);
+}
+
+function drawActiveBypassRoute() {
+    const r = robotData.robot1;
+    mapCtx.strokeStyle = 'rgba(14, 165, 233, 0.5)';
+    mapCtx.lineWidth = 2;
+    mapCtx.setLineDash([4, 4]);
+    
+    mapCtx.beginPath();
+    mapCtx.moveTo(r.robotPos.x, r.robotPos.y);
+    for (let i = activePatrolPathIndex; i < activePatrolPath.length; i++) {
+        mapCtx.lineTo(activePatrolPath[i].x, activePatrolPath[i].y);
+    }
+    mapCtx.stroke();
+    mapCtx.setLineDash([]);
+}
+
+function drawR2Route() {
+    const r2 = robotData.robot2;
+    mapCtx.strokeStyle = 'rgba(168, 85, 247, 0.5)';
+    mapCtx.lineWidth = 2;
+    mapCtx.setLineDash([4, 4]);
+    
+    mapCtx.beginPath();
+    mapCtx.moveTo(r2.robotPos.x, r2.robotPos.y);
+    for (let i = r2PathIndex; i < r2Path.length; i++) {
+        mapCtx.lineTo(r2Path[i].x, r2Path[i].y);
+    }
+    mapCtx.stroke();
+    mapCtx.setLineDash([]);
+}
+
+function drawWaypointPin(wp) {
+    const isFocused = wp.id === activeNodeId;
+    let pinColor = '#94a3b8'; 
+    let ringColor = 'rgba(148, 163, 184, 0.2)';
+    
+    if (wp.isChargingStation) {
+        pinColor = '#f59e0b'; // Gold/Amber for charging station
+        ringColor = 'rgba(245, 158, 11, 0.25)';
+    } else if (wp.status === '작동중') {
+        pinColor = '#2563eb';
+        ringColor = 'rgba(37, 99, 235, 0.25)';
+    } else if (wp.status === '스캔 완료') {
+        pinColor = '#059669';
+        ringColor = 'rgba(5, 150, 105, 0.25)';
+    } else if (wp.status === '점검 요망') {
+        pinColor = '#d97706';
+        ringColor = 'rgba(217, 119, 6, 0.25)';
+    }
+
+    if (isFocused) {
+        mapCtx.fillStyle = ringColor;
+        mapCtx.beginPath();
+        mapCtx.arc(wp.x, wp.y, 14, 0, Math.PI * 2);
+        mapCtx.fill();
+    }
+
+    mapCtx.fillStyle = pinColor;
+    mapCtx.beginPath();
+    mapCtx.arc(wp.x, wp.y, 7, 0, Math.PI * 2);
+    mapCtx.fill();
+    
+    mapCtx.strokeStyle = '#ffffff';
+    mapCtx.lineWidth = 1.5;
+    mapCtx.stroke();
+
+    mapCtx.fillStyle = '#ffffff';
+    mapCtx.textAlign = 'center';
+    mapCtx.textBaseline = 'middle';
+    mapCtx.font = 'bold 8px Inter';
+    if (wp.isChargingStation) {
+        mapCtx.fillText('⚡', wp.x, wp.y);
+    } else {
+        mapCtx.fillText(wp.order, wp.x, wp.y);
+    }
+
+    mapCtx.fillStyle = '#475569';
+    mapCtx.font = 'bold 9px "Noto Sans KR"';
+    mapCtx.textAlign = 'center';
+    mapCtx.fillText(wp.name, wp.x, wp.y + 14);
+}
+
+function drawStandbyBaseMarker() {
+    // Standby station visualizer for Robot 2
+    mapCtx.strokeStyle = 'rgba(168, 85, 247, 0.35)';
+    mapCtx.lineWidth = 1.5;
+    mapCtx.setLineDash([2, 4]);
+    mapCtx.beginPath();
+    mapCtx.arc(r2StandbyPos.x, r2StandbyPos.y, 18, 0, Math.PI*2);
+    mapCtx.stroke();
+    mapCtx.setLineDash([]);
+
+    mapCtx.fillStyle = 'rgba(168, 85, 247, 0.05)';
+    mapCtx.beginPath();
+    mapCtx.arc(r2StandbyPos.x, r2StandbyPos.y, 18, 0, Math.PI*2);
+    mapCtx.fill();
+
+    mapCtx.fillStyle = '#7c3aed';
+    mapCtx.font = '8px "Noto Sans KR"';
+    mapCtx.textAlign = 'center';
+    mapCtx.fillText('Gen.G 대기구역', r2StandbyPos.x, r2StandbyPos.y - 22);
+}
+
+// Draw dynamic elements generated by scenarios (🔥, 👤, 🔊, 💎)
+function drawScenarioMarkers() {
+    if (currentScenario === 'fire' && activeIncidentPoint) {
+        mapCtx.shadowColor = '#f97316';
+        mapCtx.shadowBlur = 10;
+        mapCtx.fillStyle = '#ef4444';
+        mapCtx.font = '22px Inter';
+        mapCtx.textAlign = 'center';
+        mapCtx.textBaseline = 'middle';
+        mapCtx.fillText('🔥', activeIncidentPoint.x, activeIncidentPoint.y);
+        mapCtx.shadowBlur = 0;
+    }
+    
+    if (currentScenario === 'intruder' && activeIncidentPoint) {
+        mapCtx.shadowColor = '#4b5563';
+        mapCtx.shadowBlur = 10;
+        mapCtx.font = '22px Inter';
+        mapCtx.textAlign = 'center';
+        mapCtx.textBaseline = 'middle';
+        mapCtx.fillText('👤', activeIncidentPoint.x, activeIncidentPoint.y);
+        mapCtx.shadowBlur = 0;
+    }
+
+    if (currentScenario === 'sound' && activeIncidentPoint) {
+        mapCtx.shadowColor = '#06b6d4';
+        mapCtx.shadowBlur = 10;
+        mapCtx.font = '22px Inter';
+        mapCtx.textAlign = 'center';
+        mapCtx.textBaseline = 'middle';
+        mapCtx.fillText('🔊', activeIncidentPoint.x, activeIncidentPoint.y);
+        mapCtx.shadowBlur = 0;
+    }
+
+    // Always draw Important Item (💎) if it exists
+    if (importantItemExist) {
+        mapCtx.shadowColor = '#3b82f6';
+        mapCtx.shadowBlur = 6;
+        mapCtx.font = '18px Inter';
+        mapCtx.textAlign = 'center';
+        mapCtx.textBaseline = 'middle';
+        mapCtx.fillText('💎', importantItemPos.x, importantItemPos.y);
+        mapCtx.shadowBlur = 0;
+
+        mapCtx.fillStyle = '#2563eb';
+        mapCtx.font = 'bold 8px "Noto Sans KR"';
+        mapCtx.fillText('중요 미술품', importantItemPos.x, importantItemPos.y - 14);
+    }
+}
+
+function drawRobotMarker(robot, themeColor, defaultName) {
+    const pos = robot.robotPos;
+    const name = robot.name || defaultName;
+
+    // Pulse sweep
+    const sizeOffset = Math.sin(Date.now() / 150) * 1.5;
+    mapCtx.fillStyle = themeColor + '20';
+    mapCtx.beginPath();
+    mapCtx.arc(pos.x, pos.y, 14 + sizeOffset, 0, Math.PI * 2);
+    mapCtx.fill();
+
+    mapCtx.fillStyle = '#ffffff';
+    mapCtx.strokeStyle = themeColor;
+    mapCtx.lineWidth = 2.5;
+    mapCtx.beginPath();
+    mapCtx.arc(pos.x, pos.y, 8, 0, Math.PI * 2);
+    mapCtx.fill();
+    mapCtx.stroke();
+
+    mapCtx.fillStyle = themeColor;
+    mapCtx.beginPath();
+    mapCtx.arc(pos.x, pos.y, 3.5, 0, Math.PI * 2);
+    mapCtx.fill();
+
+    // Robot Name overlay tag
+    mapCtx.fillStyle = '#1e293b';
+    mapCtx.font = 'bold 9px Inter';
+    mapCtx.textAlign = 'center';
+    mapCtx.fillText(name, pos.x, pos.y - 12);
+}
+
+function initEventListeners() {
+    window.addEventListener('keydown', function(e) {
+        const r = robotData.robot1;
+        if (r.isAutoMode) return; 
+        
+        const key = e.key.toLowerCase();
+        if (key === 'arrowup' || key === 'w') { e.preventDefault(); manualMove('up'); }
+        if (key === 'arrowdown' || key === 's') { e.preventDefault(); manualMove('down'); }
+        if (key === 'arrowleft' || key === 'a') { e.preventDefault(); manualMove('left'); }
+        if (key === 'arrowright' || key === 'd') { e.preventDefault(); manualMove('right'); }
+    });
+
+    mapCanvas.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        const rect = mapCanvas.getBoundingClientRect();
+        const clientX = e.clientX - rect.left;
+        const clientY = e.clientY - rect.top;
+        const canvasX = (clientX - mapPan.x) / currentZoom;
+        const canvasY = (clientY - mapPan.y) / currentZoom;
+
+        if (canvasX < 50 || canvasX > 750 || canvasY < 80 || canvasY > 560) {
+            addLog('system', 'WARN', '도면 영역 외곽에는 웨이포인트를 배치할 수 없습니다.');
+            return;
+        }
+
+        const r = robotData.robot1;
+        const nextId = r.waypoints.length > 0 ? Math.max(...r.waypoints.map(w => w.id)) + 1 : 1;
+        const nextOrder = r.waypoints.length > 0 ? Math.max(...r.waypoints.map(w => w.order)) + 1 : 1;
+        
+        const newWaypoint = {
+            id: nextId,
+            name: `신규지점 ${nextId}`,
+            x: Math.round(canvasX),
+            y: Math.round(canvasY),
+            type: '특정 좌표',
+            order: nextOrder,
+            status: '대기중',
+            isChargingStation: false
+        };
+
+        r.waypoints.push(newWaypoint);
+        addLog('map', 'INFO', `새 거점 등록 완료 : [${newWaypoint.name}]`);
+        
+        if (isPatrolling) {
+            computePatrolPathToTarget();
+        }
+        updateWaypointList();
+        renderAll();
+    });
+
+    mapCanvas.addEventListener('mousedown', function(e) {
+        if (e.button === 2) return; 
+
+        const rect = mapCanvas.getBoundingClientRect();
+        const clientX = e.clientX - rect.left;
+        const clientY = e.clientY - rect.top;
+        const canvasX = (clientX - mapPan.x) / currentZoom;
+        const canvasY = (clientY - mapPan.y) / currentZoom;
+
+        const r = robotData.robot1;
+        let vertexGrabbed = false;
+
+        for (let i = 0; i < r.blockedAreas.length; i++) {
+            const area = r.blockedAreas[i];
+            for (let j = 0; j < area.points.length; j++) {
+                const pt = area.points[j];
+                const dist = Math.hypot(pt.x - canvasX, pt.y - canvasY);
+                if (dist < 8) {
+                    draggedArea = area;
+                    draggedVertexIndex = j;
+                    vertexGrabbed = true;
+                    break;
+                }
+            }
+            if (vertexGrabbed) break;
+        }
+
+        if (vertexGrabbed) return;
+
+        let clickedNode = null;
+        r.waypoints.forEach(wp => {
+            const dist = Math.hypot(wp.x - canvasX, wp.y - canvasY);
+            if (dist < 12) clickedNode = wp;
+        });
+
+        if (clickedNode) {
+            openCoordinateModal(clickedNode, e.clientX, e.clientY);
+            activeNodeId = clickedNode.id;
+            renderAll();
+            return;
+        }
+
+        if (drawMode === 'draw') {
+            drawnPolygonPoints.push({ x: Math.round(canvasX), y: Math.round(canvasY) });
+            renderAll();
+            return;
+        }
+
+        isPanning = true;
+        startPan = { x: clientX - mapPan.x, y: clientY - mapPan.y }; 
+    });
+
+    mapCanvas.addEventListener('mousemove', function(e) {
+        const rect = mapCanvas.getBoundingClientRect();
+        const clientX = e.clientX - rect.left;
+        const clientY = e.clientY - rect.top;
+        const canvasX = (clientX - mapPan.x) / currentZoom;
+        const canvasY = (clientY - mapPan.y) / currentZoom;
+
+        if (draggedArea && draggedVertexIndex !== -1) {
+            draggedArea.points[draggedVertexIndex] = { x: Math.round(canvasX), y: Math.round(canvasY) };
+            if (isPatrolling) computePatrolPathToTarget();
+            renderAll();
+            return;
+        }
+
+        const r = robotData.robot1;
+        let foundHover = false;
+        hoveredArea = null;
+        hoveredVertexIndex = -1;
+
+        for (let i = 0; i < r.blockedAreas.length; i++) {
+            const area = r.blockedAreas[i];
+            for (let j = 0; j < area.points.length; j++) {
+                const pt = area.points[j];
+                const dist = Math.hypot(pt.x - canvasX, pt.y - canvasY);
+                if (dist < 8) {
+                    hoveredArea = area;
+                    hoveredVertexIndex = j;
+                    foundHover = true;
+                    mapCanvas.style.cursor = 'move';
+                    break;
+                }
+            }
+            if (foundHover) break;
+        }
+
+        if (!foundHover) {
+            mapCanvas.style.cursor = isPanning ? 'grabbing' : 'grab';
+        }
+
+        if (isPanning) {
+            mapPan.x = clientX - startPan.x;
+            mapPan.y = clientY - startPan.y;
+            renderAll();
+        }
+    });
+
+    window.addEventListener('mouseup', function() {
+        if (draggedArea) {
+            addLog('map', 'INFO', `차단 격벽 물리 다각형 스케치 형상 변경 완료.`);
+        }
+        isPanning = false;
+        draggedArea = null;
+        draggedVertexIndex = -1;
+        mapCanvas.style.cursor = 'grab';
+    });
+
+    mapCanvas.addEventListener('dblclick', function(e) {
+        if (drawMode === 'draw' && drawnPolygonPoints.length >= 3) {
+            const r = robotData.robot1;
+            const nextIdx = r.blockedAreas.length + 1;
+            const newArea = {
+                id: 100 + nextIdx,
+                name: `차단 영역 ${String.fromCharCode(65 + r.blockedAreas.length)}`,
+                points: [...drawnPolygonPoints]
+            };
+            r.blockedAreas.push(newArea);
+            drawnPolygonPoints = [];
+            drawMode = 'idle';
+            setDrawMode('idle');
+            addLog('map', 'INFO', `안전 통행 제어구역 [${newArea.name}] 강제 차단막 바인딩.`);
+            renderAll();
+        }
+    });
+
+    mapCanvas.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        const rect = mapCanvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const canvasX = (mouseX - mapPan.x) / currentZoom;
+        const canvasY = (mouseY - mapPan.y) / currentZoom;
+
+        const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
+        let newZoom = currentZoom * zoomFactor;
+        newZoom = Math.max(0.4, Math.min(newZoom, 4.0)); 
+
+        mapPan.x = mouseX - canvasX * newZoom;
+        mapPan.y = mouseY - canvasY * newZoom;
+        currentZoom = newZoom;
+
+        renderAll();
+    }, { passive: false });
+}
+
+function openCoordinateModal(node, screenX, screenY) {
+    const modal = document.getElementById('coordinate-modal');
+    modal.style.display = 'block';
+    
+    const rect = mapCanvas.getBoundingClientRect();
+    let leftPos = screenX - rect.left + 15;
+    let topPos = screenY - rect.top - 60;
+    
+    if (leftPos + 220 > rect.width) leftPos = rect.width - 240;
+    if (topPos + 200 > rect.height) topPos = rect.height - 220;
+
+    modal.style.left = `${leftPos}px`;
+    modal.style.top = `${topPos}px`;
+
+    document.getElementById('modal-node-name').value = node.name;
+    document.getElementById('modal-node-order').value = node.order;
+    document.getElementById('modal-node-status').value = node.status || '대기중';
+    
+    modalIsCharger = !!node.isChargingStation;
+    const btn = document.getElementById('modal-node-charger');
+    const dot = btn.querySelector('span');
+    if (modalIsCharger) {
+        btn.className = "relative inline-flex h-5 w-9 items-center rounded-full bg-blue-600 transition-colors focus:outline-none";
+        dot.className = "inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform translate-x-4";
+    } else {
+        btn.className = "relative inline-flex h-5 w-9 items-center rounded-full bg-slate-300 transition-colors focus:outline-none";
+        dot.className = "inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform translate-x-1";
+    }
+
+    modal.setAttribute('data-target-id', node.id);
+}
+
+function toggleModalCharger() {
+    modalIsCharger = !modalIsCharger;
+    const btn = document.getElementById('modal-node-charger');
+    const dot = btn.querySelector('span');
+    if (modalIsCharger) {
+        btn.classList.replace('bg-slate-300', 'bg-blue-600');
+        dot.classList.replace('translate-x-1', 'translate-x-4');
+    } else {
+        btn.classList.replace('bg-blue-600', 'bg-slate-300');
+        dot.classList.replace('translate-x-4', 'translate-x-1');
+    }
+}
+
+function closeCoordinateModal() {
+    document.getElementById('coordinate-modal').style.display = 'none';
+    activeNodeId = null;
+    renderAll();
+}
+
+function saveSelectedNode() {
+    const modal = document.getElementById('coordinate-modal');
+    const id = parseInt(modal.getAttribute('data-target-id'));
+    const r = robotData.robot1;
+    const wp = r.waypoints.find(w => w.id === id);
+    if (wp) {
+        wp.name = document.getElementById('modal-node-name').value;
+        wp.order = parseInt(document.getElementById('modal-node-order').value);
+        wp.status = document.getElementById('modal-node-status').value;
+        wp.isChargingStation = modalIsCharger;
+        
+        // Re-order remaining active waypoints to keep order sequential
+        const activeWps = r.waypoints.filter(w => !w.isChargingStation).sort((a, b) => a.order - b.order);
+        activeWps.forEach((w, idx) => {
+            w.order = idx + 1;
+        });
+        
+        addLog('map', 'INFO', `경로점 제원 갱신: [${wp.name}] (우선순위: ${wp.order}, 충전소 여부: ${wp.isChargingStation})`);
+        if (isPatrolling) {
+            computePatrolPathToTarget();
+        }
+        updateWaypointList();
+        renderAll();
+    }
+    closeCoordinateModal();
+}
+
+function deleteSelectedNode() {
+    const modal = document.getElementById('coordinate-modal');
+    const id = parseInt(modal.getAttribute('data-target-id'));
+    const r = robotData.robot1;
+    
+    r.waypoints = r.waypoints.filter(w => w.id !== id);
+    r.waypoints.sort((a,b) => a.order - b.order).forEach((w, idx) => w.order = idx + 1);
+    
+    addLog('map', 'WARN', `순회 노드 파기.`);
+    if (isPatrolling) {
+        computePatrolPathToTarget();
+    }
+    updateWaypointList();
+    renderAll();
+    closeCoordinateModal();
+}
+
+function addPresetWaypoint(name, x, y) {
+    const r = robotData.robot1;
+    if (isLocationBlocked(x, y)) {
+        addLog('system', 'WARN', `'${name}' 은 차단막/벽 내부로 생성이 보류되었습니다.`);
+        return;
+    }
+
+    const nextId = r.waypoints.length > 0 ? Math.max(...r.waypoints.map(w => w.id)) + 1 : 1;
+    const nextOrder = r.waypoints.length > 0 ? Math.max(...r.waypoints.map(w => w.order)) + 1 : 1;
+    
+    const newWaypoint = {
+        id: nextId,
+        name: name,
+        x: x,
+        y: y,
+        type: '특정 좌표',
+        order: nextOrder,
+        status: '대기중',
+        isChargingStation: false
+    };
+
+    r.waypoints.push(newWaypoint);
+    addLog('map', 'INFO', `순회 프리셋 추가: [${newWaypoint.name}]`);
+    if (isPatrolling) computePatrolPathToTarget();
+    updateWaypointList();
+    renderAll();
+}
+
+function toggleCameraFeed() {
+    const r = getActiveRobot();
+    r.cameraOn = !r.cameraOn;
+    updateCameraUI(r);
+}
+
+function updateCameraUI(robot) {
+    const stream = document.getElementById('camera-stream');
+    const offlineOverlay = document.getElementById('camera-offline-overlay');
+    const toggleBtn = document.getElementById('btn-camera-toggle');
+    const pingIndicator = document.getElementById('camera-ping-indicator');
+    
+    if (robot.cameraOn) {
+        stream.style.display = 'block';
+        if (offlineOverlay) offlineOverlay.classList.add('hidden');
+        toggleBtn.innerText = 'FEED ON';
+        toggleBtn.className = "bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[9px] px-1.5 py-0.5 rounded font-bold transition-all shadow-sm";
+        pingIndicator.className = "inline-block w-1.5 h-1.5 bg-red-500 rounded-full animate-ping";
+    } else {
+        stream.style.display = 'none';
+        if (offlineOverlay) offlineOverlay.classList.remove('hidden');
+        toggleBtn.innerText = 'FEED OFF';
+        toggleBtn.className = "bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[9px] px-1.5 py-0.5 rounded font-bold transition-all shadow-sm";
+        pingIndicator.className = "inline-block w-1.5 h-1.5 bg-slate-400 rounded-full";
+    }
+}
+
+// Auto Patrol Sequence for Robot 1 / T1
+function togglePatrol() {
+    const r = robotData.robot1;
+    if (!r.features.autodrive) {
+        addLog('patrol', 'ERROR', 'T1의 자율 주행 스위치가 비활성 상태입니다.');
+        return;
+    }
+    
+    const sorted = [...r.waypoints].filter(w => !w.isChargingStation);
+    if (sorted.length === 0) {
+        addLog('patrol', 'ERROR', 'T1을 기동하기 위한 순회 경로점이 부재합니다.');
+        return;
+    }
+
+    if (isPatrolling) {
+        isPatrolling = false;
+        document.getElementById('patrol-text').innerText = "순회 재개";
+        document.getElementById('btn-patrol-start').classList.replace('bg-amber-600', 'bg-blue-600');
+        addLog('control', 'WARN', '순찰이 유예 정지되었습니다.');
+    } else {
+        isPatrolling = true;
+        document.getElementById('patrol-text').innerText = "순회 일시정지";
+        document.getElementById('btn-patrol-start').classList.add('bg-amber-600');
+        addLog('control', 'INFO', 'T1 자율 영역 복도 패트롤 구동.');
+        computePatrolPathToTarget();
+    }
+}
+
+function stopPatrol() {
+    isPatrolling = false;
+    isScanningAnimation = false;
+    isAvoidanceRouteActive = false;
+    isRobotClipping = false;
+    isHeadingToCharge = false;
+    isCharging = false;
+    document.getElementById('avoidance-badge').classList.add('hidden');
+    
+    patrolWaypointIndex = 0;
+    activePatrolPath = [];
+    activePatrolPathIndex = 0;
+    
+    const r = robotData.robot1;
+    const sorted = [...r.waypoints].filter(w => !w.isChargingStation).sort((a,b) => a.order - b.order);
+    if (sorted.length > 0) {
+        r.robotPos = { x: sorted[0].x, y: sorted[0].y };
+    }
+    
+    document.getElementById('patrol-text').innerText = "순회 시작";
+    document.getElementById('btn-patrol-start').className = "w-full flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-colors shadow-sm";
+    renderAll();
+}
+
+// Low battery trigger simulator helper (Useful for prompt testers)
+function forceBatteryLow() {
+    robotData.robot1.battery = 30;
+    updateBatteryLevel();
+    addLog('control', 'WARN', '수동 인가: T1 배터리가 30%로 강제 조정되었습니다.');
+}
+
+// -----------------------------------------------------------------
+// DUAL ROBOT SYSTEM & SCENARIOS STATE MACHINE
+// -----------------------------------------------------------------
+function animateLoop() {
+    // Constant system loop timers
+    scenarioTimer++;
+
+    const r1 = robotData.robot1;
+    const r2 = robotData.robot2;
+
+    // A. Keep dynamic header status indicators always synchronized
+    updateStatusBadges();
+
+    // B. Check T1 battery status for automated charging trigger
+    if (r1.battery <= 30 && !isHeadingToCharge && !isCharging) {
+        const charger = r1.waypoints.find(w => w.isChargingStation);
+        if (charger) {
+            isHeadingToCharge = true;
+            addLog('charge', 'WARN', `T1 배터리 부족 (${r1.battery}%). 순환 패트롤을 중단하고 충전소(${charger.name}) 복귀를 시작합니다.`);
+            
+            // Calculate best path to charging station
+            if (r1.features.avoidance) {
+                activePatrolPath = findPathAStar(r1.robotPos, charger);
+            } else {
+                activePatrolPath = [r1.robotPos, charger];
+            }
+            activePatrolPathIndex = 0;
+        }
+    }
+
+    // C. Move Robot 1 (T1) during charge heading state
+    if (isHeadingToCharge) {
+        if (activePatrolPathIndex < activePatrolPath.length) {
+            const nextSubTarget = activePatrolPath[activePatrolPathIndex];
+            const dx = nextSubTarget.x - r1.robotPos.x;
+            const dy = nextSubTarget.y - r1.robotPos.y;
+            const distance = Math.hypot(dx, dy);
+
+            if (distance < 4) {
+                activePatrolPathIndex++;
+                if (activePatrolPathIndex >= activePatrolPath.length) {
+                    // T1 Arrived at Charging Dock!
+                    isHeadingToCharge = false;
+                    isCharging = true;
+                    r1.robotPos = { x: nextSubTarget.x, y: nextSubTarget.y };
+                    addLog('charge', 'INFO', 'T1이 충전 포트에 안착 도킹 완료하였습니다. 전력 충전을 개시합니다.');
+                    
+                    // Trigger Robot 2 (Gen.G) patrol takeover!
+                    isR2Patrolling = true;
+                    r2PatrolWaypointIndex = patrolWaypointIndex; // Start patrolling where T1 left off
+                    
+                    const activeWps = r1.waypoints.filter(w => !w.isChargingStation).sort((a,b) => a.order - b.order);
+                    if (activeWps.length > 0) {
+                        const targetNode = activeWps[r2PatrolWaypointIndex % activeWps.length];
+                        computeR2PathTo(targetNode);
+                        addLog('charge', 'WARN', `Gen.G가 T1의 순회 감찰을 교대 대행 수임합니다. (대체 시작: [${targetNode.name}])`);
+                    }
+                }
+            } else {
+                r1.robotPos.x += (dx / distance) * patrolSpeed;
+                r1.robotPos.y += (dy / distance) * patrolSpeed;
+            }
+        }
+    }
+
+    // 1. Move Robot 2 (Gen.G) if it has a pending path (Always check globally!)
+    if (r2Path.length > 0 && r2PathIndex < r2Path.length) {
+        moveR2TowardTarget();
+    }
+
+    // 1-1. Run Automated Patrol takeover for Gen.G if T1 is charging
+    if (isR2Patrolling) {
+        const activeWps = r1.waypoints.filter(w => !w.isChargingStation).sort((a,b) => a.order - b.order);
+        if (activeWps.length > 0) {
+            if (isScanningAnimation) {
+                scanAngle += 0.08;
+                scanTimer++;
+                if (scanTimer >= 180) { // ~3 seconds scan
+                    isScanningAnimation = false;
+                    activeWps[r2PatrolWaypointIndex].status = '스캔 완료';
+                    updateWaypointList();
+                    r2PatrolWaypointIndex = (r2PatrolWaypointIndex + 1) % activeWps.length;
+                    const nextTarget = activeWps[r2PatrolWaypointIndex];
+                    computeR2PathTo(nextTarget);
+                }
+            } else {
+                if (r2Path.length === 0 || r2PathIndex >= r2Path.length) {
+                    // Check if 360-degree LiDAR scanning mode is toggled for backup patrolling
+                    if (isScanModeActive && r2.features.scan360) {
+                        isScanningAnimation = true;
+                        scanAngle = 0;
+                        scanTimer = 0;
+                    } else {
+                        r2PatrolWaypointIndex = (r2PatrolWaypointIndex + 1) % activeWps.length;
+                        const nextTarget = activeWps[r2PatrolWaypointIndex];
+                        computeR2PathTo(nextTarget);
+                        addLog('patrol', 'INFO', `Gen.G 교대 순찰 피드: [${nextTarget.name}] 거점 접근 주행.`);
+                    }
+                }
+            }
+        }
+    }
+
+    // 2. SCENARIO 1: FIRE SCENARIO STEP ENGINE
+    if (currentScenario === 'fire') {
+        if (scenarioStep === 1) {
+            // Step 1: Gen.G dispatching to Fire Point
+            const distToFire = Math.hypot(activeIncidentPoint.x - r2.robotPos.x, activeIncidentPoint.y - r2.robotPos.y);
+            if (distToFire < 5) {
+                // Arrived at fire. Initiate scanning
+                scenarioStep = 2;
+                scenarioTimer = 0;
+                addLog('incident', 'WARN', `Gen.G가 발화점에 도달했습니다. Lidar 3D 가열 영역 스캔 실시...`);
+            }
+        } else if (scenarioStep === 2) {
+            // Step 2: Lidar thermal scanning (Simulate scanning animation around r2)
+            isScanningAnimation = true;
+            scanAngle += 0.12;
+            if (scenarioTimer > 150) { // ~2.5 seconds
+                isScanningAnimation = false;
+                
+                // Scenario Outcome: Fire incident found
+                scenarioStep = 3;
+                
+                // Change Camera Stream to simulated Fire Capture from unsplash
+                document.getElementById('camera-stream').src = 'https://images.unsplash.com/photo-1516496636080-14fb876e029d?auto=format&fit=crop&w=600&q=80'; // Fire scene
+                document.getElementById('camera-hud-target').classList.remove('hidden');
+                document.getElementById('camera-hud-target').innerText = '🔥 FIRE DETECTED';
+                
+                // Alert popup
+                triggerScenarioAlert('FIRE DETECTED IN ARCHIVE', 'A구역 아카이브룸 화재 가스 검출', 'Gen.G가 360° 스캔 결과, 아카이브 격벽 근방에서 급속 열화 감지 및 고화온 분사 소화 명령이 하달되었습니다. 소화 분사 후 소방 통제가 요청되었습니다.');
+                addLog('incident', 'ERROR', `[CRITICAL] Gen.G 스캔 완료: 아카이브룸 화재 확산 검지! 비상 열 소화 스프링클러 긴급 연계.`);
+            }
+        }
+    }
+
+    // 3. SCENARIO 2: INTRUDER STEP ENGINE
+    else if (currentScenario === 'intruder') {
+        if (scenarioStep === 1) {
+            // T1 is patrolling normally. We monitor when T1 gets relatively close to intruder point
+            const distT1ToIntruder = Math.hypot(activeIncidentPoint.x - r1.robotPos.x, activeIncidentPoint.y - r1.robotPos.y);
+            if (distT1ToIntruder < 100 && isPatrolling) {
+                // T1 spots the intruder! Dispatch Gen.G
+                scenarioStep = 2;
+                addLog('incident', 'WARN', `T1이 B복도에서 미등록 미확인 거동자를 포착했습니다! Gen.G 지원 요청 송출.`);
+                addLog('incident', 'INFO', `Gen.G 대기 구역 해제, 현장 출동 지시 수신.`);
+                computeR2PathTo(activeIncidentPoint);
+            }
+        } else if (scenarioStep === 2) {
+            // T1 tracks / circles intruder, Gen.G rushes over
+            const dx = activeIncidentPoint.x - r1.robotPos.x;
+            const dy = activeIncidentPoint.y - r1.robotPos.y;
+            const distToI = Math.hypot(dx, dy);
+            if (distToI > 40) {
+                r1.robotPos.x += (dx / distToI) * 0.4;
+                r1.robotPos.y += (dy / distToI) * 0.4;
+            }
+
+            // Check if Gen.G has arrived
+            const distGenGToTarget = Math.hypot(activeIncidentPoint.x - r2.robotPos.x, activeIncidentPoint.y - r2.robotPos.y);
+            if (distGenGToTarget < 35) {
+                // Gen.G arrived. Handover step! T1 resumes patrol, Gen.G neutralizes
+                scenarioStep = 3;
+                scenarioTimer = 0;
+                addLog('incident', 'INFO', `Gen.G 현장 진입. T1은 수색 임무를 인계하고 기존 기지 자율 순찰로 복귀합니다.`);
+                computePatrolPathToTarget(); // Force T1 recalculate back to normal
+            }
+        } else if (scenarioStep === 3) {
+            // Gen.G circles the intruder closely to neutralize
+            const dx = activeIncidentPoint.x - r2.robotPos.x;
+            const dy = activeIncidentPoint.y - r2.robotPos.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist > 8) {
+                r2.robotPos.x += (dx / dist) * 1.5;
+                r2.robotPos.y += (dy / dist) * 1.5;
+            }
+
+            if (scenarioTimer > 120) { // After 2 seconds, neutralization complete
+                scenarioStep = 4;
+                // Camera screen change: security grab
+                document.getElementById('camera-stream').src = 'https://images.unsplash.com/photo-1557597774-9d2739f85a94?auto=format&fit=crop&w=600&q=80'; // CCTV suspect secured
+                document.getElementById('camera-hud-target').classList.remove('hidden');
+                document.getElementById('camera-hud-target').innerText = '👤 INTRUDER SECURED';
+
+                triggerScenarioAlert('INTRUDER SECURED BY Gen.G', '침입자 제압 및 인계 대기 중', '종합관제실 통보: Gen.G 스마트 테이저 범퍼와 사이렌 위협 사격을 통해 침입 미확인자를 회의실 구석에서 완전 차단 및 구금 제압 완료하였습니다.');
+                addLog('incident', 'INFO', `Gen.G: 거동 수상자 완벽 구속 완료. 경비팀 현장 인계 대기.`);
+            }
+        }
+    }
+
+    // 4. SCENARIO 3: SOUND ANOMALY STEP ENGINE
+    else if (currentScenario === 'sound') {
+        if (scenarioStep === 1) {
+            // Gen.G travels to anomalous sound site
+            const distToSound = Math.hypot(activeIncidentPoint.x - r2.robotPos.x, activeIncidentPoint.y - r2.robotPos.y);
+            if (distToSound < 5) {
+                scenarioStep = 2;
+                scenarioTimer = 0;
+                addLog('incident', 'WARN', `Gen.G 소음감지 포인트 진입. 미소 진동 및 주파수 역추적 스캔 작동...`);
+            }
+        } else if (scenarioStep === 2) {
+            isScanningAnimation = true;
+            scanAngle += 0.15;
+            if (scenarioTimer > 150) {
+                isScanningAnimation = false;
+                scenarioStep = 3;
+
+                // Display sound waveform / camera stream
+                document.getElementById('camera-stream').src = 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&w=600&q=80'; // server rack anomaly
+                document.getElementById('camera-hud-target').classList.remove('hidden');
+                document.getElementById('camera-hud-target').innerText = '🔊 ANOMALY ACOUSTIC';
+
+                triggerScenarioAlert('ACOUSTIC ANOMALY LOCATED', '서버룸 배기팬 기계 결함 소음 검출', 'Gen.G 고지향성 마이크로폰 분석 결과: 서버실 배기팬 가속 볼트 이탈로 인한 92dB 수준의 마찰 기계 파형이 식별되었습니다. 정비 팀 배치가 요청됩니다.');
+                addLog('incident', 'WARN', `[장치 분석 완료] 서버실 송풍기 하우징 공진 소음 감지. 이상 데시벨 기록 완료.`);
+            }
+        }
+    }
+
+    // 5. SCENARIO 4: THEFT STEP ENGINE
+    else if (currentScenario === 'theft') {
+        if (scenarioStep === 1) {
+            // T1 is patrolling. Once T1 gets within a threshold of the artwork, theft event triggers
+            const distT1ToItem = Math.hypot(importantItemPos.x - r1.robotPos.x, importantItemPos.y - r1.robotPos.y);
+            if (distT1ToItem < 90 && isPatrolling) {
+                importantItemExist = false; // Poof! Item is stolen!
+                scenarioStep = 2;
+                scenarioTimer = 0;
+                
+                // T1 enters TURBO mode instantly, sound alarm, flash red
+                isTurboActive = true;
+                patrolSpeed = 2.0;
+                document.getElementById('btn-turbo-mode').className = "py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all bg-orange-500 border-transparent text-white shadow-sm hover:bg-orange-600";
+                
+                // Gen.G is dispatched to the theft scene
+                computeR2PathTo(importantItemPos);
+
+                triggerScenarioAlert('💎 CRITICAL THEFT DETECTED', '국가 중요 소장품 유실 인지', '보안 레벨 등급 SSS급 미술품 탈루 경보 발효! T1 순회 분석기에서 감지된 시각적 특징 벡터의 불일치가 감지되어 가속 전 구역 봉쇄 격자 수색을 가동하며, 대기 중인 Gen.G가 진원지로 초고속 진입합니다.');
+                addLog('incident', 'ERROR', `[EMERGENCY] 중요 보존품 도난 발생! T1 초고속 가속 서치 모드로 전환합니다.`);
+                addLog('incident', 'INFO', `Gen.G가 미술품 도난 좌표로 자동 협업 급습 수색을 개시합니다.`);
+            }
+        } else if (scenarioStep === 2) {
+            // Gen.G travels to theft location to inspect
+            const distR2ToTheft = Math.hypot(importantItemPos.x - r2.robotPos.x, importantItemPos.y - r2.robotPos.y);
+            if (distR2ToTheft < 10) {
+                scenarioStep = 3;
+                scenarioTimer = 0;
+                addLog('incident', 'WARN', `Gen.G가 도난 구역에 도달하여 미세 잔존 분말 스펙트럼 분석 수색을 시작합니다.`);
+            }
+        } else if (scenarioStep === 3) {
+            isScanningAnimation = true;
+            scanAngle += 0.22; // High-speed scan rotation
+            if (scenarioTimer > 180) {
+                isScanningAnimation = false;
+                addLog('incident', 'INFO', `Gen.G 합동 현장 증거 보존 마감. 종합관제소 경찰 인계용 보안 로그 확보.`);
+                scenarioStep = 4;
+            }
+        }
+    }
+
+    // 6. Move Robot 1 (T1) if patrolling is active and not heading to charge/docked
+    if (isPatrolling && !isHeadingToCharge && !isCharging) {
+        let blockNormalR1Movement = false;
+        if (currentScenario === 'intruder' && scenarioStep === 2) {
+            blockNormalR1Movement = true; // R1 is locked tracking the suspect
+        }
+
+        if (!blockNormalR1Movement) {
+            if (isScanningAnimation) {
+                scanAngle += 0.08;
+                scanTimer++;
+                if (scanTimer >= 180) { // ~3 seconds
+                    isScanningAnimation = false;
+                    const sorted = [...r1.waypoints].filter(w => !w.isChargingStation).sort((a,b) => a.order - b.order);
+                    sorted[patrolWaypointIndex].status = '스캔 완료';
+                    updateWaypointList();
+                    patrolWaypointIndex = (patrolWaypointIndex + 1) % sorted.length;
+                    computePatrolPathToTarget();
+                }
+            } else {
+                if (activePatrolPath.length === 0 || activePatrolPathIndex >= activePatrolPath.length) {
+                    computePatrolPathToTarget();
+                }
+
+                const nextSubTarget = activePatrolPath[activePatrolPathIndex];
+                if (nextSubTarget) {
+                    const dx = nextSubTarget.x - r1.robotPos.x;
+                    const dy = nextSubTarget.y - r1.robotPos.y;
+                    const distance = Math.hypot(dx, dy);
+
+                    if (distance < 4) {
+                        activePatrolPathIndex++;
+                        if (activePatrolPathIndex >= activePatrolPath.length) {
+                            const sorted = [...r1.waypoints].filter(w => !w.isChargingStation).sort((a,b) => a.order - b.order);
+                            addLog('patrol', 'INFO', `T1이 [${sorted[patrolWaypointIndex].name}] 순회 감찰을 완수했습니다.`);
+                            
+                            if (isScanModeActive && r1.features.scan360) {
+                                isScanningAnimation = true;
+                                scanAngle = 0;
+                                scanTimer = 0;
+                            } else {
+                                patrolWaypointIndex = (patrolWaypointIndex + 1) % sorted.length;
+                                computePatrolPathToTarget();
+                            }
+                        }
+                    } else {
+                        r1.robotPos.x += (dx / distance) * patrolSpeed;
+                        r1.robotPos.y += (dy / distance) * patrolSpeed;
+                    }
+                }
+            }
+        }
+    }
+
+    renderAll();
+    patrolAnimationId = requestAnimationFrame(animateLoop);
+}
+
+// Global live header badge manager
+function updateStatusBadges() {
+    const t1Badge = document.getElementById('t1-status-badge');
+    const r2Badge = document.getElementById('r2-status-badge');
+    
+    if (!t1Badge || !r2Badge) return;
+    
+    // T1 Status Display
+    if (isCharging) {
+        t1Badge.innerText = `T1: 충전 중 (⚡ ${robotData.robot1.battery}%)`;
+        t1Badge.className = "bg-amber-100 border border-amber-300 text-amber-700 px-1.5 py-0.5 rounded font-bold animate-pulse";
+    } else if (isHeadingToCharge) {
+        t1Badge.innerText = "T1: 충전 복귀 중";
+        t1Badge.className = "bg-indigo-100 border border-indigo-300 text-indigo-700 px-1.5 py-0.5 rounded font-bold";
+    } else if (isPatrolling) {
+        t1Badge.innerText = "T1: 자동순회 중";
+        t1Badge.className = "bg-blue-100 border border-blue-300 text-blue-700 px-1.5 py-0.5 rounded font-semibold";
+    } else {
+        t1Badge.innerText = "T1: 순회 정지";
+        t1Badge.className = "bg-slate-100 border border-slate-300 text-slate-500 px-1.5 py-0.5 rounded font-semibold";
+    }
+
+    // Gen.G Status Display
+    if (isR2Patrolling) {
+        r2Badge.innerText = "Gen.G: 대체 순찰 중 (⚠️)";
+        r2Badge.className = "bg-purple-100 border border-purple-300 text-purple-700 px-1.5 py-0.5 rounded font-bold animate-pulse";
+    } else if (currentScenario !== 'idle') {
+        r2Badge.innerText = "Gen.G: 시나리오 수색";
+        r2Badge.className = "bg-rose-100 border border-rose-300 text-rose-700 px-1.5 py-0.5 rounded font-bold animate-bounce";
+    } else {
+        r2Badge.innerText = "Gen.G: 대기구역 대기";
+        r2Badge.className = "bg-orange-100 border border-orange-300 text-orange-700 px-1.5 py-0.5 rounded font-semibold";
+    }
+}
+
+// Sub helper for Gen.G path execution
+function moveR2TowardTarget() {
+    const r2 = robotData.robot2;
+    if (r2Path.length === 0 || r2PathIndex >= r2Path.length) return;
+    
+    const nextNode = r2Path[r2PathIndex];
+    if (!nextNode) return;
+
+    const dx = nextNode.x - r2.robotPos.x;
+    const dy = nextNode.y - r2.robotPos.y;
+    const distance = Math.hypot(dx, dy);
+
+    if (distance < 4) {
+        r2PathIndex++;
+    } else {
+        r2.robotPos.x += (dx / distance) * r2Speed;
+        r2.robotPos.y += (dy / distance) * r2Speed;
+    }
+}
+
+// -----------------------------------------------------------------
+// SCENARIO TEST TRIGGER LOGICS
+// -----------------------------------------------------------------
+function triggerScenario(type) {
+    resetScenarios(); // clear any previous
+    currentScenario = type;
+    scenarioStep = 1;
+    scenarioTimer = 0;
+    
+    const r1 = robotData.robot1;
+    const r2 = robotData.robot2;
+
+    addLog('system', 'WARN', `[시뮬레이터] '${type}' 시나리오 원격 패키지가 로드되었습니다.`);
+
+    // Make sure patrol is running
+    if (!isPatrolling) {
+        togglePatrol();
+    }
+
+    if (type === 'fire') {
+        activeIncidentPoint = { x: 620, y: 380 };
+        addLog('incident', 'ERROR', `[S1 경보] 창고동 2구역 연감지 화재 이상 펄스 전송.`);
+        computeR2PathTo(activeIncidentPoint);
+    } 
+    
+    else if (type === 'intruder') {
+        activeIncidentPoint = { x: 300, y: 220 };
+        addLog('incident', 'ERROR', `[S2 경보] 내부 침입자 적외선 초소 감지망 트리거.`);
+    } 
+    
+    else if (type === 'sound') {
+        activeIncidentPoint = { x: 550, y: 220 };
+        addLog('incident', 'ERROR', `[S3 경보] 회의실/서버실 방향 92dB 이상의 초지향 충격음 탐지.`);
+        computeR2PathTo(activeIncidentPoint);
+    } 
+    
+    else if (type === 'theft') {
+        importantItemExist = true;
+        addLog('incident', 'WARN', `[S4 대기] 중요 보호 유산 주변 수색 준비 완료.`);
+    }
+
+    renderAll();
+}
+
+function resetScenarios() {
+    currentScenario = 'idle';
+    scenarioStep = 0;
+    scenarioTimer = 0;
+    activeIncidentPoint = null;
+    importantItemExist = true;
+
+    // Reset speeds and modes
+    isTurboActive = false;
+    patrolSpeed = 0.95;
+    document.getElementById('btn-turbo-mode').className = "py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200";
+
+    // Stop alert popups
+    dismissEmergencyAlert();
+
+    // Reset cameras and badges
+    document.getElementById('camera-stream').src = robotData.robot1.cameraUrl;
+    document.getElementById('camera-hud-target').classList.add('hidden');
+
+    // Return Gen.G back to standby base ONLY IF NOT taking over T1's patrol!
+    if (!isR2Patrolling) {
+        computeR2PathTo(r2StandbyPos);
+    }
+
+    addLog('system', 'INFO', '모든 관제 시나리오가 비활성화 되었으며 복구 절차가 자동 인가되었습니다.');
+    renderAll();
+}
+
+function triggerScenarioAlert(title, subtitle, desc) {
+    alertActive = true;
+    alertMuted = false;
+    
+    // Customize popup text
+    document.getElementById('alert-title').innerText = title;
+    document.getElementById('alert-subtitle').innerText = subtitle;
+    document.getElementById('alert-desc').innerText = desc;
+    
+    // Change icon to warning style
+    document.getElementById('danger-icon-container').innerHTML = `
+        <svg class="w-8 h-8 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+        </svg>
+    `;
+    
+    document.getElementById('danger-alert-popup').style.display = 'flex';
+    startAudioSiren();
+}
+
+// -----------------------------------------------------------------
+// ORIGINAL CORE LOGICS KEEP SAFE
+// -----------------------------------------------------------------
+function setDrawMode(mode) {
+    drawMode = mode;
+    const btnDraw = document.getElementById('btn-draw-mode');
+
+    if (mode === 'draw') {
+        btnDraw.className = "py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all bg-amber-500 border border-amber-200 text-amber-800 hover:bg-amber-100";
+        addLog('map', 'INFO', '동적 다각형 차단막 스케치 시작 (더블 클릭 마감)');
+    } else if (mode === 'delete') {
+        const r = robotData.robot1;
+        if (r.blockedAreas.length > 0) {
+            const popped = r.blockedAreas.pop();
+            addLog('map', 'WARN', `차단 격벽 [${popped.name}] 정밀 해지.`);
+            if (isPatrolling) computePatrolPathToTarget();
+            renderAll();
+        }
+        drawMode = 'idle';
+        setTimeout(() => {
+            btnDraw.className = "py-1.5 px-2 rounded-lg text-[11px] font-semibold transition-all bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100";
+        }, 300);
+    }
+}
+
+function resetMapTransforms() {
+    currentZoom = 1.0;
+    mapPan = { x: 0, y: 0 };
+    renderAll();
+}
+
+function updateSensors() {
+    const r = robotData.robot1;
+    r.sound = Math.max(30, Math.min(110, r.sound + Math.floor(Math.random() * 7) - 3));
+    r.lux = Math.max(100, Math.min(950, r.lux + Math.floor(Math.random() * 11) - 5));
+    
+    if (r.features.gassensor) {
+        r.gas = Math.max(10, Math.min(100, r.gas + Math.floor(Math.random() * 5) - 2));
+        document.getElementById('txt-gas').innerText = r.gas;
+        if (r.gas > 75 && !alertActive && !alertMuted) {
+            triggerEmergencyAlert();
+        }
+        sparklineHistory.gas.push(r.gas);
+    } else {
+        sparklineHistory.gas.push(0);
+    }
+
+    document.getElementById('txt-sound').innerText = r.sound;
+    document.getElementById('txt-lux').innerText = r.lux;
+
+    sparklineHistory.gas.shift();
+    sparklineHistory.sound.push(r.sound);
+    sparklineHistory.sound.shift();
+    sparklineHistory.lux.push(r.lux);
+    sparklineHistory.lux.shift();
+
+    drawSparkline('chart-gas', sparklineHistory.gas, r.features.gassensor ? '#f59e0b' : '#cbd5e1');
+    drawSparkline('chart-sound', sparklineHistory.sound, '#06b6d4');
+    drawSparkline('chart-lux', sparklineHistory.lux, '#f97316');
+}
+
+function drawSparkline(canvasId, data, strokeColor) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    if (data.length === 0) return;
+
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = 1.25;
+    ctx.beginPath();
+
+    const max = Math.max(...data) * 1.1;
+    const min = Math.min(...data) * 0.9;
+    const range = max - min || 1;
+    const stepX = canvas.width / (data.length - 1);
+    
+    data.forEach((val, idx) => {
+        const x = idx * stepX;
+        const y = canvas.height - ((val - min) / range) * (canvas.height - 4) - 2;
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.lineTo(0, canvas.height);
+    ctx.closePath();
+    
+    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    grad.addColorStop(0, strokeColor + '15');
+    grad.addColorStop(1, strokeColor + '00');
+    ctx.fillStyle = grad;
+    ctx.fill();
+}
+
+function updateBatteryLevel() {
+    const r1 = robotData.robot1;
+    
+    if (isCharging) {
+        // Fast recharge rate for smooth simulation demonstration (e.g. +10% per tick)
+        r1.battery = Math.min(100, r1.battery + 10);
+        if (r1.battery >= 100) {
+            isCharging = false;
+            isR2Patrolling = false;
+            addLog('charge', 'INFO', 'T1 급속 전력 보완 완료 (100%). 순환 복도 패트롤로 전원 복귀 지시 및 Gen.G 대기 모드 해제.');
+            
+            // Return Gen.G back to its dedicated standby station
+            computeR2PathTo(r2StandbyPos);
+            
+            // Resume T1 normal patrol
+            if (isPatrolling) {
+                computePatrolPathToTarget();
+            }
+        }
+    } else if (isPatrolling && !isHeadingToCharge) {
+        // Normal depletion on duty (1% decrease)
+        r1.battery = Math.max(0, r1.battery - 1);
+    }
+    
+    if (r1.battery < 25 && !isHeadingToCharge && !isCharging) {
+        addLog('system', 'WARN', `T1 배터리 경고 (${r1.battery}%). 자율 복귀가 요청됩니다.`);
+    }
+
+    document.getElementById('txt-battery-percent').innerText = `${r1.battery}%`;
+    document.getElementById('bar-battery-fill').style.width = `${r1.battery}%`;
+
+    const barFill = document.getElementById('bar-battery-fill');
+    if (r1.battery < 20) {
+        barFill.className = "bg-rose-500 h-full transition-all duration-1000";
+    } else if (r1.battery < 50) {
+        barFill.className = "bg-amber-500 h-full transition-all duration-1000";
+    } else {
+        barFill.className = "bg-emerald-500 h-full transition-all duration-1000";
+    }
+}
+
+function updateWaypointList() {
+    const queue = document.getElementById('waypoint-queue');
+    queue.innerHTML = '';
+
+    const r = robotData.robot1;
+    const sorted = [...r.waypoints].filter(w => !w.isChargingStation).sort((a,b) => a.order - b.order);
+
+    sorted.forEach((wp) => {
+        const row = document.createElement('div');
+        row.className = `flex items-center justify-between p-2 rounded-lg text-[10px] font-medium hover:border-slate-300 transition-all bg-slate-50 border border-slate-200`;
+        
+        let badgeStyle = "bg-slate-200 text-slate-500 border border-slate-300/40";
+        if (wp.status === '작동중') {
+            badgeStyle = "bg-blue-50 text-blue-700 border border-blue-200";
+        } else if (wp.status === '스캔 완료') {
+            badgeStyle = "bg-emerald-50 text-emerald-700 border border-emerald-200";
+        } else if (wp.status === '점검 요망') {
+            badgeStyle = "bg-amber-50 text-amber-700 border border-amber-200";
+        }
+
+        row.innerHTML = `
+            <div class="flex items-center space-x-2 truncate">
+                <span class="inline-flex items-center justify-center w-4 h-4 rounded bg-slate-200 text-slate-700 font-bold font-mono text-[9px]">${wp.order}</span>
+                <span class="text-slate-700 truncate font-semibold">${wp.name}</span>
+            </div>
+            <div class="flex items-center space-x-1.5 shrink-0">
+                <span class="px-1.5 py-0.5 rounded text-[8px] font-semibold ${badgeStyle}">${wp.status || '대기중'}</span>
+                <button onclick="editWaypoint(${wp.id})" class="p-0.5 rounded text-slate-400 hover:text-slate-800 hover:bg-slate-200">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
+                </button>
+            </div>
+        `;
+        queue.appendChild(row);
+    });
+}
+
+function editWaypoint(id) {
+    const r = robotData.robot1;
+    const wp = r.waypoints.find(w => w.id === id);
+    if (wp) {
+        openCoordinateModal(wp, window.innerWidth / 2 - 100, window.innerHeight / 2 - 100);
+    }
+}
+
+function resetWaypoints() {
+    const r = robotData.robot1;
+    r.waypoints = [
+        { id: 1, name: '출입구', x: 120, y: 150, type: '특정 좌표', order: 1, status: '대기중', isChargingStation: false },
+        { id: 2, name: '복도 1', x: 300, y: 220, type: '특정 좌표', order: 2, status: '대기중', isChargingStation: false },
+        { id: 3, name: '회의실', x: 550, y: 220, type: '특정 좌표', order: 3, status: '대기중', isChargingStation: false },
+        { id: 4, name: '창고', x: 620, y: 380, type: '특정 좌표', order: 4, status: '대기중', isChargingStation: false },
+        { id: 5, name: '사무실', x: 260, y: 475, type: '특정 좌표', order: 5, status: '대기중', isChargingStation: false },
+        { id: 99, name: 'T1 충전소', x: 100, y: 110, type: '충전소', order: 6, status: '대기중', isChargingStation: true }
+    ];
+    addLog('system', 'INFO', '지도 경로점 전체 리셋 단행.');
+    if (isPatrolling) computePatrolPathToTarget();
+    updateWaypointList();
+    renderAll();
+}
+
+function startAudioSiren() {
+    try {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        let freqToggle = false;
+        sirenInterval = setInterval(() => {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freqToggle ? 880 : 440, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.25);
+            freqToggle = !freqToggle;
+        }, 400);
+    } catch(err) {
+        console.warn("Audio Context error ignored.");
+    }
+}
+
+function stopAudioSiren() {
+    if (sirenInterval) {
+        clearInterval(sirenInterval);
+        sirenInterval = null;
+    }
+}
+
+function triggerEmergencyAlert() {
+    alertActive = true;
+    alertMuted = false;
+    document.getElementById('alert-title').innerText = "DANGER LEVEL BREACHED";
+    document.getElementById('alert-subtitle').innerText = "긴급 대기 위험농도 초과";
+    document.getElementById('alert-desc').innerHTML = `관제실 속보: T1 안전 관리 모듈에서 임계 기준치(75 ppm)를 초과하는 위험 가스를 포착했습니다. 현장 진입을 제한하고 환기 시스템 강제 개방 명령을 수행합니다.`;
+    document.getElementById('danger-alert-popup').style.display = 'flex';
+    addLog('system', 'ERROR', '유독 가스 누설 센서 경보 전송!');
+    startAudioSiren();
+}
+
+function dismissEmergencyAlert() {
+    alertActive = false;
+    alertMuted = true;
+    document.getElementById('danger-alert-popup').style.display = 'none';
+    addLog('system', 'WARN', '수동 알람 음소거 적용.');
+    stopAudioSiren();
+}
+
+function addLog(category, level, message) {
+    const consoleEl = document.getElementById('log-console');
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    
+    let levelColor = 'text-blue-600';
+    if (level === 'WARN') levelColor = 'text-amber-600 font-bold';
+    if (level === 'ERROR') levelColor = 'text-rose-600 font-bold';
+
+    const logRow = document.createElement('div');
+    logRow.className = "flex items-start space-x-1.5 leading-relaxed pb-0.5 border-b border-slate-100 text-[10px]";
+    logRow.innerHTML = `
+        <span class="text-slate-400 font-mono shrink-0">${timeStr}</span>
+        <span class="text-slate-500 font-semibold shrink-0">[${category.toUpperCase()}]</span>
+        <span class="${levelColor} shrink-0">${level}</span>
+        <span class="text-slate-700 truncate">${message}</span>
+    `;
+
+    consoleEl.appendChild(logRow);
+    consoleEl.scrollTop = consoleEl.scrollHeight;
+}
+
+function clearLogs() {
+    document.getElementById('log-console').innerHTML = '';
+}
+
+function exportLogs() {
+    const logs = Array.from(document.getElementById('log-console').children).map(el => el.innerText).join('\n');
+    const blob = new Blob([logs], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `incident_security_export_${Date.now()}.txt`;
+    a.click();
+    addLog('system', 'INFO', '관제 로그 정밀 내역 다운로드 처리.');
+}
+
+function toggleFullscreen() {
+    const container = document.getElementById('app-container');
+    if (!document.fullscreenElement) {
+        container.requestFullscreen().catch(err => {
+            addLog('system', 'ERROR', `전체화면 에러: ${err.message}`);
+        });
+    } else {
+        document.exitFullscreen();
+    }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!-- CameraAndLogPanel.uxml — 중앙 하단 행: 카메라 패널(40%) + 이벤트 로그(60%). -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="../ControlRoomTokens.uss" />
+    <Style src="../ControlRoomStyle.uss" />
+    <ui:VisualElement name="camera-log-row" class="camera-log-row">
+        <ui:VisualElement name="camera-panel" class="camera-panel">
+            <ui:VisualElement class="camera-header">
+                <ui:Label text="카메라 (선택 로봇)" class="camera-label" />
+                <ui:VisualElement class="camera-live-dot" />
+            </ui:VisualElement>
+            <ui:Image name="camera-image" class="camera-image-placeholder">
+                <ui:VisualElement class="camera-crosshair-v" />
+                <ui:VisualElement class="camera-crosshair-h" />
+                <ui:Label name="camera-placeholder-text" text="RGB feed — Phase 2.7 ROS 연결 대기" class="camera-placeholder-text" />
+            </ui:Image>
+            <ui:Label name="camera-hz" text="-- Hz" class="camera-hz" />
+        </ui:VisualElement>
+        <ui:ScrollView name="log-panel" class="log-panel">
+            <ui:Label text="이벤트 로그" class="card-title" />
+            <ui:VisualElement name="log-list">
+                <ui:Label text="[00:00:01] 시스템 부팅 완료" class="log-entry" />
+                <ui:Label text="[00:00:02] 시나리오 로드: 박물관 정상 운영" class="log-entry" />
+                <ui:Label text="[00:00:03] 센서 4종 활성 (가스/소음/조도/PIR)" class="log-entry" />
+            </ui:VisualElement>
+        </ui:ScrollView>
+    </ui:VisualElement>
+</ui:UXML>

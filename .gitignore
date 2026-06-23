@@ -1,0 +1,133 @@
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Supabase CLI cache (link 명령이 생성)
+supabase/.temp/
+supabase/.branches/
+
+# Supabase 클라이언트 설정 (anon 키 분리 정책 — example만 커밋)
+unity/ControlRoom/Assets/Resources/SupabaseConfig/supabase.json
+unity/ControlRoom/Assets/Resources/SupabaseConfig/supabase.json.meta
+
+# Node / Python / Cache
+.pytest_cache/
+.venv/
+node_modules/
+dist/
+build/
+tmp/
+coverage/
+htmlcov/
+
+# Obsidian local workspace
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+
+# Unity (unity-src/ 추가 시 활성)
+unity-src/Library/
+unity-src/Temp/
+unity-src/Obj/
+unity-src/Build/
+unity-src/Builds/
+unity-src/Logs/
+unity-src/UserSettings/
+unity-src/MemoryCaptures/
+unity-src/*.csproj
+unity-src/*.sln
+unity-src/*.unityproj
+unity-src/*.suo
+unity-src/*.user
+
+# Unity ControlRoom (실 위치)
+unity/ControlRoom/Library/
+unity/ControlRoom/Temp/
+unity/ControlRoom/Obj/
+unity/ControlRoom/Build/
+unity/ControlRoom/Builds/
+unity/ControlRoom/Logs/
+unity/ControlRoom/UserSettings/
+unity/ControlRoom/MemoryCaptures/
+unity/ControlRoom/Assets/_Recovery/
+unity/ControlRoom/*.csproj
+unity/ControlRoom/*.sln
+
+# Unity 산출물이 루트에 잘못 생성된 경우 방지 (2026-06-08 incident)
+/Library/
+/Logs/
+/Packages/
+/ProjectSettings/
+/UserSettings/
+/Temp/
+/Obj/
+
+# Claude Code 런타임 락
+.claude/scheduled_tasks.lock
+
+# ROS / Python builds
+__pycache__/
+*.py[cod]
+ros-ws/build/
+ros-ws/install/
+ros-ws/log/
+
+# Local YOLO datasets / training artifacts
+datasets/
+runs/
+*.pt
+
+# Secrets / Env
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+auth.json
+
+# Evidence / Assets (대용량은 LFS 또는 별도 저장)
+docs/evidence/**/*.mp4
+docs/evidence/**/*.mov
+docs/evidence/**/*.zip
+docs/assets/**/*.psd
+docs/assets/**/*.ai
+
+# Playwright / Test artifacts
+.playwright-mcp/
+qa-screenshots/
+test-results/
+playwright-report/
+
+# --- 신규 repo(ros2-ai-amr-repo2) 경량화 (2026-06-23) ---
+# 구버전 Unity 프로젝트 (60M prefab 등 — 신규 repo 제외 결정)
+unity-src/
+
+# 영상 녹화물은 어디에 있든 추적 금지 (LFS/별도 저장)
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.h264
+*.h265
+
+# 모델 가중치 (이미 *.pt 있음 — 추가 포맷)
+*.onnx
+*.engine
+*.pth
+*.weights
+
+# 루트에 떨어진 참고 PDF (다운로드 자료)
+/*.pdf
+
+# git 히스토리 백업 (추적 금지)
+.git.bak*/
+
+# evidence 이미지는 repo에 불필요 (로컬만 유지)
+docs/evidence/**/*.png
+docs/evidence/**/*.jpg
+docs/evidence/**/*.jpeg
+docs/evidence/**/*.gif
+docs/evidence/**/*.webp
+docs/evidence/**/*.bmp
+docs/evidence/**/*.h264

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- wiring.svg — AS0025 사운드(DO->D3) + DS18B20 온도(D8) 결선 시각화 -->
+<!-- 색: 빨강=5V, 검정=GND, 노랑=DATA->D8, 초록=DO->D3, 보라=4.7k 풀업 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="640" font-family="-apple-system, Helvetica, Arial, sans-serif">
+  <rect width="1000" height="640" fill="#fafafa"/>
+  <text x="500" y="38" font-size="26" font-weight="700" text-anchor="middle" fill="#222">URHYNIX 배선도 · 사운드(D3) + DS18B20(D8)</text>
+  <text x="500" y="62" font-size="14" text-anchor="middle" fill="#777">색깔 = 빨강:5V · 검정:GND · 노랑:DATA→D8 · 초록:DO→D3 · 보라:4.7kΩ 풀업</text>
+
+  <!-- ===== Arduino UNO ===== -->
+  <rect x="60" y="120" width="220" height="380" rx="12" fill="#00879c" stroke="#005e6b" stroke-width="3"/>
+  <text x="170" y="150" font-size="18" font-weight="700" text-anchor="middle" fill="#fff">Arduino UNO</text>
+  <text x="170" y="172" font-size="12" text-anchor="middle" fill="#cdeef3">/dev/cu.usbmodem11101</text>
+
+  <!-- USB -->
+  <rect x="20" y="195" width="42" height="50" rx="4" fill="#888"/>
+  <text x="41" y="225" font-size="11" text-anchor="middle" fill="#fff" transform="rotate(-90 41 225)">USB</text>
+
+  <!-- Arduino pins (right edge) -->
+  <!-- 5V -->
+  <circle cx="280" cy="220" r="8" fill="#e23b3b" stroke="#fff" stroke-width="2"/>
+  <text x="262" y="225" font-size="14" font-weight="700" text-anchor="end" fill="#fff">5V</text>
+  <!-- GND -->
+  <circle cx="280" cy="280" r="8" fill="#222" stroke="#fff" stroke-width="2"/>
+  <text x="262" y="285" font-size="14" font-weight="700" text-anchor="end" fill="#fff">GND</text>
+  <!-- D3 -->
+  <circle cx="280" cy="360" r="8" fill="#2faf5a" stroke="#fff" stroke-width="2"/>
+  <text x="262" y="365" font-size="14" font-weight="700" text-anchor="end" fill="#fff">D3</text>
+  <!-- D8 -->
+  <circle cx="280" cy="430" r="8" fill="#e6b800" stroke="#fff" stroke-width="2"/>
+  <text x="262" y="435" font-size="14" font-weight="700" text-anchor="end" fill="#fff">D8</text>
+
+  <!-- ===== Power rails ===== -->
+  <rect x="430" y="120" width="14" height="400" fill="#e23b3b"/>
+  <text x="437" y="535" font-size="13" font-weight="700" text-anchor="middle" fill="#e23b3b">+5V 레일</text>
+  <rect x="470" y="120" width="14" height="400" fill="#222"/>
+  <text x="477" y="555" font-size="13" font-weight="700" text-anchor="middle" fill="#222">GND 레일</text>
+
+  <!-- 5V Arduino -> red rail -->
+  <path d="M288,220 L437,220" stroke="#e23b3b" stroke-width="4" fill="none"/>
+  <!-- GND Arduino -> black rail -->
+  <path d="M288,280 L477,280" stroke="#222" stroke-width="4" fill="none"/>
+
+  <!-- ===== DS18B20 ===== -->
+  <rect x="640" y="120" width="300" height="170" rx="10" fill="#fff" stroke="#00879c" stroke-width="3"/>
+  <text x="790" y="148" font-size="18" font-weight="700" text-anchor="middle" fill="#00879c">DS18B20 (온도)</text>
+  <!-- pins -->
+  <circle cx="660" cy="190" r="7" fill="#e23b3b"/><text x="675" y="195" font-size="14" fill="#333">VCC / + / V</text>
+  <circle cx="660" cy="225" r="7" fill="#e6b800"/><text x="675" y="230" font-size="14" fill="#333">DATA / S / DQ</text>
+  <circle cx="660" cy="260" r="7" fill="#222"/><text x="675" y="265" font-size="14" fill="#333">GND / − / G</text>
+  <!-- pullup note -->
+  <rect x="755" y="178" width="170" height="46" rx="6" fill="#f3eafc" stroke="#8e44ad" stroke-width="1.5"/>
+  <text x="840" y="197" font-size="12" font-weight="700" text-anchor="middle" fill="#8e44ad">베어센서면 4.7kΩ</text>
+  <text x="840" y="214" font-size="12" text-anchor="middle" fill="#8e44ad">DATA ↔ 5V 사이</text>
+
+  <!-- DS18B20 wires -->
+  <path d="M444,190 L660,190" stroke="#e23b3b" stroke-width="4" fill="none"/>            <!-- VCC -> red rail -->
+  <path d="M484,260 L520,260 L520,260 L660,260" stroke="#222" stroke-width="4" fill="none"/> <!-- GND -> black rail -->
+  <!-- DATA -> D8 (yellow), route around -->
+  <path d="M660,225 L560,225 L560,430 L288,430" stroke="#e6b800" stroke-width="4" fill="none"/>
+  <!-- pullup (purple) DATA->red rail -->
+  <path d="M755,201 L730,201 L730,170 L444,170 L444,200" stroke="#8e44ad" stroke-width="3" stroke-dasharray="6 4" fill="none"/>
+
+  <!-- ===== Sound AS0025 ===== -->
+  <rect x="640" y="340" width="300" height="170" rx="10" fill="#fff" stroke="#2faf5a" stroke-width="3"/>
+  <text x="790" y="368" font-size="18" font-weight="700" text-anchor="middle" fill="#2faf5a">AS0025 (사운드)</text>
+  <circle cx="660" cy="408" r="7" fill="#2faf5a"/><text x="675" y="413" font-size="14" fill="#333">DO / D0 / OUT</text>
+  <circle cx="660" cy="443" r="7" fill="#e23b3b"/><text x="675" y="448" font-size="14" fill="#333">+ / VCC</text>
+  <circle cx="660" cy="478" r="7" fill="#222"/><text x="675" y="483" font-size="14" fill="#333">G / − / GND</text>
+  <text x="675" y="503" font-size="12" fill="#aaa">AO 핀은 꽂지 않음</text>
+
+  <!-- Sound wires -->
+  <path d="M660,443 L600,443 L600,300 L444,300 L444,220" stroke="#e23b3b" stroke-width="4" fill="none"/>  <!-- VCC -> red rail -->
+  <path d="M660,478 L484,478" stroke="#222" stroke-width="4" fill="none"/>                                   <!-- GND -> black rail -->
+  <path d="M660,408 L540,408 L540,360 L288,360" stroke="#2faf5a" stroke-width="4" fill="none"/>             <!-- DO -> D3 -->
+
+  <!-- ===== Legend / checklist ===== -->
+  <rect x="60" y="540" width="880" height="80" rx="10" fill="#fff" stroke="#ddd" stroke-width="2"/>
+  <text x="78" y="565" font-size="14" font-weight="700" fill="#333">체크리스트</text>
+  <text x="78" y="588" font-size="13" fill="#444">① 두 모듈 VCC=빨강레일, GND=검정레일 (극성 절대 바뀌면 안 됨 → DS18B20 −127/발열)</text>
+  <text x="78" y="608" font-size="13" fill="#444">② DATA(노랑)=D8 · 사운드 DO(초록)=D3 · 베어센서면 4.7kΩ(보라) DATA↔5V · USB 꽂고 "ㄱ"</text>
+</svg>

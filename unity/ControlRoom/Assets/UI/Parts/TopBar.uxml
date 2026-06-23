@@ -1,0 +1,16 @@
+<!-- TopBar.uxml — 상단바: 로고 + 로봇 탭(티원/젠지) + 시계 + 경보 카운트 + 전원. -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="../ControlRoomTokens.uss" />
+    <Style src="../ControlRoomStyle.uss" />
+    <ui:VisualElement name="top-bar" class="top-bar">
+        <ui:Label name="logo-label" text="URHYNIX 관제실" class="logo" />
+        <ui:VisualElement class="robot-tabs">
+            <ui:Button name="tab-tb3_1" text="티원" class="robot-tab active" />
+            <ui:Button name="tab-tb3_2" text="젠지" class="robot-tab" />
+        </ui:VisualElement>
+        <ui:VisualElement class="spacer" />
+        <ui:Label name="clock-label" text="00:00:00" class="clock" />
+        <ui:Label name="alert-count-label" text="경보 0" class="alert-count" />
+        <ui:Button name="btn-power" text="전원" class="btn-power" />
+    </ui:VisualElement>
+</ui:UXML>

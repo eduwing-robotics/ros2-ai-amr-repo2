@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".codex/hooks/post-edit-reminder.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

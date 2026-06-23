@@ -1,0 +1,43 @@
+<!-- LeftControlPanel.uxml — 좌측 230px 제어 패널: 시나리오 4개 + 모드 + 순회 + 특수 모드 토글. -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="../ControlRoomTokens.uss" />
+    <Style src="../ControlRoomStyle.uss" />
+    <ui:ScrollView name="left-panel" class="left-panel">
+        <ui:VisualElement class="card">
+            <ui:Label text="위험상황 테스트" class="card-title" />
+            <ui:Button name="btn-scenario-fire" text="화재" class="btn-scenario" />
+            <ui:Button name="btn-scenario-intruder" text="침입" class="btn-scenario" />
+            <ui:Button name="btn-scenario-noise" text="소음" class="btn-scenario" />
+            <ui:Button name="btn-scenario-theft" text="도난" class="btn-scenario" />
+        </ui:VisualElement>
+        <ui:VisualElement class="card">
+            <ui:Label text="운영" class="card-title" />
+            <ui:VisualElement class="btn-row">
+                <ui:Button name="btn-mode-auto" text="자동" class="btn-mode active" />
+                <ui:Button name="btn-mode-manual" text="수동" class="btn-mode" />
+            </ui:VisualElement>
+            <ui:VisualElement class="btn-row">
+                <ui:Button name="btn-patrol-start" text="순회 시작" class="btn-action" />
+                <ui:Button name="btn-patrol-stop" text="순회 정지" class="btn-action" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="card">
+            <ui:Label text="특수 모드" class="card-title" />
+            <ui:VisualElement class="toggle-row">
+                <ui:Toggle name="toggle-scan" label="360°" class="feature-toggle" />
+                <ui:Toggle name="toggle-turbo" label="가속" class="feature-toggle" />
+                <ui:Toggle name="toggle-slam" label="SLAM" class="feature-toggle" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="card card-fill">
+            <ui:Label text="순회 지점" class="card-title" />
+            <ui:VisualElement name="waypoint-list" class="waypoint-list">
+                <ui:Button name="wp-1" text="1. 정문 입구" class="btn-waypoint" />
+                <ui:Button name="wp-2" text="2. 중앙 홀" class="btn-waypoint" />
+                <ui:Button name="wp-3" text="3. 작품 A 앞" class="btn-waypoint" />
+                <ui:Button name="wp-4" text="4. 작품 B 앞" class="btn-waypoint" />
+                <ui:Button name="wp-5" text="5. 충전소 복귀" class="btn-waypoint" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:ScrollView>
+</ui:UXML>

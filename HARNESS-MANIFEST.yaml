@@ -1,0 +1,103 @@
+version: 1
+name: URHYNIX
+generated_on: 2026-05-26
+based_on: jason-agent-harness-template@2026-05-15
+github: https://github.com/URHYNIX/URHYNIX.git
+
+project_focus:
+  domain: SK하이닉스 산학협력 MVP — TurtleBot3 자율주행 + Unity 디지털트윈 + 카메라 장애물 인식 + DB 기록
+  jira_project: SCRUM (로봇 2조)
+  excluded_scope:
+    - 로봇팔 (FR5 등)
+    - 픽앤플레이스
+    - 장애물 물리 제거
+  team: 김주영, 김선일, 임현찬, 박태진
+  reference_project: /Users/family/jason/FR5UNITY (원본 절대 수정 금지, 복사본 사용)
+
+entrypoints:
+  primary: AGENTS.md
+  secondary: CLAUDE.md
+  machine_readable: HARNESS-MANIFEST.yaml
+
+precedence:
+  - code-and-runtime-truth
+  - project-root-agents-md-or-claude-md
+  - docs/ref/PRD.md
+  - docs/ref/ARCHITECTURE.md
+  - docs/ref/PROJECT-PLAN.md
+  - docs/status/PROJECT-STATUS.md
+  - docs/status/DECISION-LOG.md
+  - patterns-and-templates
+
+required_files:
+  - AGENTS.md
+  - AGENT.md
+  - CLAUDE.md
+  - HARNESS-MANIFEST.yaml
+  - README.md
+  - docs/ref/PRD.md
+  - docs/ref/PROJECT-PLAN.md
+  - docs/ref/ARCHITECTURE.md
+  - docs/ref/JIRA-MAP.md
+  - docs/status/PROJECT-STATUS.md
+  - docs/status/DECISION-LOG.md
+  - docs/checklists/camera-integration-checklist.md
+  - docs/checklists/demo-validation-checklist.md
+
+portable_assets:
+  - .claude
+  - .codex
+  - .obsidian
+  - templates
+  - scripts
+
+ops_assets:
+  - .claude/settings.json
+  - .claude/automations
+  - .codex/hooks.json
+  - .obsidian/templates.json
+
+doc_buckets:
+  ref: docs/ref          # 변하지 않는 정본 (PRD, ARCH, PLAN, JIRA-MAP)
+  status: docs/status    # 자주 갱신되는 상태/결정 로그
+  checklists: docs/checklists
+  daily: docs/daily      # 일일 작업 로그 (슬랙 요약 소스)
+  evidence: docs/evidence  # 테스트 사진/영상/로그 날짜별
+  assets: docs/assets    # 발표용 캡처/이미지
+
+automations:
+  # 코워크가 이 항목을 읽고 cron/스케줄에 등록한다.
+  # 실제 실행 명세는 .claude/automations/<name>.md 에 있다.
+  - name: daily-recap
+    spec: .claude/automations/daily-recap.md
+    purpose: 그날 작업 내용을 요약해 Slack 채널 C0B5Q43A27R 로 전송
+    status: drafting
+  - name: skill-harvest
+    spec: .claude/automations/skill-harvest.md
+    purpose: Codex 세션 인덱스를 스캔해 반복 패턴을 새 스킬 후보로 추출
+    status: planned
+
+slack:
+  channel_id: C0B5Q43A27R
+  transport: mcp__claude_ai_Slack__slack_send_message
+
+reuse_strategy:
+  unity_codebase:
+    source: /Users/family/jason/FR5UNITY (원본, 절대 수정 금지)
+    target: URHYNIX/unity-src (예정, fork 후 정리)
+    keep:
+      - Assets/Scripts/Visualization/Renderer/RobotRenderer.cs
+      - Assets/Scripts/Visualization/Shared/OrbitCameraController.cs
+      - Assets/Scripts/Visualization/Shared/FrameGizmo.cs
+      - Assets/Runtime/Prefabs/Teaching
+      - Assets/Scripts/UI/RobotControlV3 (TCP 조그 제거)
+    drop:
+      - Assets/Scripts/App/Fairino
+      - Assets/Plugins/Fairino
+      - Assets/Runtime/Robots/FAIRINO_FR5*
+      - Assets/Scripts/Kinematics
+      - Assets/Scripts/UI/RobotControlV3/TcpJogController.cs
+    new:
+      - ROS-TCP 브릿지 (TurtleBot3 pose/scan 토픽)
+      - LiDAR/카메라 시각화 컴포넌트
+      - 장애물 인식 결과 표시 패널

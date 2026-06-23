@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>URHYNIX — 디지털트윈경비로봇 컨펌 보고</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep:   #0A1726;
+    --bg-panel:  #122236;
+    --bg-elev:   #182B43;
+    --border:    #1E3A56;
+    --border-soft: rgba(91,208,232,0.18);
+    --text:      #EAF6FF;
+    --muted:     #8FA8C2;
+    --dim:       #5B7A99;
+    --cyan:      #5BD0E8;
+    --sky:       #7CC4F2;
+    --mint:      #62E3A3;
+    --ice:       #C8EEF8;
+    --warn:      #F5C26B;
+    --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    --font-sans: 'Pretendard', 'Inter', -apple-system, 'Apple SD Gothic Neo', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; height:100%; overflow:hidden; }
+  body {
+    background: radial-gradient(ellipse at 50% 30%, #112236 0%, var(--bg-deep) 60%, #060D17 100%);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+  }
+
+  /* ----- HUD frame ----- */
+  .hud-grid {
+    position: fixed; inset: 0; pointer-events: none; z-index: 1;
+    background-image:
+      linear-gradient(rgba(91,208,232,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(91,208,232,0.04) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+  .hud-corner {
+    position: fixed; width: 28px; height: 28px; z-index: 5; pointer-events: none;
+    border: 1.5px solid var(--cyan); opacity: 0.65;
+  }
+  .hud-corner.tl { top:18px; left:18px; border-right:none; border-bottom:none; }
+  .hud-corner.tr { top:18px; right:18px; border-left:none; border-bottom:none; }
+  .hud-corner.bl { bottom:18px; left:18px; border-right:none; border-top:none; }
+  .hud-corner.br { bottom:18px; right:18px; border-left:none; border-top:none; }
+
+  .hud-top, .hud-bottom {
+    position: fixed; left:0; right:0; z-index: 4; pointer-events: none;
+    padding: 22px 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .hud-top { top: 0; }
+  .hud-bottom { bottom: 0; }
+  .hud-top .brand { color: var(--cyan); font-weight: 700; font-size: 14px; }
+  .hud-top .status { display:flex; align-items:center; gap:10px; }
+  .hud-top .status .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--mint);
+    box-shadow: 0 0 10px var(--mint), 0 0 20px rgba(98,227,163,0.5);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+  .hud-bottom .nav-hint { color: var(--dim); }
+  .hud-bottom .nav-hint kbd {
+    color: var(--ice); border: 1px solid var(--border);
+    padding: 2px 7px; border-radius: 3px; margin: 0 3px;
+    font-family: var(--font-mono); font-size: 11px; background: rgba(18,34,54,0.5);
+  }
+
+  /* ----- Deck ----- */
+  #deck {
+    position: relative; width: 100vw; height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .slide {
+    position: absolute; inset: 0;
+    padding: 80px 100px 80px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    transform: translateY(30px);
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .slide.active { opacity: 1; transform: translateY(0); pointer-events: auto; z-index: 2; }
+  .slide.prev { transform: translateY(-30px); }
+
+  /* ----- Typography ----- */
+  .eyebrow {
+    font-family: var(--font-mono); font-size: 13px;
+    color: var(--cyan); letter-spacing: 0.18em;
+    margin-bottom: 18px;
+  }
+  h1 {
+    margin: 0; font-size: 88px; line-height: 1.02;
+    font-weight: 800; letter-spacing: -0.025em; color: var(--ice);
+  }
+  h2 {
+    margin: 0 0 38px; font-size: 56px; line-height: 1.12;
+    font-weight: 700; letter-spacing: -0.02em; color: var(--text);
+  }
+  h2 .accent { color: var(--cyan); }
+  .lead {
+    font-size: 22px; line-height: 1.55; color: var(--muted);
+    max-width: 920px;
+  }
+
+  /* ----- Slide 1: Boot ----- */
+  .slide-boot { align-items: flex-start; }
+  .boot-title { display: flex; align-items: baseline; gap: 28px; flex-wrap: wrap; }
+  .boot-title h1 { font-size: 132px; letter-spacing: -0.04em; }
+  .boot-title .ver {
+    font-family: var(--font-mono); color: var(--cyan);
+    font-size: 22px; letter-spacing: 0.16em;
+  }
+  .boot-sub {
+    margin-top: 24px; font-size: 38px; font-weight: 500;
+    color: var(--sky); letter-spacing: -0.01em;
+  }
+  .boot-log {
+    margin-top: 48px;
+    font-family: var(--font-mono); font-size: 15px;
+    color: var(--muted); line-height: 1.9;
+    border-left: 2px solid var(--cyan);
+    padding: 4px 22px;
+  }
+  .boot-log .line { opacity: 0; }
+  .boot-log .ok { color: var(--mint); }
+  .slide-boot.active .boot-log .line {
+    animation: fadeIn 0.4s ease forwards;
+  }
+  .slide-boot.active .boot-log .line:nth-child(1) { animation-delay: 0.3s; }
+  .slide-boot.active .boot-log .line:nth-child(2) { animation-delay: 0.7s; }
+  .slide-boot.active .boot-log .line:nth-child(3) { animation-delay: 1.1s; }
+  .slide-boot.active .boot-log .line:nth-child(4) { animation-delay: 1.5s; }
+  .slide-boot.active .boot-log .line:nth-child(5) { animation-delay: 1.9s; }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  .team-row {
+    margin-top: 54px; display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  .team-chip {
+    padding: 10px 22px;
+    border: 1px solid var(--border);
+    background: rgba(18,34,54,0.6);
+    border-radius: 999px;
+    font-family: var(--font-sans); font-size: 15px;
+    color: var(--ice); letter-spacing: 0.02em;
+  }
+  .team-chip .role { color: var(--cyan); margin-right: 10px; font-size: 12px; font-family: var(--font-mono); }
+
+  .boot-meta {
+    position: absolute; right: 100px; bottom: 100px;
+    text-align: right; font-size: 14px;
+    color: var(--dim); line-height: 2;
+  }
+  .boot-meta .label { color: var(--muted); }
+  .boot-meta .value { color: var(--cyan); font-family: var(--font-mono); letter-spacing: 0.06em; }
+
+  /* ----- Slide 2: Mission flow ----- */
+  .flow {
+    margin-top: 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 32px;
+  }
+  .flow-step {
+    flex: 1; padding: 42px 28px 32px;
+    border: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(91,208,232,0.06) 0%, rgba(18,34,54,0.4) 100%);
+    border-radius: 8px;
+    text-align: center;
+    position: relative;
+  }
+  .flow-step .icon { font-size: 52px; line-height: 1; margin-bottom: 18px; display: block; }
+  .flow-step .name { font-size: 28px; font-weight: 700; color: var(--ice); margin-bottom: 10px; }
+  .flow-step .desc { font-size: 16px; color: var(--muted); line-height: 1.55; }
+  .flow-step .id {
+    font-size: 13px; color: var(--cyan); font-weight: 600;
+    position: absolute; top: 16px; left: 22px;
+    letter-spacing: 0.04em;
+  }
+  .flow-arrow {
+    flex: 0 0 60px; font-size: 36px; color: var(--cyan); text-align: center;
+    animation: arrowPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes arrowPulse {
+    0%, 100% { opacity: 0.4; transform: translateX(0); }
+    50% { opacity: 1; transform: translateX(6px); }
+  }
+  .flow-caption {
+    margin-top: 56px; text-align: center;
+    font-size: 24px; color: var(--text); font-weight: 500;
+    letter-spacing: -0.01em; line-height: 1.5;
+  }
+  .flow-caption .hi { color: var(--cyan); }
+
+  /* ----- Slide 3: Scenarios ----- */
+  .scenario-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px;
+  }
+  .scenario {
+    padding: 36px 28px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(18,34,54,0.5);
+    transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+    position: relative; overflow: hidden;
+  }
+  .scenario::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--cyan); opacity: 0.6;
+  }
+  .scenario:nth-child(1)::before { background: var(--sky); }
+  .scenario:nth-child(2)::before { background: var(--cyan); }
+  .scenario:nth-child(3)::before { background: var(--mint); }
+  .scenario:nth-child(4)::before { background: var(--warn); }
+  .scenario .icon { font-size: 56px; display: block; margin-bottom: 22px; }
+  .scenario .num {
+    font-size: 13px; color: var(--cyan); font-weight: 600;
+    margin-bottom: 8px; letter-spacing: 0.04em;
+  }
+  .scenario .name {
+    font-size: 28px; font-weight: 700; color: var(--ice);
+    margin-bottom: 10px; letter-spacing: -0.01em;
+  }
+  .scenario .sensor {
+    font-size: 14px; color: var(--cyan); font-weight: 500;
+    margin-bottom: 14px;
+  }
+  .scenario .sensor .state { font-weight: 600; }
+  .scenario .sensor .state.have    { color: var(--mint); }
+  .scenario .sensor .state.pending { color: var(--warn); }
+  .scenario .sensor .state.virtual { color: var(--sky); }
+  .scenario .desc { font-size: 16px; color: var(--muted); line-height: 1.55; }
+
+  /* ----- Slide 4: 3D Hardware ----- */
+  .hw-layout { display: grid; grid-template-columns: 1.4fr 1fr; gap: 56px; height: 70vh; }
+  .hw-canvas-wrap {
+    position: relative;
+    border: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(91,208,232,0.04) 0%, rgba(10,23,38,0.6) 100%);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  #hwCanvas { width: 100%; height: 100%; display: block; }
+  .hw-canvas-label {
+    position: absolute; top: 18px; left: 22px;
+    font-size: 13px; color: var(--cyan); font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .hw-canvas-hint {
+    position: absolute; bottom: 18px; right: 22px;
+    font-size: 12px; color: var(--dim);
+  }
+  .hw-status {
+    position: absolute; top: 18px; right: 22px;
+    font-size: 12px; color: var(--mint); font-weight: 500;
+  }
+  .hw-status .dot {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--mint); margin-right: 6px;
+    box-shadow: 0 0 8px var(--mint);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .hw-spots {
+    display: flex; flex-direction: column; gap: 18px;
+    align-self: center;
+  }
+  .hw-spot {
+    display: grid; grid-template-columns: 40px 1fr; gap: 18px; align-items: start;
+    padding: 18px 22px;
+    border: 1px solid var(--border-soft);
+    background: rgba(18,34,54,0.5);
+    border-radius: 6px;
+  }
+  .hw-spot .bullet {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 2px solid currentColor;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+  }
+  .hw-spot.s-lidar { color: var(--cyan); }
+  .hw-spot.s-cam   { color: var(--sky); }
+  .hw-spot.s-ctrl  { color: var(--mint); }
+  .hw-spot.s-arduino { color: var(--warn); }
+  .hw-spot .name { font-size: 20px; font-weight: 700; color: var(--ice); margin-bottom: 4px; }
+  .hw-spot .desc { font-size: 14px; color: var(--muted); line-height: 1.55; }
+
+  /* ----- Slide 5: System ----- */
+  .sys-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; margin-bottom: 38px; }
+  .module {
+    padding: 28px 22px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(18,34,54,0.5);
+    text-align: center;
+  }
+  .module .id {
+    font-family: var(--font-mono); font-size: 16px; font-weight: 700;
+    color: var(--cyan); letter-spacing: 0.08em;
+    margin-bottom: 12px;
+  }
+  .module .name {
+    font-size: 17px; font-weight: 600; color: var(--ice);
+    line-height: 1.4; min-height: 70px;
+    margin-bottom: 14px;
+  }
+  .module .owners {
+    font-size: 13px; color: var(--muted); line-height: 1.7;
+  }
+  .sys-flow {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; flex-wrap: wrap;
+    font-size: 15px; color: var(--ice); padding-top: 14px;
+    border-top: 1px solid var(--border-soft);
+  }
+  .sys-flow .step { color: var(--ice); padding: 8px 14px; background: rgba(91,208,232,0.08); border-radius: 4px; }
+  .sys-flow .step.end { background: rgba(98,227,163,0.12); color: var(--mint); }
+  .sys-flow .arr { color: var(--cyan); font-family: var(--font-mono); }
+
+  /* ----- Slide 6: Evidence ----- */
+  .evidence-list { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .ev {
+    padding: 26px 28px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(18,34,54,0.5);
+    display: grid; grid-template-columns: 56px 1fr; gap: 22px; align-items: center;
+  }
+  .ev.ok { border-left: 4px solid var(--mint); }
+  .ev.wait { border-left: 4px solid var(--warn); }
+  .ev .badge {
+    width: 56px; height: 56px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 700;
+  }
+  .ev.ok .badge { background: rgba(98,227,163,0.18); color: var(--mint); }
+  .ev.wait .badge { background: rgba(245,194,107,0.16); color: var(--warn); }
+  .ev .name { font-size: 22px; font-weight: 700; color: var(--ice); margin-bottom: 6px; letter-spacing: -0.01em; }
+  .ev .detail { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+  /* ----- Slide 7: Proof (mockup + terminal) ----- */
+  .proof-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 28px;
+    margin-top: 14px;
+  }
+  .proof-left, .proof-right {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .proof-label {
+    font-family: var(--font-mono); font-size: 13px;
+    color: var(--cyan); letter-spacing: 0.06em;
+  }
+  .proof-sub {
+    color: var(--dim); font-weight: 400; margin-left: 6px;
+  }
+  .proof-mockup {
+    width: 100%; height: auto; max-height: 360px; object-fit: contain;
+    border-radius: 8px; border: 1px solid var(--border-soft);
+    background: #060D17;
+  }
+  .proof-cap {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .cap-chip {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--ice); background: rgba(91,208,232,0.10);
+    border: 1px solid var(--border-soft);
+    padding: 3px 9px; border-radius: 11px;
+  }
+  .terminal {
+    background: #060D17;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    font-family: var(--font-mono); font-size: 12px;
+    flex: 1;
+    box-shadow: 0 0 20px rgba(91,208,232,0.06) inset;
+  }
+  .term-head {
+    background: rgba(91,208,232,0.06);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 14px;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .t-dot { width: 11px; height: 11px; border-radius: 50%; }
+  .t-dot.r { background: #FF5F56; }
+  .t-dot.y { background: #FFBD2E; }
+  .t-dot.g { background: #27C93F; }
+  .term-title {
+    margin-left: 8px; color: var(--muted); font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+  .term-body {
+    padding: 14px 16px;
+    color: var(--ice);
+    line-height: 1.55;
+  }
+  .t-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .t-prompt { color: var(--cyan); }
+  .t-cmd { color: var(--ice); }
+  .t-ok {
+    color: var(--mint); font-weight: 700;
+    text-shadow: 0 0 4px rgba(98,227,163,0.4);
+  }
+  .t-info { color: var(--muted); }
+  .t-val { color: var(--warn); font-weight: 600; }
+  .proof-meta {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    font-family: var(--font-mono); font-size: 11px;
+  }
+  .proof-meta > div {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .m-key { color: var(--dim); letter-spacing: 0.06em; }
+  .m-val { color: var(--ice); font-weight: 600; }
+
+  /* ----- Slide 8: Next ----- */
+  .milestones {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px;
+    margin-bottom: 38px;
+  }
+  .ms {
+    padding: 26px 22px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(18,34,54,0.5);
+    position: relative;
+  }
+  .ms .id {
+    font-size: 22px; font-weight: 800;
+    color: var(--cyan); margin-bottom: 6px;
+  }
+  .ms .sprint { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+  .ms .goal { font-size: 16px; color: var(--ice); line-height: 1.5; }
+  .one-line {
+    margin-top: 20px;
+    padding: 32px 38px;
+    border: 1px solid var(--cyan);
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(91,208,232,0.1) 0%, rgba(98,227,163,0.06) 100%);
+    display: flex; align-items: center; gap: 26px;
+  }
+  .one-line .label {
+    font-size: 14px; color: var(--cyan); font-weight: 700;
+    min-width: 100px;
+  }
+  .one-line .text {
+    font-size: 22px; font-weight: 500; color: var(--ice); line-height: 1.55;
+  }
+  .one-line .text .em { color: var(--mint); font-weight: 700; }
+
+  /* ----- Slide indicator ----- */
+  .slide-num {
+    position: fixed; top: 22px; right: 56px; z-index: 6;
+    font-family: var(--font-mono); font-size: 12px;
+    color: var(--muted); letter-spacing: 0.1em;
+  }
+  .slide-num .cur { color: var(--cyan); font-weight: 700; }
+
+  /* ----- Index overlay ----- */
+  #indexOverlay {
+    position: fixed; inset: 0; background: rgba(6,13,23,0.96); z-index: 100;
+    display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(10px);
+  }
+  #indexOverlay.show { display: flex; }
+  .idx-grid {
+    display: grid; grid-template-columns: repeat(4, 260px); gap: 18px;
+  }
+  .idx {
+    padding: 22px; border: 1px solid var(--border);
+    background: rgba(18,34,54,0.7); border-radius: 6px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .idx:hover { border-color: var(--cyan); background: rgba(91,208,232,0.1); }
+  .idx .n { font-family: var(--font-mono); font-size: 13px; color: var(--cyan); letter-spacing: 0.1em; margin-bottom: 8px; }
+  .idx .t { font-size: 17px; font-weight: 600; color: var(--ice); }
+
+  /* ----- Responsive ----- */
+  @media (max-width: 1400px) {
+    .slide { padding: 70px 60px; }
+    h1 { font-size: 72px; }
+    h2 { font-size: 44px; }
+    .boot-title h1 { font-size: 100px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hud-grid"></div>
+<div class="hud-corner tl"></div>
+<div class="hud-corner tr"></div>
+<div class="hud-corner bl"></div>
+<div class="hud-corner br"></div>
+
+<div class="hud-top">
+  <span class="brand">URHYNIX · 디지털트윈경비로봇 관제</span>
+  <span class="status"><span class="dot"></span>시스템 온라인 · 구역 7G</span>
+</div>
+
+<div class="slide-num"><span class="cur" id="curNum">01</span> / 07</div>
+
+<div class="hud-bottom">
+  <span>2026-05-27 · 강사님 컨펌 발표</span>
+  <span class="nav-hint">
+    <kbd>←</kbd><kbd>→</kbd> 이동
+    <kbd>F</kbd> 전체화면
+    <kbd>ESC</kbd> 목차
+  </span>
+</div>
+
+<main id="deck">
+
+  <!-- ========== SLIDE 1 — 인트로 ========== -->
+  <section class="slide slide-boot" data-slide="1">
+    <div class="boot-title">
+      <h1>URHYNIX</h1>
+      <span class="ver">버전 1.0 · 2026</span>
+    </div>
+    <div class="boot-sub">디지털트윈경비로봇</div>
+
+    <div class="boot-log">
+      <div class="line">&gt; 미션 프로필 불러오는 중... <span class="ok">[완료]</span></div>
+      <div class="line">&gt; 1호기(순찰) + 2호기(출동) 연결 <span class="ok">[완료]</span></div>
+      <div class="line">&gt; 센서 — 인체(PIR) · 조도(LDR) 자동화 검증 <span class="ok">[통과 ✓]</span></div>
+      <div class="line">&gt; 유니티 관제 화면 + 데이터베이스 <span class="ok">[접속됨]</span></div>
+      <div class="line">&gt; 강사님 검토 대기 중_</div>
+    </div>
+
+    <div class="team-row">
+      <div class="team-chip"><span class="role">리드</span>김주영</div>
+      <div class="team-chip"><span class="role">통신</span>김선일</div>
+      <div class="team-chip"><span class="role">하드웨어</span>박태진</div>
+      <div class="team-chip"><span class="role">로봇</span>임현찬</div>
+    </div>
+
+    <div class="boot-meta">
+      <div><span class="label">스프린트</span> · <span class="value">1 / 4</span></div>
+      <div><span class="label">진행 주차</span> · <span class="value">1주차 · Day 1 (절반 PASS)</span></div>
+      <div><span class="label">에픽</span> · <span class="value">SCRUM-7</span></div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 2 — 미션 ========== -->
+  <section class="slide" data-slide="2">
+    <div class="eyebrow">미션 · 01</div>
+    <h2>한 대가 발견하면,<br><span class="accent">다른 한 대가 출동</span>합니다.</h2>
+
+    <div class="flow">
+      <div class="flow-step">
+        <span class="id">1호기 · 순찰 담당</span>
+        <span class="icon">🛡️</span>
+        <div class="name">감지</div>
+        <div class="desc">정해진 경로로 순찰하며<br>센서로 이상 신호를 잡습니다</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <span class="id">2호기 · 출동 담당</span>
+        <span class="icon">🚓</span>
+        <div class="name">출동</div>
+        <div class="desc">이상이 감지된 위치로<br>스스로 길찾기 이동합니다</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <span class="id">관제 화면 · 데이터베이스</span>
+        <span class="icon">💾</span>
+        <div class="name">확인 · 기록</div>
+        <div class="desc">카메라로 현장을 확인하고<br>모든 결과를 자동 저장합니다</div>
+      </div>
+    </div>
+
+    <div class="flow-caption">
+      두 대의 터틀봇이 <span class="hi">역할을 나눠</span> 협력하는 <span class="hi">가상·실물 연동 경비 시스템</span>입니다.
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 3 — 시나리오 ========== -->
+  <section class="slide" data-slide="3">
+    <div class="eyebrow">범위 · 02</div>
+    <h2>네 가지 시나리오로 <span class="accent">시연</span>합니다.</h2>
+
+    <div class="scenario-grid">
+      <div class="scenario">
+        <div class="num">시나리오 1</div>
+        <span class="icon">🌙</span>
+        <div class="name">야간 모드</div>
+        <div class="sensor">조도 센서 <span class="state have">· 검증 완료 ✓</span></div>
+        <div class="desc">실내가 어두워지면<br>경비 모드로 자동 전환</div>
+      </div>
+      <div class="scenario">
+        <div class="num">시나리오 2</div>
+        <span class="icon">🚶</span>
+        <div class="name">침입 감지</div>
+        <div class="sensor">PIR 인체 감지 <span class="state have">· 검증 완료 ✓ · 5m 내</span></div>
+        <div class="desc">약 5m 안의 움직임을 잡으면<br>관제 화면에 위치 표시</div>
+      </div>
+      <div class="scenario">
+        <div class="num">시나리오 3</div>
+        <span class="icon">🔊</span>
+        <div class="name">이상 소음</div>
+        <div class="sensor">소음 센서 <span class="state pending">· 추가 예정</span></div>
+        <div class="desc">기준치를 넘는 소리가 나면<br>2호기가 자동으로 출동</div>
+      </div>
+      <div class="scenario">
+        <div class="num">시나리오 4</div>
+        <span class="icon">🔥</span>
+        <div class="name">화재 의심</div>
+        <div class="sensor">유니티 가상 시뮬 <span class="state virtual">· 실물 테스트 X</span></div>
+        <div class="desc">유니티에 가상 화재 지점 생성<br>→ 로봇이 자동으로 우회 주행</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 4 — 하드웨어 3D ========== -->
+  <section class="slide" data-slide="4">
+    <div class="eyebrow">하드웨어 · 03</div>
+    <h2>실제 터틀봇3에 <span class="accent">센서 4종</span>을 더해 만듭니다.</h2>
+
+    <div class="hw-layout">
+      <div class="hw-canvas-wrap">
+        <div class="hw-canvas-label">터틀봇3 · 3D 실시간 보기</div>
+        <div class="hw-status" id="hwStatus"><span class="dot"></span>모델 불러오는 중…</div>
+        <div class="hw-canvas-hint">끌어서 회전</div>
+        <canvas id="hwCanvas"></canvas>
+      </div>
+
+      <div class="hw-spots">
+        <div class="hw-spot s-lidar">
+          <div class="bullet">1</div>
+          <div>
+            <div class="name">라이다 (LiDAR)</div>
+            <div class="desc">상단에 달린 360도 거리 센서. 지도 작성과 자율 주행의 기반입니다.</div>
+          </div>
+        </div>
+        <div class="hw-spot s-cam">
+          <div class="bullet">2</div>
+          <div>
+            <div class="name">파이 카메라</div>
+            <div class="desc">정면 영상. 2호기가 출동한 뒤 현장을 직접 확인하고 라이브 송출합니다.</div>
+          </div>
+        </div>
+        <div class="hw-spot s-ctrl">
+          <div class="bullet">3</div>
+          <div>
+            <div class="name">제어 보드 + 라즈베리파이</div>
+            <div class="desc">모터·자세 센서를 제어하고, 모든 데이터를 외부로 보내는 통신 허브입니다.</div>
+          </div>
+        </div>
+        <div class="hw-spot s-arduino">
+          <div class="bullet">4</div>
+          <div>
+            <div class="name">아두이노 + 센서 4종</div>
+            <div class="desc">상판 빈 공간에 부착. USB 케이블로 라즈베리파이에 데이터를 보냅니다.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 5 — 시스템 구조 ========== -->
+  <section class="slide" data-slide="5">
+    <div class="eyebrow">시스템 구조 · 04</div>
+    <h2>다섯 영역을 <span class="accent">동시에</span> 진행합니다.</h2>
+
+    <div class="sys-grid">
+      <div class="module">
+        <div class="id">M1</div>
+        <div class="name">데이터베이스<br>+ 통신 · AI</div>
+        <div class="owners">김주영<br>김선일</div>
+      </div>
+      <div class="module">
+        <div class="id">M2</div>
+        <div class="name">아두이노 메인 보드<br>+ 통신</div>
+        <div class="owners">박태진 · 임현찬<br>김주영</div>
+      </div>
+      <div class="module">
+        <div class="id">M3</div>
+        <div class="name">유니티 관제 화면<br>+ 영상 송출</div>
+        <div class="owners">김선일<br>박태진</div>
+      </div>
+      <div class="module">
+        <div class="id">M4</div>
+        <div class="name">센서 4종<br>회로 · 펌웨어</div>
+        <div class="owners">김주영 · 임현찬<br>박태진</div>
+      </div>
+      <div class="module">
+        <div class="id">M5</div>
+        <div class="name">터틀봇 · 라이다<br>지도 · 자율주행</div>
+        <div class="owners">임현찬<br>김선일</div>
+      </div>
+    </div>
+
+    <div class="sys-flow">
+      <span class="step">센서</span>
+      <span class="arr">→</span>
+      <span class="step">아두이노</span>
+      <span class="arr">→</span>
+      <span class="step">라즈베리파이</span>
+      <span class="arr">→</span>
+      <span class="step">통신 모듈</span>
+      <span class="arr">→</span>
+      <span class="step end">유니티 관제 화면</span>
+      <span class="arr">+</span>
+      <span class="step end">데이터베이스</span>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 6 — 진행 상황 ========== -->
+  <section class="slide" data-slide="6">
+    <div class="eyebrow">진행 상황 · 05</div>
+    <h2>지금까지 <span class="accent">동작이 확인</span>된 것들.</h2>
+
+    <div class="evidence-list">
+      <div class="ev ok">
+        <div class="badge">✓</div>
+        <div>
+          <div class="name">터틀봇 실물 통신 확인</div>
+          <div class="detail">로봇 접속 정상 · 라이다 데이터 초당 10회 · 위치·자세 신호 모두 정상</div>
+        </div>
+      </div>
+      <div class="ev ok">
+        <div class="badge">✓</div>
+        <div>
+          <div class="name">시각화 도구로 로봇 상태 보기</div>
+          <div class="detail">원격 화면 공유로 로봇이 보는 지도와 좌표를 실시간 확인</div>
+        </div>
+      </div>
+      <div class="ev ok">
+        <div class="badge">✓</div>
+        <div>
+          <div class="name">유니티에서 로봇 데이터 받기</div>
+          <div class="detail">통신 모듈 빌드 완료 · 유니티가 라이다와 좌표를 받는 것 확인</div>
+        </div>
+      </div>
+      <div class="ev ok">
+        <div class="badge">✓</div>
+        <div>
+          <div class="name">인체(PIR) + 조도(LDR) 센서 검증</div>
+          <div class="detail">움직임 감지 시 LED 점등 + 조도 값 실시간 보고 동시 동작 확인 · 시리얼 30초 캡처에서 안정적 진동·트리거 확인</div>
+        </div>
+      </div>
+      <div class="ev ok">
+        <div class="badge">✓</div>
+        <div>
+          <div class="name">문서 · 보드 · 이슈 모두 동기화</div>
+          <div class="detail">공식 문서 9건 · 보드 8장 · Jira 18카드 · 컨플루언스 사용자 요구사항 v4 게시 (Unity 관제 UI 참조 디자인 추가)</div>
+        </div>
+      </div>
+      <div class="ev wait">
+        <div class="badge">⏳</div>
+        <div>
+          <div class="name">오늘 통합 검증 — 인체 감지가 DB까지</div>
+          <div class="detail">박태진 담당 · 아두이노 + 시리얼 단계 ✓ 통과 · 라즈베리파이 시리얼 수신 → DB 한 줄 저장이 마지막 단계</div>
+        </div>
+      </div>
+      <div class="ev wait">
+        <div class="badge">⏳</div>
+        <div>
+          <div class="name">파이 카메라 + DB 연결</div>
+          <div class="detail">김주영 · 임현찬 · 카메라 영상이 정상으로 들어오는지 확인 중</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 7 — 통합 검증 증거 & UI 시안 ========== -->
+  <section class="slide" data-slide="7">
+    <div class="eyebrow">검증 증거 · 06</div>
+    <h2>실제로 <span class="accent">터틀봇 ↔ ROS2 ↔ 유니티</span>가 연결됐습니다.</h2>
+
+    <div class="proof-grid">
+      <div class="proof-left">
+        <div class="proof-label">📺 관제 UI 예시 시안 <span class="proof-sub">(A.R.O.C. SYSTEM 스타일 · 김선일 작업 베이스)</span></div>
+        <img src="../whiteboards/unity_ui_mockup.png" alt="Unity 관제 UI 예시 시안 (A.R.O.C. SYSTEM HQ COMMAND)" class="proof-mockup" />
+        <div class="proof-cap">
+          <span class="cap-chip">중앙 맵</span>
+          <span class="cap-chip">로봇 위치 마커</span>
+          <span class="cap-chip">이벤트 좌표</span>
+          <span class="cap-chip">Vision 분석</span>
+          <span class="cap-chip">이벤트 로그</span>
+        </div>
+      </div>
+
+      <div class="proof-right">
+        <div class="proof-label">⌨️ 실제 통신 로그 <span class="proof-sub">(2026-05-27 smoke 캡처)</span></div>
+        <div class="terminal">
+          <div class="term-head"><span class="t-dot r"></span><span class="t-dot y"></span><span class="t-dot g"></span><span class="term-title">tmux · bringup + ros2 + ros_tcp</span></div>
+          <div class="term-body">
+            <div class="t-line"><span class="t-prompt">tb3$</span> <span class="t-cmd">ros2 launch turtlebot3_bringup robot.launch.py</span></div>
+            <div class="t-line"><span class="t-ok">[OK]</span> Succeeded to open the port(/dev/ttyACM0)!</div>
+            <div class="t-line"><span class="t-ok">[OK]</span> Start Calibration of Gyro</div>
+            <div class="t-line"><span class="t-ok">[OK]</span> Activated lidar publish thread</div>
+            <div class="t-line">&nbsp;</div>
+            <div class="t-line"><span class="t-prompt">tb3$</span> <span class="t-cmd">ros2 topic hz /scan</span></div>
+            <div class="t-line"><span class="t-info">average rate:</span> <span class="t-val">10.017 Hz</span></div>
+            <div class="t-line"><span class="t-prompt">tb3$</span> <span class="t-cmd">ros2 topic echo /battery_state</span></div>
+            <div class="t-line"><span class="t-info">voltage:</span> <span class="t-val">12.20 V</span> · <span class="t-info">percentage:</span> <span class="t-val">94.44 %</span></div>
+            <div class="t-line">&nbsp;</div>
+            <div class="t-line"><span class="t-prompt">unity-tcp$</span> Connection from 192.168.0.107</div>
+            <div class="t-line"><span class="t-ok">[OK]</span> RegisterSubscriber(/scan, sensor_msgs/LaserScan)</div>
+            <div class="t-line"><span class="t-ok">[OK]</span> RegisterSubscriber(/odom, nav_msgs/Odometry)</div>
+            <div class="t-line"><span class="t-ok">[OK]</span> RegisterSubscriber(/battery_state, ...)</div>
+            <div class="t-line"><span class="t-ok">[OK]</span> RegisterSubscriber(/tf, tf2_msgs/TFMessage)</div>
+          </div>
+        </div>
+        <div class="proof-meta">
+          <div><span class="m-key">로봇 IP</span><span class="m-val">192.168.0.138</span></div>
+          <div><span class="m-key">ROS_DOMAIN_ID</span><span class="m-val">230</span></div>
+          <div><span class="m-key">TCP 포트</span><span class="m-val">10000</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDE 8 — 다음 단계 ========== -->
+  <section class="slide" data-slide="8">
+    <div class="eyebrow">다음 단계 · 07</div>
+    <h2>네 단계 목표로 <span class="accent">발표까지</span> 갑니다.</h2>
+
+    <div class="milestones">
+      <div class="ms">
+        <div class="id">1단계</div>
+        <div class="sprint">스프린트 1 종료 <span style="color: var(--mint); font-size: 11px; margin-left: 6px;">· 진행 중 (Day-1 절반 PASS)</span></div>
+        <div class="goal">1호기가 스스로 순찰하고, 관제 화면에 위치가 보이는 단계</div>
+      </div>
+      <div class="ms">
+        <div class="id">2단계</div>
+        <div class="sprint">스프린트 2 종료</div>
+        <div class="goal">센서 한 가지가 잡은 신호가 관제 화면까지 끊김 없이 전달되는 단계</div>
+      </div>
+      <div class="ms">
+        <div class="id">3단계</div>
+        <div class="sprint">스프린트 3 종료</div>
+        <div class="goal">2호기 출동, 현장 카메라 확인, DB 저장까지 전체 흐름 완성</div>
+      </div>
+      <div class="ms">
+        <div class="id">4단계</div>
+        <div class="sprint">스프린트 4 종료</div>
+        <div class="goal">시나리오 네 가지를 묶어서 시연하고 발표용 지표 표 완성</div>
+      </div>
+    </div>
+
+    <div class="one-line">
+      <div class="label">한줄정리</div>
+      <div class="text">두 대의 터틀봇이 <span class="em">감지·출동·기록</span>을 협력하는 <span class="em">가상·실물 연동 경비 시스템</span>을, 7주 안에 4가지 시나리오로 시연해 보이겠습니다.</div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ========== 목차 오버레이 ========== -->
+<div id="indexOverlay">
+  <div class="idx-grid">
+    <div class="idx" data-go="1"><div class="n">01</div><div class="t">URHYNIX · 인트로</div></div>
+    <div class="idx" data-go="2"><div class="n">02</div><div class="t">미션 — 감지·출동·기록</div></div>
+    <div class="idx" data-go="3"><div class="n">03</div><div class="t">시나리오 4종</div></div>
+    <div class="idx" data-go="4"><div class="n">04</div><div class="t">하드웨어 (3D)</div></div>
+    <div class="idx" data-go="5"><div class="n">05</div><div class="t">시스템 구조</div></div>
+    <div class="idx" data-go="6"><div class="n">06</div><div class="t">진행 상황</div></div>
+    <div class="idx" data-go="7"><div class="n">07</div><div class="t">검증 증거 · UI 시안</div></div>
+    <div class="idx" data-go="8"><div class="n">08</div><div class="t">다음 단계 · 한줄정리</div></div>
+  </div>
+</div>
+
+<!-- TurtleBot3 GLB (base64 임베드, file:// 우회) -->
+<script src="./assets/turtlebot3.b64.js"></script>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+  // ===== 슬라이드 네비게이션 =====
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.length;
+  let cur = 0;
+  const curNum = document.getElementById('curNum');
+  const overlay = document.getElementById('indexOverlay');
+
+  function setCur(i) {
+    cur = ((i % total) + total) % total;
+    slides.forEach((s, k) => {
+      s.classList.toggle('active', k === cur);
+      s.classList.toggle('prev', k < cur);
+    });
+    curNum.textContent = String(cur + 1).padStart(2, '0');
+    if (cur === 3) ensureHardware3D();
+  }
+
+  function toggleFullscreen() {
+    const el = document.documentElement;
+    const fsEl =
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement;
+    if (!fsEl) {
+      const req =
+        el.requestFullscreen ||
+        el.webkitRequestFullscreen ||
+        el.mozRequestFullScreen ||
+        el.msRequestFullscreen;
+      if (req) {
+        const p = req.call(el);
+        if (p && p.catch) p.catch(err => console.warn('fullscreen fail', err));
+      }
+    } else {
+      const exit =
+        document.exitFullscreen ||
+        document.webkitExitFullscreen ||
+        document.mozCancelFullScreen ||
+        document.msExitFullscreen;
+      if (exit) exit.call(document);
+    }
+  }
+
+  document.addEventListener('keydown', (e) => {
+    // 입력 필드 안이면 무시
+    const tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+    const k = e.key;
+    if (k === 'ArrowRight' || k === 'PageDown') {
+      e.preventDefault(); setCur(cur + 1);
+    } else if (k === 'ArrowLeft' || k === 'PageUp') {
+      e.preventDefault(); setCur(cur - 1);
+    } else if (k === 'Home') {
+      e.preventDefault(); setCur(0);
+    } else if (k === 'End') {
+      e.preventDefault(); setCur(total - 1);
+    } else if (k === 'f' || k === 'F') {
+      e.preventDefault(); toggleFullscreen();
+    } else if (k === 'Escape') {
+      overlay.classList.toggle('show');
+    } else if (/^[1-8]$/.test(k)) {
+      e.preventDefault(); setCur(parseInt(k, 10) - 1);
+    }
+  });
+
+  // 클릭으로도 다음 슬라이드 (HUD 영역 클릭은 제외)
+  document.addEventListener('click', (e) => {
+    if (overlay.classList.contains('show')) return;
+    if (e.target.closest('.hud-top, .hud-bottom, .hud-corner, .slide-num, .hw-canvas-wrap, button, a, kbd')) return;
+    // 단순 클릭은 무시 (오작동 방지). 필요 시 활성화.
+  });
+
+  overlay.addEventListener('click', (e) => {
+    const t = e.target.closest('.idx');
+    if (t) {
+      setCur(parseInt(t.dataset.go, 10) - 1);
+      overlay.classList.remove('show');
+    } else if (e.target === overlay) {
+      overlay.classList.remove('show');
+    }
+  });
+
+  setCur(0);
+
+  // ===== Three.js 터틀봇3 뷰어 =====
+  let hwInit = false;
+  async function ensureHardware3D() {
+    if (hwInit) return;
+    hwInit = true;
+    const statusEl = document.getElementById('hwStatus');
+    try {
+      const THREE = await import('three');
+      const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+      const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+
+      const canvas = document.getElementById('hwCanvas');
+      const wrap = canvas.parentElement;
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      const scene = new THREE.Scene();
+      scene.background = null;
+
+      const camera = new THREE.PerspectiveCamera(38, 1, 0.05, 100);
+      camera.position.set(0.55, 0.42, 0.6);
+      camera.lookAt(0, 0.08, 0);
+
+      const amb = new THREE.AmbientLight(0xC8EEF8, 0.55);
+      scene.add(amb);
+      const key = new THREE.DirectionalLight(0xEAF6FF, 1.1);
+      key.position.set(0.6, 1.2, 0.8);
+      scene.add(key);
+      const rim = new THREE.DirectionalLight(0x5BD0E8, 0.7);
+      rim.position.set(-0.8, 0.4, -0.6);
+      scene.add(rim);
+      const fill = new THREE.DirectionalLight(0x7CC4F2, 0.35);
+      fill.position.set(0.3, 0.2, -1.0);
+      scene.add(fill);
+
+      const grid = new THREE.GridHelper(2, 20, 0x5BD0E8, 0x1E3A56);
+      grid.material.opacity = 0.25;
+      grid.material.transparent = true;
+      grid.position.y = -0.001;
+      scene.add(grid);
+
+      const controls = new OrbitControls(camera, canvas);
+      controls.target.set(0, 0.08, 0);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.minDistance = 0.35;
+      controls.maxDistance = 1.6;
+      controls.minPolarAngle = 0.1;
+      controls.maxPolarAngle = Math.PI / 2.05;
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 0.6;
+      controls.enablePan = false;
+      controls.update();
+
+      const fit = () => {
+        const w = wrap.clientWidth, h = wrap.clientHeight;
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      };
+      fit();
+      window.addEventListener('resize', fit);
+
+      const tick = () => {
+        controls.update();
+        renderer.render(scene, camera);
+        requestAnimationFrame(tick);
+      };
+
+      // ===== GLB base64 임베드 디코딩 → loader.parse() =====
+      function loadEmbeddedGLB() {
+        const b64 = window.TURTLEBOT3_GLB_B64;
+        if (!b64) throw new Error('embedded GLB missing');
+        const binary = atob(b64);
+        const len = binary.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+        return new Promise((resolve, reject) => {
+          const loader = new GLTFLoader();
+          loader.parse(bytes.buffer, '', resolve, reject);
+        });
+      }
+
+      try {
+        const gltf = await loadEmbeddedGLB();
+        gltf.scene.traverse((o) => {
+          if (o.isMesh && o.material) {
+            o.material.envMapIntensity = 0.7;
+          }
+        });
+        scene.add(gltf.scene);
+        if (statusEl) statusEl.innerHTML = '<span class="dot"></span>모델 로드 완료';
+      } catch (err) {
+        console.warn('GLB 로드 실패, 임시 모델 표시', err);
+        const placeholder = new THREE.Group();
+        const body = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.07, 0.07, 0.14, 32),
+          new THREE.MeshStandardMaterial({ color: 0xE8EEF4, roughness: 0.5 })
+        );
+        body.position.y = 0.07;
+        const lidar = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.05, 0.05, 0.025, 32),
+          new THREE.MeshStandardMaterial({ color: 0x5BD0E8, roughness: 0.35, metalness: 0.3 })
+        );
+        lidar.position.y = 0.155;
+        placeholder.add(body, lidar);
+        scene.add(placeholder);
+        if (statusEl) statusEl.innerHTML = '<span class="dot" style="background:var(--warn);box-shadow:0 0 8px var(--warn);"></span>임시 모델';
+      }
+
+      tick();
+    } catch (e) {
+      console.error('Three.js 초기화 실패', e);
+      if (statusEl) statusEl.innerHTML = '3D 로드 실패';
+    }
+  }
+</script>
+
+</body>
+</html>

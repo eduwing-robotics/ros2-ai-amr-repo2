@@ -1,0 +1,43 @@
+<!doctype html>
+<!-- wiring_simple.html — 초간단 배선 카드 (사운드 D3 / 온도 D8) -->
+<html lang="ko"><head><meta charset="utf-8"><title>배선 초간단</title>
+<style>
+  body{font-family:-apple-system,Helvetica,Arial,sans-serif;background:#f4f6f8;margin:0;padding:28px;color:#222}
+  h1{text-align:center;font-size:26px;margin:0 0 6px}
+  .sub{text-align:center;color:#888;margin:0 0 26px;font-size:15px}
+  .card{max-width:620px;margin:0 auto 22px;background:#fff;border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.08);overflow:hidden}
+  .head{font-size:20px;font-weight:800;padding:14px 20px;color:#fff}
+  .temp .head{background:#00879c}.sound .head{background:#2faf5a}
+  .row{display:flex;align-items:center;gap:14px;padding:16px 20px;border-top:1px solid #eee;font-size:19px}
+  .dot{width:26px;height:26px;border-radius:50%;flex:0 0 26px}
+  .name{flex:1;font-weight:600}
+  .arrow{color:#bbb;font-size:24px}
+  .pin{background:#222;color:#fff;font-weight:800;padding:6px 16px;border-radius:8px;min-width:54px;text-align:center}
+  .red{background:#e23b3b}.black{background:#222}.yellow{background:#e6b800}.green{background:#2faf5a}
+  .rule{max-width:620px;margin:24px auto 0;background:#fff7e0;border:1px solid #f0d264;border-radius:12px;padding:16px 20px;font-size:16px;line-height:1.6}
+  .rule b{color:#c47f00}
+</style></head><body>
+  <h1>🔌 배선 초간단 가이드</h1>
+  <p class="sub">선 색깔대로, "→ 화살표 끝"에 꽂으면 끝</p>
+
+  <div class="card temp">
+    <div class="head">🌡️ 온도센서 (DS18B20)</div>
+    <div class="row"><span class="dot red"></span><span class="name">VCC / + / V</span><span class="arrow">→</span><span class="pin red">5V</span></div>
+    <div class="row"><span class="dot yellow"></span><span class="name">DATA / S / DQ</span><span class="arrow">→</span><span class="pin yellow">D8</span></div>
+    <div class="row"><span class="dot black"></span><span class="name">GND / − / G</span><span class="arrow">→</span><span class="pin black">GND</span></div>
+  </div>
+
+  <div class="card sound">
+    <div class="head">🔊 사운드 (AS0025)</div>
+    <div class="row"><span class="dot red"></span><span class="name">VCC / +</span><span class="arrow">→</span><span class="pin red">5V</span></div>
+    <div class="row"><span class="dot green"></span><span class="name">DO / D0 / OUT</span><span class="arrow">→</span><span class="pin green">D3</span></div>
+    <div class="row"><span class="dot black"></span><span class="name">GND / − / G</span><span class="arrow">→</span><span class="pin black">GND</span></div>
+  </div>
+
+  <div class="rule">
+    ✅ <b>규칙 2개만</b><br>
+    1. 🔴빨강(VCC)·⚫검정(GND)은 두 모듈 <b>똑같이</b> 5V·GND로<br>
+    2. 신호선만 다름 → 온도 <b>D8</b>, 사운드 <b>D3</b><br>
+    ⚠️ DS18B20이 검은 3다리 부품이면 4.7kΩ을 DATA↔5V 사이에 추가
+  </div>
+</body></html>

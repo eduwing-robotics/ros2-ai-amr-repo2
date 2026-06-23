@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>URHYNIX · Sprint 보드</title>
+<style>
+  :root {
+    --bg: #ecfdf5;
+    --fg: #064e3b;
+    --muted: #6b7280;
+    --accent: #059669;
+    --accent-dark: #064e3b;
+    --card: #ffffff;
+    --border: #a7f3d0;
+    --hover: #d1fae5;
+
+    --c-juyoung:   #1f6feb;
+    --c-sunil:     #9333ea;
+    --c-taejin:    #f59e0b;
+    --c-hyeonchan: #10b981;
+
+    --s1: #4c7cf3;
+    --s2: #f39c4c;
+    --s3: #7c4cf3;
+    --s4: #ef4444;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo",
+                 "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.6; font-size: 18px;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 56px 32px 80px; }
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 14px; color: var(--muted); margin-bottom: 40px;
+  }
+  .topbar a { color: var(--accent); text-decoration: none; }
+  .topbar a:hover { text-decoration: underline; }
+
+  .badge {
+    display: inline-block; background: var(--accent); color: #fff;
+    padding: 6px 14px; border-radius: 999px; font-size: 13px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 600; margin-bottom: 16px;
+  }
+  h1 {
+    font-size: 64px; line-height: 1.1; margin: 0 0 16px;
+    letter-spacing: -0.025em; color: var(--accent-dark);
+  }
+  .lead {
+    font-size: 22px; color: var(--muted); margin: 0 0 48px; line-height: 1.55;
+  }
+
+  .timeline {
+    display: flex; gap: 6px; margin: 0 0 40px;
+    border-radius: 8px; overflow: hidden;
+  }
+  .timeline .tb {
+    color: #fff; padding: 14px 16px; font-size: 14px; font-weight: 600;
+    text-align: center; flex-grow: 2;
+  }
+  .timeline .tb.s1 { background: var(--s1); flex-grow: 2; }
+  .timeline .tb.s2 { background: var(--s2); flex-grow: 2; }
+  .timeline .tb.s3 { background: var(--s3); flex-grow: 2; }
+  .timeline .tb.s4 { background: var(--s4); flex-grow: 1; }
+
+  .sprint {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 28px 32px; margin-bottom: 22px;
+    border-left: 8px solid var(--s1);
+  }
+  .sprint[data-sprint="S1"] { border-left-color: var(--s1); }
+  .sprint[data-sprint="S2"] { border-left-color: var(--s2); }
+  .sprint[data-sprint="S3"] { border-left-color: var(--s3); }
+  .sprint[data-sprint="S4"] { border-left-color: var(--s4); }
+
+  .sprint-head {
+    display: flex; align-items: baseline; gap: 16px;
+    flex-wrap: wrap; margin-bottom: 8px;
+  }
+  .sprint-id {
+    font-size: 14px; color: #fff; padding: 4px 12px;
+    border-radius: 5px; background: var(--s1);
+    font-weight: 700; letter-spacing: 0.05em;
+  }
+  .sprint[data-sprint="S1"] .sprint-id { background: var(--s1); }
+  .sprint[data-sprint="S2"] .sprint-id { background: var(--s2); }
+  .sprint[data-sprint="S3"] .sprint-id { background: var(--s3); }
+  .sprint[data-sprint="S4"] .sprint-id { background: var(--s4); }
+  .sprint h2 {
+    font-size: 32px; line-height: 1.2; margin: 0;
+    letter-spacing: -0.015em;
+  }
+  .sprint .duration {
+    font-size: 15px; color: var(--muted); font-weight: 600;
+  }
+  .sprint .goal {
+    font-size: 20px; line-height: 1.55; margin: 8px 0 0;
+  }
+
+  details {
+    margin-top: 20px;
+    border-top: 1px dashed var(--border);
+    padding-top: 16px;
+  }
+  details summary {
+    cursor: pointer; font-size: 15px; color: var(--accent);
+    font-weight: 600; list-style: none; user-select: none; padding: 6px 0;
+  }
+  details summary:hover { color: var(--accent-dark); }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: "▸ "; margin-right: 4px; }
+  details[open] summary::before { content: "▾ "; }
+  details .tickets { margin-top: 12px; }
+
+  .ticket {
+    display: block; text-decoration: none; color: inherit;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px; margin-bottom: 10px;
+    transition: border-color 0.1s ease;
+  }
+  .ticket:hover { border-color: var(--accent); }
+  .ticket-head {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+  }
+  .ticket-id {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px; color: var(--accent); font-weight: 600;
+  }
+  .ticket .title {
+    font-size: 16px; line-height: 1.45; margin: 0 0 8px;
+  }
+  .ticket .owners {
+    display: flex; gap: 4px; flex-wrap: wrap;
+  }
+  .owner-chip {
+    display: inline-block; font-size: 12px; padding: 2px 9px;
+    border-radius: 999px; color: #fff; background: #9ca3af;
+  }
+  .owner-chip[data-owner="김주영"]   { background: var(--c-juyoung); }
+  .owner-chip[data-owner="김선일"]   { background: var(--c-sunil); }
+  .owner-chip[data-owner="박태진"]   { background: var(--c-taejin); }
+  .owner-chip[data-owner="임현찬"]   { background: var(--c-hyeonchan); }
+
+  .nav-footer {
+    margin-top: 56px; padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; font-size: 16px;
+  }
+  .nav-footer a {
+    color: var(--accent); text-decoration: none;
+    padding: 12px 20px; border: 1px solid var(--border);
+    border-radius: 8px; background: var(--card);
+  }
+  .nav-footer a:hover { background: var(--hover); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <a href="dev-plan.html">← 메인</a>
+    <span>URHYNIX · 디지털트윈경비로봇</span>
+  </div>
+
+  <span class="badge">🗓️ Sprint 보드</span>
+  <h1>7주를<br>4 스프린트로</h1>
+  <p class="lead">단일 → 센서 → DB+출동 → 데모. 한 발씩 통하게 만든다. 펼치면 그 스프린트의 작업 카드(Jira 링크)가 보인다.</p>
+
+  <div class="timeline">
+    <div class="tb s1">S1 · 2주</div>
+    <div class="tb s2">S2 · 2주</div>
+    <div class="tb s3">S3 · 2주</div>
+    <div class="tb s4">S4 · 1주</div>
+  </div>
+
+  <details open style="margin: 0 0 32px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px 28px;">
+    <summary style="font-size: 18px; color: var(--accent-dark); font-weight: 700; padding-bottom: 8px;">⚡ 병렬 작업 매트릭스 (펼침 기본)</summary>
+    <div class="body" style="margin-top: 16px; font-size: 16px; line-height: 1.6;">
+      <p style="margin: 0 0 12px;"><strong>원칙</strong>: 한 모듈 안에서는 순차, 모듈 간에는 병렬. <code>CONTRACT.md</code> 인터페이스만 합의된 상태면 각자 동시에 진행 가능.</p>
+
+      <h3 style="font-size: 14px; color: var(--accent); margin: 20px 0 8px; letter-spacing: 0.06em;">S1 1주차 동시 시작 가능한 4팀</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px;">
+        <div style="background: var(--bg); border-left: 4px solid var(--c-juyoung); padding: 12px;">
+          <strong>DB팀</strong><br>김주영·김선일<br>
+          <span style="font-size: 13px; color: var(--muted);">SCRUM-14 스키마 SQL</span>
+        </div>
+        <div style="background: var(--bg); border-left: 4px solid var(--c-sunil); padding: 12px;">
+          <strong>Unity팀</strong><br>김선일·박태진<br>
+          <span style="font-size: 13px; color: var(--muted);">SCRUM-9 듀얼 로봇 씬</span>
+        </div>
+        <div style="background: var(--bg); border-left: 4px solid var(--c-taejin); padding: 12px;">
+          <strong>HW팀</strong><br>박태진·임현찬<br>
+          <span style="font-size: 13px; color: var(--muted);">SCRUM-16 트랙 + 키트 점검</span>
+        </div>
+        <div style="background: var(--bg); border-left: 4px solid var(--c-hyeonchan); padding: 12px;">
+          <strong>센서팀</strong><br>김주영·임현찬·박태진<br>
+          <span style="font-size: 13px; color: var(--muted);">키트 점검 + 회로도</span>
+        </div>
+      </div>
+
+      <h3 style="font-size: 14px; color: var(--accent); margin: 20px 0 8px; letter-spacing: 0.06em;">주차 × 모듈 매트릭스</h3>
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+          <thead>
+            <tr style="background: var(--hover);">
+              <th style="padding: 8px; text-align: left; border-bottom: 2px solid var(--border);">주</th>
+              <th style="padding: 8px; text-align: left; border-bottom: 2px solid var(--border);">M1 백엔드</th>
+              <th style="padding: 8px; text-align: left; border-bottom: 2px solid var(--border);">M2 아두이노</th>
+              <th style="padding: 8px; text-align: left; border-bottom: 2px solid var(--border);">M3 Unity</th>
+              <th style="padding: 8px; text-align: left; border-bottom: 2px solid var(--border);">M4 센서</th>
+              <th style="padding: 8px; text-align: left; border-bottom: 2px solid var(--border);">M5 터틀봇</th>
+              <th style="padding: 8px; text-align: left; border-bottom: 2px solid var(--border);">공통</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding: 6px; border-bottom: 1px solid var(--border);"><strong>W1</strong></td><td style="padding: 6px;">SCRUM-14 스키마</td><td style="padding: 6px;">키트 점검·핀 도면</td><td style="padding: 6px;">SCRUM-9 UI 초안</td><td style="padding: 6px;">회로 도면</td><td style="padding: 6px;">—</td><td style="padding: 6px;">SCRUM-8 합의<br>SCRUM-16 트랙</td></tr>
+            <tr style="background: var(--bg);"><td style="padding: 6px; border-bottom: 1px solid var(--border);"><strong>W2</strong></td><td style="padding: 6px;">(계속)</td><td style="padding: 6px;">키트 확인</td><td style="padding: 6px;">(계속)</td><td style="padding: 6px;">센서 동작 확인</td><td style="padding: 6px;">SCRUM-10 SLAM</td><td style="padding: 6px;">—</td></tr>
+            <tr><td style="padding: 6px; border-bottom: 1px solid var(--border);"><strong>W3</strong></td><td style="padding: 6px;">—</td><td style="padding: 6px;">SCRUM-13 브릿지</td><td style="padding: 6px;">SCRUM-11 pose</td><td style="padding: 6px;">SCRUM-13 회로</td><td style="padding: 6px;">SCRUM-20 sync</td><td style="padding: 6px;">—</td></tr>
+            <tr style="background: var(--bg);"><td style="padding: 6px; border-bottom: 1px solid var(--border);"><strong>W4</strong></td><td style="padding: 6px;">—</td><td style="padding: 6px;">(계속)</td><td style="padding: 6px;">SCRUM-22 야간모드</td><td style="padding: 6px;">(계속)</td><td style="padding: 6px;">SCRUM-19 카메라</td><td style="padding: 6px;">—</td></tr>
+            <tr><td style="padding: 6px; border-bottom: 1px solid var(--border);"><strong>W5</strong></td><td style="padding: 6px;">SCRUM-23 저장</td><td style="padding: 6px;">—</td><td style="padding: 6px;">SCRUM-25 라이브</td><td style="padding: 6px;">SCRUM-17 추가</td><td style="padding: 6px;">SCRUM-12 출동</td><td style="padding: 6px;">—</td></tr>
+            <tr style="background: var(--bg);"><td style="padding: 6px; border-bottom: 1px solid var(--border);"><strong>W6</strong></td><td style="padding: 6px;">SCRUM-21 AI</td><td style="padding: 6px;">—</td><td style="padding: 6px;">(계속)</td><td style="padding: 6px;">(계속)</td><td style="padding: 6px;">(계속)</td><td style="padding: 6px;">—</td></tr>
+            <tr><td style="padding: 6px; border-bottom: 1px solid var(--border);"><strong>W7</strong></td><td style="padding: 6px;">SCRUM-15 지표</td><td style="padding: 6px;">—</td><td style="padding: 6px;">SCRUM-24 영상</td><td style="padding: 6px;">—</td><td style="padding: 6px;">—</td><td style="padding: 6px;">SCRUM-18 시연환경</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="font-size: 14px; color: var(--accent); margin: 20px 0 8px; letter-spacing: 0.06em;">직렬 병목 (먼저 끝내야 다음 시작)</h3>
+      <ul>
+        <li><strong>SCRUM-8 합의 (1일)</strong> → 모든 작업의 전제</li>
+        <li><strong>SCRUM-16 트랙</strong> → SCRUM-10 SLAM</li>
+        <li><strong>SCRUM-13 센서+이벤트</strong> → SCRUM-12 출동, SCRUM-21 AI</li>
+        <li><strong>SCRUM-14 DB 스키마</strong> → SCRUM-23 좌표·미디어·보호 대상 확장, SCRUM-15 KPI</li>
+        <li><strong>SCRUM-19 카메라</strong> → SCRUM-25 라이브, SCRUM-23 이미지 저장</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="sprint" data-sprint="S1">
+    <div class="sprint-head">
+      <span class="sprint-id">S1</span>
+      <h2>단일 로봇 베이스라인</h2>
+      <span class="duration">2주</span>
+    </div>
+    <p class="goal">tb3_1 한 대로 순찰 주행 + Unity pose 표시 + DB 스키마 초안까지 라인을 통하게 만든다. 모든 후속의 토대.</p>
+    <details>
+      <summary>작업 카드 5개 보기</summary>
+      <div class="tickets">
+        <a class="ticket" href="https://jason1127.atlassian.net/browse/SCRUM-8" target="_blank" rel="noopener">
+          <div class="ticket-head"><span class="ticket-id">SCRUM-8</span></div>
+          <div class="title">MVP 범위·역할 매트릭스·SSOT 합의</div>
+          <div class="owners"><span class="owner-chip" data-owner="김주영">김주영</span><span class="owner-chip" data-owner="김선일">김선일</span></div>
+        </a>
+        <a class="ticket" href="https://jason1127.atlassian.net/browse/SCRUM-9" target="_blank" rel="noopener">
+          <div class="ticket-head"><span class="ticket-id">SCRUM-9</span></div>
+          <div class="title">Unity 박물관/미술관 + 듀얼 로봇 표시 관제 UI 초안</div>
+          <div class="owners"><span class="owner-chip" data-owner="김선일">김선일</span><span class="owner-chip" data-owner="박태진">박태진</span></div>
+        </a>
+        <a class="ticket" href="https://jason1127.atlassian.net/browse/SCRUM-10" target="_blank" rel="noopener">
+          <div class="ticket-head"><span class="ticket-id">SCRUM-10</span></div>
+          <div class="title">tb3_1 SLAM/Nav2 기본 순찰 베이스라인</div>
+          <div class="owners"><span class="owner-chip" data-owner="임현찬">임현찬</span><span class="owner-chip" data-owner="김선일">김선일</span></div>
+        </a>
+        <a class="ticket" href="https://jason1127.atlassian.net/browse/SCRUM-16" target="_blank" rel="noopener">
+          <div class="ticket-head"><span class="ticket-id">SCRUM-16</span></div>
+          <div class="title">실내 트랙 + 박물관/미술관 경비 구역 + 야간 모드 환경 세팅</div>
+          <div class="owners"><span class="owner-chip" data-owner="박태진">박태진</span><span class="owner-chip" data-owner="임현찬">임현찬</span></div>
+        </a>
+        <a class="ticket" href="https://jason1127.atlassian.net/browse/SCRUM-14" target="_blank" rel="noopener">
+          <div class="ticket-head"><span class="ticket-id">SCRUM-14</span></div>
+          <div class="title">DB 스키마 초안 + events 마이그레이션 + 확장 테이블 계획</div>
+          <div class="owners"><span class="owner-chip" data-owner="김주영">김주영</span><span class="owner-chip" data-owner="김선일">김선일</span></div>
+        </a>
+      </div>
+    </details>
+  </div>
+
+  <div class="sprint" data-sprint="S2">
+    <div class="sprint-head">
+      <span class="sprint-id">S2</span>
+      <h2>센서 + 이벤트 1종</h2>
+      <span class="duration">2주</span>
+    </div>
+    <p class="goal">아두이노 센서 1종으로 이벤트를 발행해 Unity 마커까지 띄운다. "감지 → 표시" 한 줄 통과.</p>
+    <details>
+      <summary>작업 카드 5개 보기</summary>
+      <div class="tickets">
+        <a class="ticket" href="https://jason1127.atlassian.net/browse/SCRUM-13" target="_blank" rel="noopener">
+          <div class="ticket-head"><span class="ticket-id">SCRUM-13</span></div>
+          <div class="title">아두이노 센서 1종(PIR/조도) → /security/event 발행</div>
+          <div class="owners"><span class="owner-chip" data-owner="김주영">김주영</span><span class="owner-chip" data-owner="임현찬">임현찬</span><span class="owner-chip" data-owner="박태진">박태진</span></div>
+        </a>
+        <a class="ticket" href="https://jason1127.atlassian.net/browse/SCRUM-19" target="_blank" rel="noopener">
+          <div class="ticket-head"><span class="ticket-id">SCRUM-19</span></div>
+          <div class="title">Pi Camera 설치 + 카메라 스트림 발행</div>
+          <div class="owners"><span class="owner-chip" data-owner="박태진">박태진</span><span class="owner-chip" data-owner="임현찬">임현찬</span></div>
+        </a>
+        <a class="ticket" href="https://jason1127.atlassian.net/browse/SCRUM-20" target="_blank" rel="noopener">
+          <div class="ticket-head"><span class="ticket-id">SCRUM-20</span></div>
+          <div class="title">tb3_1 pose ↔ 센서 이벤트 timestamp 동기화</div>
+          <div class="owners"><span class="owner-chip" data-owner="임현찬">임현찬</span><span class="owner-chip" data-owner="김선일">김선일</span></div>
+        </a>
+        <a class="ticket" href="https://jason1127.atlassian.net/browse/SCRUM-11" target="_blank" rel="noopener">
+          <div class="ticket-head"><span class="ticket-id">SCRUM-11</span></div>
+          <div class="title">Unity에 tb3_1 위치·경로·이벤트 마커 표시</div>
+          <div class="owners"><span class="owner-chip" data-owner="김선일">김선일</span><span class="owner-chip" data-owner="박태진">박태진</span></div>
+        </a>
+        <a class="ticket" href="https://jason1127.atlassian.net/browse/SCRUM-22" target="_blank" rel="noopener">
+          <div class="ticket-head"><span class="ticket-id">SCRUM-22</span></div>
+          <div class="title">야간 모드 / 이벤트 패널 / 운영 대시보드 UI</div>
+          <div class="owners"><span class="owner-chip" data-owner="김선일">김선일</span><span class="owner-chip" data-owner="박태진">박태진</span></div>
+        </a>
+      </div>
+    </details>
+  </div>
+
+  <div class="sprint" data-sprint="S3">
+    <div class="sprint-head">
+      <span class="sprint-id">S3</span>
+      <h2>DB + 2호기 출동 시뮬</h2>
+      <span class="duration">2주</span>
+    </div>
+    <p class="goal">모든 이벤트가 DB에 저장되고, tb3_2가 (시뮬 또는 실기) 출동해 카메라로 액자 주변을 확인하는 흐름 완성.</p>
+    <details>
+      <summary>작업 카드 5개 보기</summary>
+      <div class="tickets">
+        <a class="ticket" href="https://jason1127.atlassian.net/browse/SCRUM-12" target="_blank" rel="noopener">
+          <div class="ticket-head"><span class="ticket-id">SCRUM-12</span></div>
+          <div class="title">tb3_2 출동 로직 — dispatch 수신 → Nav2 goal</div>
+          <div class="owners"><span class="owner-chip" data-owner="임현찬">임현찬</span><span class="owner-chip" data-owner="김선일">김선일</span></div>
+        </a>
+        <a class="ticket" href="https://jason1127.atlassian.net/browse/SCRUM-17" target="_blank" rel="noopener">
+          <div class="ticket-head"><span class="ticket-id">SCRUM-17</span></div>
+          <div class="title">추가 센서(소리·불꽃 모의) + 임계값 캘리브</div>
+          <div class="owners"><span class="owner-chip" data-owner="김주영">김주영</span><span class="owner-chip" data-owner="임현찬">임현찬</span><span class="owner-chip" data-owner="박태진">박태진</span></div>
+        </a>
+        <a class="ticket" href="https://jason1127.atlassian.net/browse/SCRUM-21" target="_blank" rel="noopener">
+          <div class="ticket-head"><span class="ticket-id">SCRUM-21</span></div>
+          <div class="title">라벨링 + AI 오탐/실탐 분류 보조 모델 + 액자형 중요물품 인식</div>
+          <div class="owners"><span class="owner-chip" data-owner="김주영">김주영</span><span class="owner-chip" data-owner="김선일">김선일</span></div>
+        </a>
+        <a class="ticket" href="https://jason1127.atlassian.net/browse/SCRUM-23" target="_blank" rel="noopener">
+          <div class="ticket-head"><span class="ticket-id">SCRUM-23</span></div>
+          <div class="title">이벤트·좌표·사진·영상·사운드 저장 구조 확장</div>
+          <div class="owners"><span class="owner-chip" data-owner="김선일">김선일</span><span class="owner-chip" data-owner="김주영">김주영</span></div>
+        </a>
+        <a class="ticket" href="https://jason1127.atlassian.net/browse/SCRUM-25" target="_blank" rel="noopener">
+          <div class="ticket-head"><span class="ticket-id">SCRUM-25</span></div>
+          <div class="title">Pi Camera 라이브 스트리밍 → Unity 패널</div>
+          <div class="owners"><span class="owner-chip" data-owner="김선일">김선일</span><span class="owner-chip" data-owner="박태진">박태진</span></div>
+        </a>
+      </div>
+    </details>
+  </div>
+
+  <div class="sprint" data-sprint="S4">
+    <div class="sprint-head">
+      <span class="sprint-id">S4</span>
+      <h2>2대 실기 확장 + 발표 데모</h2>
+      <span class="duration">1주</span>
+    </div>
+    <p class="goal">박물관/미술관 액자 보호 컨셉으로 시나리오 4종을 시연하고 발표 지표 표를 만든다. 가능하면 2대 실기 동시 주행.</p>
+    <details>
+      <summary>작업 카드 3개 보기</summary>
+      <div class="tickets">
+        <a class="ticket" href="https://jason1127.atlassian.net/browse/SCRUM-15" target="_blank" rel="noopener">
+          <div class="ticket-head"><span class="ticket-id">SCRUM-15</span></div>
+          <div class="title">액자 보호 시나리오 4종 통합 시연 + 발표 지표 표</div>
+          <div class="owners"><span class="owner-chip" data-owner="김주영">김주영</span><span class="owner-chip" data-owner="김선일">김선일</span></div>
+        </a>
+        <a class="ticket" href="https://jason1127.atlassian.net/browse/SCRUM-18" target="_blank" rel="noopener">
+          <div class="ticket-head"><span class="ticket-id">SCRUM-18</span></div>
+          <div class="title">최종 시연 환경 — 2대 동시 구동 + 광량 준비</div>
+          <div class="owners"><span class="owner-chip" data-owner="박태진">박태진</span><span class="owner-chip" data-owner="임현찬">임현찬</span></div>
+        </a>
+        <a class="ticket" href="https://jason1127.atlassian.net/browse/SCRUM-24" target="_blank" rel="noopener">
+          <div class="ticket-head"><span class="ticket-id">SCRUM-24</span></div>
+          <div class="title">발표용 화면/영상/시나리오 컷 캡처</div>
+          <div class="owners"><span class="owner-chip" data-owner="박태진">박태진</span><span class="owner-chip" data-owner="김선일">김선일</span></div>
+        </a>
+      </div>
+    </details>
+  </div>
+
+  <div class="nav-footer">
+    <a href="dev-plan-modules.html">← 모듈</a>
+    <a href="dev-plan-scenarios.html">시나리오 4종 →</a>
+  </div>
+
+</div>
+</body>
+</html>

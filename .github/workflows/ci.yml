@@ -1,0 +1,26 @@
+name: URHYNIX CI (최소)
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  # 시크릿만 점검. 다른 건 다 풀어둠.
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run secret-scan
+        run: |
+          chmod +x .claude/skills/secret-scan/scan.sh
+          bash .claude/skills/secret-scan/scan.sh
+
+# 익숙해지면 추가할 수 있는 것 (지금은 주석 처리):
+# - HARNESS-MANIFEST required_files 검증
+# - CONTRACT.md 동시 갱신 강제
+# - ROS colcon build
+# - Unity 컴파일 (라이선스 필요)

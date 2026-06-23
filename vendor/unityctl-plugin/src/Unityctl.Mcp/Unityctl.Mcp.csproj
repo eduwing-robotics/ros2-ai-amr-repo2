@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Unityctl.Mcp</RootNamespace>
+    <AssemblyName>unityctl-mcp</AssemblyName>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>unityctl-mcp</ToolCommandName>
+    <PackageId>unityctl-mcp</PackageId>
+    <Description>MCP server for unityctl — native .NET Model Context Protocol bridge to Unity Editor</Description>
+    <Authors>Jason-hub-star</Authors>
+    <PackageProjectUrl>https://github.com/Jason-hub-star/unityctl</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Jason-hub-star/unityctl</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>unity;mcp;ai;gamedev;editor</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Unityctl.Mcp.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Unityctl.Core\Unityctl.Core.csproj" />
+  </ItemGroup>
+</Project>

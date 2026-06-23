@@ -1,0 +1,57 @@
+<!-- RightStatusPanel.uxml — 우측 240px: 배터리 + 센서 4종(인체감지/소음/온도/레이저) + 하드웨어 카드. (as-built 2026-06-18) -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="../ControlRoomTokens.uss" />
+    <Style src="../ControlRoomStyle.uss" />
+    <ui:ScrollView name="right-panel" class="right-panel">
+        <ui:VisualElement class="card">
+            <ui:Label text="배터리" class="card-title" />
+            <ui:Label name="battery-percent-label" text="-- %" class="battery-percent" />
+            <ui:VisualElement class="battery-bar-bg">
+                <ui:VisualElement name="battery-bar-fill" class="battery-bar-fill" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="card">
+            <ui:Label text="센서" class="card-title" />
+            <ui:VisualElement class="sensor-row">
+                <ui:Label text="인체감지" />
+                <ui:Label name="sensor-pir-value" text="감지 안 됨" class="sensor-value sensor-ok" />
+            </ui:VisualElement>
+            <ui:VisualElement class="sensor-row">
+                <ui:Label text="소음" />
+                <ui:Label name="sensor-sound-value" text="--" class="sensor-value sensor-ok" />
+            </ui:VisualElement>
+            <ui:VisualElement class="sensor-row">
+                <ui:Label text="온도" />
+                <ui:Label name="sensor-temp-value" text="--" class="sensor-value" />
+            </ui:VisualElement>
+            <ui:VisualElement class="sensor-row">
+                <ui:Label text="레이저" />
+                <ui:Label name="sensor-laser-value" text="미결선" class="sensor-value sensor-disabled" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="card">
+            <ui:Label text="하드웨어" class="card-title" />
+            <ui:Label name="hardware-info-label" text="(로봇 선택 시 표시)" class="muted" />
+        </ui:VisualElement>
+        <ui:VisualElement class="card card-fill">
+            <ui:Label text="보호대상" class="card-title" />
+            <ui:VisualElement name="protected-target-list">
+                <ui:VisualElement name="target-frame-a" class="target-row">
+                    <ui:VisualElement class="target-dot target-ok" />
+                    <ui:Label text="액자 A" class="target-name" />
+                    <ui:Label name="target-frame-a-status" text="확인됨" class="target-status target-status-ok" />
+                </ui:VisualElement>
+                <ui:VisualElement name="target-frame-b" class="target-row">
+                    <ui:VisualElement class="target-dot target-ok" />
+                    <ui:Label text="액자 B" class="target-name" />
+                    <ui:Label name="target-frame-b-status" text="확인됨" class="target-status target-status-ok" />
+                </ui:VisualElement>
+                <ui:VisualElement name="target-object-a" class="target-row">
+                    <ui:VisualElement class="target-dot target-ok" />
+                    <ui:Label text="중요품 A" class="target-name" />
+                    <ui:Label name="target-object-a-status" text="확인됨" class="target-status target-status-ok" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:ScrollView>
+</ui:UXML>

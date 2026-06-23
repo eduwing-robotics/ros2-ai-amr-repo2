@@ -1,0 +1,44 @@
+{
+  "sensors": [
+    {
+      "sensorId": "pir",
+      "displayName": "인체감지",
+      "sensorType": "boolean",
+      "unit": "",
+      "topicName": "/sensors/pir",
+      "warningThreshold": 1.0,
+      "iconName": "sensor_badge",
+      "robotId": "tb3_2"
+    },
+    {
+      "sensorId": "sound",
+      "displayName": "소음",
+      "sensorType": "analog",
+      "unit": "swing",
+      "topicName": "/sensors/sound",
+      "warningThreshold": 60.0,
+      "iconName": "sensor_badge",
+      "robotId": "tb3_2"
+    },
+    {
+      "sensorId": "temp",
+      "displayName": "온도",
+      "sensorType": "analog",
+      "unit": "raw",
+      "topicName": "/sensors/temp",
+      "warningThreshold": 0.0,
+      "iconName": "sensor_badge",
+      "robotId": "tb3_2"
+    },
+    {
+      "sensorId": "laser",
+      "displayName": "레이저",
+      "sensorType": "boolean",
+      "unit": "",
+      "topicName": "/sensors/laser",
+      "warningThreshold": 1.0,
+      "iconName": "sensor_badge",
+      "robotId": "tb3_2"
+    }
+  ]
+}

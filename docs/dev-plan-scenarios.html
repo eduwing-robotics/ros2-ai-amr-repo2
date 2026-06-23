@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>URHYNIX · 시나리오 4종</title>
+<style>
+  :root {
+    --bg: #eef2ff;
+    --fg: #1e1b4b;
+    --muted: #64748b;
+    --accent: #4f46e5;
+    --accent-dark: #312e81;
+    --card: #ffffff;
+    --border: #c7d2fe;
+    --hover: #e0e7ff;
+
+    --night: #4c7cf3;
+    --pir:   #ef4444;
+    --noise: #f59e0b;
+    --fire:  #b91c1c;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo",
+                 "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg); color: var(--fg);
+    line-height: 1.6; font-size: 18px;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 56px 32px 80px; }
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 14px; color: var(--muted); margin-bottom: 40px;
+  }
+  .topbar a { color: var(--accent); text-decoration: none; }
+  .topbar a:hover { text-decoration: underline; }
+
+  .badge {
+    display: inline-block; background: var(--accent); color: #fff;
+    padding: 6px 14px; border-radius: 999px; font-size: 13px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 600; margin-bottom: 16px;
+  }
+  h1 {
+    font-size: 64px; line-height: 1.1; margin: 0 0 16px;
+    letter-spacing: -0.025em; color: var(--accent-dark);
+  }
+  .lead {
+    font-size: 22px; color: var(--muted); margin: 0 0 48px; line-height: 1.55;
+  }
+
+  .scenario {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 28px 32px; margin-bottom: 22px;
+    border-top: 8px solid var(--night);
+  }
+  .scenario[data-kind="night"] { border-top-color: var(--night); }
+  .scenario[data-kind="pir"]   { border-top-color: var(--pir); }
+  .scenario[data-kind="noise"] { border-top-color: var(--noise); }
+  .scenario[data-kind="fire"]  { border-top-color: var(--fire); }
+
+  .scenario-head {
+    display: flex; align-items: baseline; gap: 16px;
+    margin-bottom: 10px; flex-wrap: wrap;
+  }
+  .scn-icon {
+    font-size: 32px;
+  }
+  .scenario h2 {
+    font-size: 36px; line-height: 1.2; margin: 0;
+    letter-spacing: -0.015em;
+  }
+  .sensor-chip {
+    font-size: 13px; color: #fff; padding: 4px 12px;
+    border-radius: 5px; background: var(--night);
+    font-weight: 600;
+  }
+  .scenario[data-kind="night"] .sensor-chip { background: var(--night); }
+  .scenario[data-kind="pir"]   .sensor-chip { background: var(--pir); }
+  .scenario[data-kind="noise"] .sensor-chip { background: var(--noise); }
+  .scenario[data-kind="fire"]  .sensor-chip { background: var(--fire); }
+
+  .scenario .summary {
+    font-size: 20px; line-height: 1.55; margin: 0;
+  }
+
+  details {
+    margin-top: 20px;
+    border-top: 1px dashed var(--border);
+    padding-top: 16px;
+  }
+  details summary {
+    cursor: pointer; font-size: 15px; color: var(--accent);
+    font-weight: 600; list-style: none; user-select: none; padding: 6px 0;
+  }
+  details summary:hover { color: var(--accent-dark); }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: "▸ "; margin-right: 4px; }
+  details[open] summary::before { content: "▾ "; }
+  details .body { margin-top: 12px; font-size: 17px; line-height: 1.6; }
+  details .body h3 {
+    font-size: 15px; margin: 14px 0 6px;
+    color: var(--accent); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  details .body p { margin: 0 0 10px; }
+  details .body ul { margin: 4px 0 12px 20px; padding: 0; }
+  details .body code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--hover); padding: 2px 6px;
+    border-radius: 3px; font-size: 15px;
+  }
+  details .body .flow {
+    background: var(--bg); border-radius: 8px;
+    padding: 12px 16px; margin: 8px 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 14px; line-height: 1.8;
+    color: var(--accent-dark);
+  }
+
+  .nav-footer {
+    margin-top: 56px; padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; font-size: 16px;
+  }
+  .nav-footer a {
+    color: var(--accent); text-decoration: none;
+    padding: 12px 20px; border: 1px solid var(--border);
+    border-radius: 8px; background: var(--card);
+  }
+  .nav-footer a:hover { background: var(--hover); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <a href="dev-plan.html">← 메인</a>
+    <span>URHYNIX · 디지털트윈경비로봇</span>
+  </div>
+
+  <span class="badge">🎬 액자 보호 시나리오 4종</span>
+  <h1>발표에서<br>보여줄<br>4가지 장면</h1>
+  <p class="lead">박물관/미술관 구역에서 액자형 사진 타깃을 지키며 야간 모드 → 외부자 감지 → 이상 소음 → 화재 의심을 시연한다. 같은 흐름(감지 → Unity 표시 → tb3_2 출동 → 카메라 확인 → 좌표·사진·영상·사운드 DB 저장)을 4가지 트리거로 보여준다.</p>
+
+  <div class="scenario" data-kind="night">
+    <div class="scenario-head">
+      <span class="scn-icon">🌙</span>
+      <h2>야간 경비 모드</h2>
+      <span class="sensor-chip">조도 센서</span>
+    </div>
+    <p class="summary">실내가 어두워지면 야간 모드가 켜지고 tb3_1이 액자형 보호 대상 주변을 저속 순찰한다. Unity 관제 화면은 <code>Night Patrol</code>과 LiDAR 강화 상태를 함께 표시한다.</p>
+    <details>
+      <summary>흐름과 표시 방식 보기</summary>
+      <div class="body">
+        <h3>흐름</h3>
+        <div class="flow">조도 임계값 하향 → /security/event(dark) → Unity 모드 토글 → tb3_1 저속 순찰 + pose/LiDAR 로그 빈도 증가</div>
+        <h3>발표 포인트</h3>
+        <ul>
+          <li>발표 시연에서는 손으로 센서를 가려 야간 모드 트리거</li>
+          <li>Unity 상단 모드 라벨이 즉시 변하는 것이 시각적 효과</li>
+          <li>오탐을 막기 위해 임계값은 시연장에서 재캘리브 (SCRUM-18)</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="scenario" data-kind="pir">
+    <div class="scenario-head">
+      <span class="scn-icon">🚶</span>
+      <h2>외부자 감지</h2>
+      <span class="sensor-chip">PIR + LiDAR</span>
+    </div>
+    <p class="summary">PIR이 사람 움직임을 감지하면 LiDAR 거리 변화와 pose 맥락을 함께 저장한다. tb3_2가 감지 좌표로 출동해 Pi Camera로 액자 주변 현장을 확인한다.</p>
+    <details>
+      <summary>흐름과 표시 방식 보기</summary>
+      <div class="body">
+        <h3>흐름</h3>
+        <div class="flow">PIR HIGH + LiDAR 변화 → /security/event(pir) → Unity 마커 표시 → dispatcher → /security/dispatch → tb3_2 Nav2 → 도착 → /security/camera_confirm → DB 기록</div>
+        <h3>발표 포인트</h3>
+        <ul>
+          <li>이 시나리오가 MVP의 가장 핵심 — "감지 → 출동 → 확인"의 전 체인을 보여준다</li>
+          <li>Pi Camera 라이브 스트림이 Unity 패널에 뜨는 순간이 클라이맥스</li>
+          <li>response_time, pose 로그, 사진/영상 경로가 DB에 저장되어 발표 지표에 사용</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="scenario" data-kind="noise">
+    <div class="scenario-head">
+      <span class="scn-icon">🔊</span>
+      <h2>이상 소음</h2>
+      <span class="sensor-chip">소리 센서</span>
+    </div>
+    <p class="summary">소리 센서가 임계값 이상을 감지하면 <code>noise_alert</code>가 발행된다. 반복 감지 횟수나 강도에 따라 severity가 올라간다.</p>
+    <details>
+      <summary>흐름과 표시 방식 보기</summary>
+      <div class="body">
+        <h3>흐름</h3>
+        <div class="flow">마이크 → 임계값 초과 → /security/event(noise, severity=2~3) → Unity 타임라인 누적 → 일정 횟수 이상 시 tb3_2 출동</div>
+        <h3>발표 포인트</h3>
+        <ul>
+          <li>한 번의 단일 이벤트가 아니라 <strong>누적/반복</strong>으로 위험도가 올라가는 패턴</li>
+          <li>Unity 타임라인 패널에 점들이 쌓이는 시각적 효과</li>
+          <li>오탐(노이즈)이 흔한 영역 — AI 분류 보조 모델(SCRUM-21)의 효과를 보여주는 자리</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="scenario" data-kind="fire">
+    <div class="scenario-head">
+      <span class="scn-icon">🔥</span>
+      <h2>화재 의심 (모의)</h2>
+      <span class="sensor-chip">불꽃 센서 · 모의</span>
+    </div>
+    <p class="summary">실제 불꽃 테스트는 금지. 모의 입력(버튼·플래그)으로 <code>fire_alert</code>를 발행하고, 카메라는 액자형 사진 타깃 주변을 확인한다. Unity는 빨간 마커와 경고 패널로 즉시 표시.</p>
+    <details>
+      <summary>흐름과 표시 방식 보기</summary>
+      <div class="body">
+        <h3>흐름</h3>
+        <div class="flow">모의 입력 버튼 → /security/event(fire, severity=3) → Unity 빨간 마커 + 경고 패널 → tb3_2 즉시 출동 → 액자 주변 카메라 확인 + 영상/사운드 저장</div>
+        <h3>발표 포인트</h3>
+        <ul>
+          <li>실제 불꽃 대신 모의 입력을 쓴다는 점을 발표에서 명시 — "안전 우선 설계"의 일부로 소개</li>
+          <li>severity 3 이벤트는 다른 모든 이벤트를 가로채고 즉시 출동</li>
+          <li>가장 극적인 화면 (빨간 풀스크린 경고)을 시연 마지막에 배치 권장</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div class="nav-footer">
+    <a href="dev-plan-sprints.html">← Sprint 보드</a>
+    <a href="dev-plan-risks.html">위험 →</a>
+  </div>
+
+</div>
+</body>
+</html>

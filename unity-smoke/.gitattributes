@@ -1,0 +1,52 @@
+# Unity-standard Git attributes (Unity 6 / 6000.x)
+# Default: auto LF normalization for text
+* text=auto eol=lf
+
+# Unity YAML — force LF and treat as text (mergetool friendly)
+*.cs           text diff=csharp eol=lf
+*.shader       text eol=lf
+*.cginc        text eol=lf
+*.hlsl         text eol=lf
+*.json         text eol=lf
+*.md           text eol=lf
+*.txt          text eol=lf
+*.rsp          text eol=lf
+*.xml          text eol=lf
+*.yml          text eol=lf
+*.yaml         text eol=lf
+*.asmdef       text eol=lf
+*.uxml         text eol=lf
+*.uss          text eol=lf
+
+# Unity serialized YAML assets — text + custom merger if you install UnityYAMLMerge
+*.unity        text merge=unityyamlmerge eol=lf
+*.prefab       text merge=unityyamlmerge eol=lf
+*.asset        text merge=unityyamlmerge eol=lf
+*.meta         text merge=unityyamlmerge eol=lf
+*.controller   text merge=unityyamlmerge eol=lf
+*.anim         text merge=unityyamlmerge eol=lf
+*.mat          text merge=unityyamlmerge eol=lf
+*.physicMaterial text merge=unityyamlmerge eol=lf
+*.physicsMaterial2D text merge=unityyamlmerge eol=lf
+*.lighting     text merge=unityyamlmerge eol=lf
+
+# Binary
+*.png          binary
+*.jpg          binary
+*.jpeg         binary
+*.gif          binary
+*.psd          binary
+*.fbx          binary
+*.obj          binary
+*.tga          binary
+*.tif          binary
+*.tiff         binary
+*.wav          binary
+*.mp3          binary
+*.ogg          binary
+*.mp4          binary
+*.dll          binary
+*.so           binary
+*.dylib        binary
+*.bundle       binary
+*.unitypackage binary

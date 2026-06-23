@@ -1,0 +1,11 @@
+{
+  "_comment": "복사해서 supabase.json 으로 저장(=gitignore 대상). anon/publishable 키만. service_role 절대 금지.",
+  "url": "https://ueupkrxwybuuqxflstvg.supabase.co",
+  "anonKey": "sb_publishable_PUT_YOUR_PUBLISHABLE_KEY_HERE",
+  "defaultRobotId": "tb3_2",
+  "fallbackSessionId": "00000000-0000-0000-0000-000000000001",
+  "scenario": "mixed",
+  "poseWriteHz": 2.0,
+  "poseMinMoveMeters": 0.05,
+  "enabled": true
+}
