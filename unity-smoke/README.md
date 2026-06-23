@@ -23,7 +23,7 @@ sudo apt update && sudo apt install -y expect openssh-client netcat-openbsd jq c
 brew install expect jq
 
 # 1) URHYNIX repo clone
-git clone https://github.com/URHYNIX/URHYNIX.git ~/URHYNIX
+git clone https://github.com/eduwing-robotics/ros2-ai-amr-repo2.git ~/URHYNIX
 
 # 2) tb3 helpers source
 echo 'source ~/URHYNIX/scripts/tb3.sh' >> ~/.zshrc    # macOS

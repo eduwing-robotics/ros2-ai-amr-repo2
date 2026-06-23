@@ -86,7 +86,7 @@ sudo apt update && sudo apt install -y expect openssh-client netcat-openbsd jq c
 brew install expect jq
 
 # 2) 레포 clone (콜라보레이터 권한 확인 후)
-git clone https://github.com/URHYNIX/URHYNIX.git ~/URHYNIX
+git clone https://github.com/eduwing-robotics/ros2-ai-amr-repo2.git ~/URHYNIX
 
 # 3) helpers source
 echo 'source ~/URHYNIX/scripts/tb3.sh' >> ~/.bashrc     # Ubuntu
@@ -395,7 +395,7 @@ Day-1 PASS 확인 후 다음 액션:
 | Jira | [SCRUM-7 에픽](https://jason1127.atlassian.net/browse/SCRUM-7) | 18 카드 부모 |
 | Jira | [SCRUM 보드](https://jason1127.atlassian.net/jira/software/projects/SCRUM/boards/1) | 칸반 |
 | Slack | 채널 `C0B5Q43A27R` (⚠️ 봇 초대 필요) | 팀 소통 |
-| GitHub | [URHYNIX/URHYNIX](https://github.com/URHYNIX/URHYNIX) | 코드 |
+| GitHub | [eduwing-robotics/ros2-ai-amr-repo2](https://github.com/eduwing-robotics/ros2-ai-amr-repo2) | 코드 |
 
 ---
 

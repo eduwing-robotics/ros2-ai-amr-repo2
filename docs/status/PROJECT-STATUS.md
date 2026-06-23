@@ -75,7 +75,7 @@ Last updated: 2026-06-23 — **🔄 git 원격 이관 완료**: 기존 `https://
 | Confluence | [기능 요구사항 정의서 v5](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/2555905) | 액자 보호 기능 요구사항 + 현재/예정 DB 분리 |
 | Jira | [SCRUM-7 에픽](https://jason1127.atlassian.net/browse/SCRUM-7) · [보드](https://jason1127.atlassian.net/jira/software/projects/SCRUM/boards/1) | 18 카드 부모 |
 | Slack | 채널 `C0B5Q43A27R` (⚠️ 봇 초대 필요) | 팀 소통 |
-| GitHub | [URHYNIX/URHYNIX](https://github.com/URHYNIX/URHYNIX) | 코드 정본 |
+| GitHub | [eduwing-robotics/ros2-ai-amr-repo2](https://github.com/eduwing-robotics/ros2-ai-amr-repo2) | 코드 정본 |
 | 로컬 보드 | `docs/dev-plan-bundle.html` | 단일 HTML 7페이지 |
 
 ## 역할 매트릭스 (5 모듈 × 4명)

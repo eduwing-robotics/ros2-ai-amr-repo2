@@ -4,6 +4,10 @@ UR HYNIX 팀의 TurtleBot3 + Unity Digital Twin + Camera Vision 장애물 인식
 
 이 폴더는 Jira/Confluence에 올린 내용을 다시 찾기 쉽게 정리하는 로컬 정본입니다.
 
+## 저장소
+
+- 코드 정본: https://github.com/eduwing-robotics/ros2-ai-amr-repo2
+
 ## 바로 읽는 순서
 
 1. [현재 상태](docs/status/PROJECT-STATUS.md)

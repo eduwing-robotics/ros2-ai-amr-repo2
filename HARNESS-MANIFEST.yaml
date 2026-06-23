@@ -2,7 +2,7 @@ version: 1
 name: URHYNIX
 generated_on: 2026-05-26
 based_on: jason-agent-harness-template@2026-05-15
-github: https://github.com/URHYNIX/URHYNIX.git
+github: https://github.com/eduwing-robotics/ros2-ai-amr-repo2.git
 
 project_focus:
   domain: SK하이닉스 산학협력 MVP — TurtleBot3 자율주행 + Unity 디지털트윈 + 카메라 장애물 인식 + DB 기록
