@@ -2,6 +2,28 @@
 
 > **📌 최신 5건은 DECISION-CURRENT.md 참조. 이 파일은 전체 역사 기록입니다.**
 
+## 2026-06-23
+
+### 🔄 프로젝트 git 원격 이관 — 기존 repo 폐기 · 새 repo로 단일 초기 커밋 force-push 완료
+
+- **결정**: URHYNIX 프로젝트의 git 원격을 새 GitHub repo로 이관하고 앞으로 모든 push는 이 repo로 진행한다.
+- **새 원격(origin)**: `https://github.com/eduwing-robotics/ros2-ai-amr-repo2`
+- **기존 원격**: `https://github.com/URHYNIX/URHYNIX.git` (더 이상 사용 안 함, 로컬 백업만 보존)
+- **방식**: 기존 git 히스토리를 버리고 새로 init → 단일 초기 커밋으로 force-push 완료. 기존 히스토리는 로컬 `.git.bak.20260623/`에 백업됨(새 repo 검증 후 삭제 예정).
+- **경량화 최적화** (.gitignore 보강 완료):
+  - `unity-src/` (구버전 Unity, 60M prefab 포함) 제외
+  - 모델 가중치: `*.pt`, `*.onnx`, `*.engine`, `*.pth`, `*.weights` 제외
+  - 영상 파일: `*.mp4`, `*.mov`, `*.avi`, `*.mkv`, `*.h264`, `*.h265` 제외
+  - 루트 참고 PDF: `/*.pdf` 제외
+  - evidence 이미지: `docs/evidence/**/*.{png,jpg,jpeg,gif,webp,bmp}` (42개 36M, git에서만 제거·로컬 보존)
+- **결과**: 클론 무게 약 **25M**(압축 .git 기준).
+- **검증**: Unity ControlRoom 프로젝트는 클론 후 **Unity 6000.3.16f1**로 정상 열림. ProjectSettings/Packages/manifest.json/Assets/.meta 전부 포함. 런타임 DB는 `SupabaseConfig/supabase.json`을 `.example`에서 복사·키 입력 필요.
+- **미보류 액션**:
+  - 옛 히스토리 백업(`.git.bak.20260623/`) 삭제(새 repo 검증 후)
+  - evidence 맵 PNG 필요 시 복원 검토
+
+---
+
 ## 2026-06-18
 
 ### ✅ demo_logs_rls.sql 적용 완료 + Unity 직접쓰기 경로 end-to-end 검증 PASS (pose_logs TF 추적 과제)

@@ -4,21 +4,23 @@
 > 
 > 구조: Last updated 날짜 | Top 액션 | 첫 5분 체크리스트 | 복구 명령 | More info 링크
 
-**Last updated**: 2026-06-18 (**✅ demo_logs_rls.sql 적용 완료 + Unity→Supabase 직접쓰기 end-to-end 검증 PASS** — Supabase `ueupkrxwybuuqxflstvg`는 paused 아니라 **복구 LIVE** 확인. demo_logs_rls.sql 적용(logs 테이블 + dispatches event_id nullable·nav_mode·reason + anon RLS 10개), anon REST 왕복(pose_logs/logs insert→select) PASS, Unity Play에서 **session_meta + logs 직접쓰기 PASS**(logs 7건 DB 실기록, `DbVerifyConsole.Verify()` active=True 검증). **⚠️ 미해결 1건**: pose_logs에 Unity pose 미기록 — RobotPoseSubscriber가 `/tf` map 프레임을 못 받음(로봇 정지 아님; 첫 pose는 무조건 기록되는 로직이라 데이터 소스 미수신이 원인). **다음 진입**: ① Unity Play에서 RobotPoseSubscriber `/tf` 구독·수신 확인 → ROS 연결(젠지 `192.168.10.84:10000`)·TF 체인(map→odom→base_link 발행 여부)·센서 real/fake 점검 → ② pose 흐르면 pose_logs 적재 확인. **주의**: anon DELETE 정책 없음(204여도 미삭제) → 정리는 `supabase db query` service 권한. 자세히: `DECISION-LOG.md` 2026-06-18 최상단. **함정 메모**: unityctl 0.4.0 `play start/stop`은 `--project` 필수, `exec invoke`는 `--type`/`--method` 분리. **이전(2026-06-18, superseded)**: 🗄️ Unity→Supabase "직접 택배" 코드+컴파일 PASS·DB 복구 대기 — 위에서 Restore·SQL 적용·검증 완료로 해소. **이전(2026-06-18)**: ✅ 실센서→ROS→Unity 4카드 라이브 표시 LIVE 검증(사용자 화면 확인), IP 정합+PIR D4→D2. **이전(2026-06-18 오후)**: Phase C Unity UI 4센서 카드 리팩토링 PASS. **이전(2026-06-17)**: 🌡️ PP-A017 온도 A0 PASS · 🎨 시나리오 다이어그램. **ROS IP SSOT**: `default_robots.json[0].hostAddress` — DHCP drift 시 먼저 여기 갱신.
+**Last updated**: 2026-06-23 (**🔄 git 원격 이관 완료** — 기존 URHYNIX repo에서 새 ros2-ai-amr-repo2로 이관. 클론 무게 ~25M, Unity ControlRoom 6000.3.16f1 정상. **⚠️ 주의**: 앞으로 모든 push는 새 repo `https://github.com/eduwing-robotics/ros2-ai-amr-repo2`로 진행. 옛 히스토리 백업 `.git.bak.20260623/`은 검증 후 삭제 예정. evidence 맵 PNG는 로컬 보존(git 제외). 자세히: `DECISION-LOG.md` 2026-06-23 최상단. **이전(2026-06-18)**: ✅ demo_logs_rls.sql 적용 완료 + Unity→Supabase 직접쓰기 검증 PASS (pose_logs TF 미수신 차후 추적). **이전(2026-06-18)**: ✅ 실센서→ROS→Unity 4카드 라이브 표시. **ROS IP SSOT**: `default_robots.json[0].hostAddress` — DHCP drift 시 먼저 여기 갱신.
 
 ---
 
 ## ⚡ Top 1 Action (가장 최신)
 
-**Unity pose_logs 미기록 추적 — RobotPoseSubscriber /tf map 프레임 수신 / TF 체인 확인**
+**다음 세션 시작 전 git origin 원격 확인**
 
-- **배경**: Supabase demo_logs_rls.sql 적용 완료 + session_meta/logs 직접쓰기 PASS (logs 7건 기록), pose_logs만 0건  
-- **원인**: RobotPoseSubscriber가 /tf map 프레임 못 받는 것(TF 체인/ROS 연결/센서 fake 여부 미확인)  
-- **다음 확인**:  
-  1. ROS bringup 시 `/tf` 토픽이 map→odom→base_link 체인 발행되는가  
-  2. RobotPoseSubscriber 구독 로그에 "Transform received" 메시지가 나오는가  
-  3. 로봇 센서(SLAM/wheel odom)가 정상 동작 중인가  
-- **주의**: 첫 pose는 조건 없이 무조건 기록(로직 정상), 데이터 소스만 미수신
+- **배경**: 2026-06-23 git 원격을 새 repo `https://github.com/eduwing-robotics/ros2-ai-amr-repo2`로 이관 완료
+- **다음 확인**:
+  1. `git remote -v` → origin이 새 repo인지 확인
+  2. 클론 무게 `du -sh .git/` → ~25M 정상 범위
+  3. Unity ControlRoom 빌드 → 정상 실행 확인
+- **미보류**:
+  - 옛 히스토리 백업(`.git.bak.20260623/`) 삭제(새 repo 검증 후)
+  - evidence 맵 PNG 필요 시 로컬 보존 확인
+- **주의**: 앞으로 모든 push는 새 repo로만 진행
 
 ---
 

@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-06-18 — **✅ demo_logs_rls.sql 적용 완료 + Unity 직접쓰기 경로 end-to-end 검증 PASS**: Supabase `ueupkrxwybuuqxflstvg` 복구되어 LIVE. logs 테이블 생성, dispatches event_id nullable + nav_mode/reason, anon RLS 10개 적용 완료. Unity Play에서 session_meta + logs 테이블 직접쓰기 PASS, logs 7건 DB 실기록(`DbVerifyConsole` 검증). **미해결**: pose_logs는 RobotPoseSubscriber /tf map 프레임 미수신(다음 세션 TF 추적 과제). 자세히: `DECISION-LOG.md` 2026-06-18 최상단. 이전(2026-06-18): 4센서 통합 아두이노 핀맵 확정 PASS(PIR D2·레이저 D4·사운드 A1 AO·온도 A0). **이전(2026-06-10)**: Mac MPS + T1 RealSense → YOLOv8n 라이브 PASS(26 fps).
+Last updated: 2026-06-23 — **🔄 git 원격 이관 완료**: 기존 `https://github.com/URHYNIX/URHYNIX.git`에서 새 `https://github.com/eduwing-robotics/ros2-ai-amr-repo2`로 이관. 클론 무게 ~25M (경량화 완료: unity-src 60M·모델 가중치·영상·PDF·evidence 이미지 git 제외, 로컬 보존). Unity ControlRoom 6000.3.16f1 정상 열림. 앞으로 모든 push는 새 repo로 진행. 자세히: `DECISION-LOG.md` 2026-06-23 최상단. **이전(2026-06-18)**: ✅ demo_logs_rls.sql 적용 완료 + Unity→Supabase 직접쓰기 end-to-end 검증 PASS (pose_logs TF 미수신 차후 추적). **이전(2026-06-18)**: 4센서 통합 아두이노 핀맵 확정 PASS(PIR D2·레이저 D4·사운드 A1 AO·온도 A0). **이전(2026-06-10)**: Mac MPS + T1 RealSense → YOLOv8n 라이브 PASS(26 fps).
 
 ## 2026-06-02 Addendum
 
