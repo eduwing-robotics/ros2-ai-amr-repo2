@@ -1,10 +1,12 @@
 // MapPanelView.cs — 중앙 맵 패널의 툴바/토글 담당. 2D 콘텐츠는 Map/MapView 서브시스템에 위임.
 // 2026-06-16: 직접 텍스처 렌더를 걷어내고 MapView(Viewport/Image/Hud/[Phase2]Marker/[Phase3]Interaction)로 분리.
 // 3D는 Phase 6 안내. 책임분리로 이 파일은 토글만 유지(비대화 방지).
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 using URHYNIX.ControlRoom.App;
 using URHYNIX.ControlRoom.Map;
+using URHYNIX.ControlRoom.Services;
 
 namespace URHYNIX.ControlRoom.UI
 {
@@ -29,6 +31,9 @@ namespace URHYNIX.ControlRoom.UI
 
             if (container2D != null) mapView = new MapView(container2D, root);
 
+            SetupSlotDropdown(root);
+            SetupPatrolControls(root);
+
             // 맵 회전 컨트롤 (SLAM 원점↔실제 경기장 정렬 보정). 맵+마커 함께 회전.
             var btnCcw = root.Q<Button>("btn-map-rot-ccw");
             var btnCw  = root.Q<Button>("btn-map-rot-cw");
@@ -43,6 +48,62 @@ namespace URHYNIX.ControlRoom.UI
 
             ControlRoomEvents.OnMapViewModeChanged += SyncUI;
             SyncUI(ControlRoomState.Instance.MapViewMode);
+        }
+
+        // 맵 슬롯 드롭다운: 저장맵 슬롯 + 라이브(SLAM)를 나열, 선택 시 슬롯 전환 이벤트 발화.
+        void SetupSlotDropdown(VisualElement root)
+        {
+            var dd = root.Q<DropdownField>("map-slot-dropdown");
+            if (dd == null) return;
+
+            var choices = new List<string>();
+            foreach (var id in MapCatalog.SlotIds()) choices.Add(id);
+            choices.Add(MapCatalog.LiveLabel);   // 라이브(SLAM)
+            dd.choices = choices;
+
+            // 초기값: 마지막 선택 슬롯(없으면 첫 슬롯, 그것도 없으면 라이브).
+            string active = PlayerPrefs.GetString(StaticMapLoader.ActiveSlotPrefKey, "");
+            string initial = (active == MapCatalog.LiveSlotId) ? MapCatalog.LiveLabel
+                           : (choices.Contains(active) ? active : choices[0]);
+            dd.SetValueWithoutNotify(initial);
+
+            dd.RegisterValueChangedCallback(evt =>
+            {
+                string slot = (evt.newValue == MapCatalog.LiveLabel) ? MapCatalog.LiveSlotId : evt.newValue;
+                ControlRoomEvents.RaiseMapSlotSelected(slot);
+                ControlRoomEvents.RaiseLogAdded("map", "INFO", $"맵 슬롯 전환: {evt.newValue}");
+            });
+        }
+
+        // 순찰 편집 토글 + 전체삭제 버튼. 토글 ON이면 맵 좌클릭=추가, 우클릭=마지막제거.
+        void SetupPatrolControls(VisualElement root)
+        {
+            var btnEdit = root.Q<Button>("btn-patrol-edit");
+            var btnClear = root.Q<Button>("btn-patrol-clear");
+            if (btnEdit != null)
+                btnEdit.clicked += () =>
+                {
+                    bool on = !ControlRoomState.Instance.PatrolEditMode;
+                    ControlRoomState.Instance.SetPatrolEditMode(on);
+                    btnEdit.EnableInClassList("active", on);
+                    ControlRoomEvents.RaiseLogAdded("map", "INFO",
+                        on ? "순찰 편집 ON — 좌클릭=지점추가, 우클릭=마지막제거" : "순찰 편집 OFF");
+                };
+            if (btnClear != null)
+                btnClear.clicked += () => PatrolService.Instance.Clear();
+
+            var btnRun = root.Q<Button>("btn-patrol-run");
+            if (btnRun != null)
+                btnRun.clicked += () =>
+                {
+                    if (!ActiveRobotService.Has(ActiveRobotService.CapPatrol))
+                    {
+                        ControlRoomEvents.RaiseLogAdded("patrol", "WARN",
+                            $"{ActiveRobotService.CurrentId}는 순찰 미지원(capabilities)");
+                        return;
+                    }
+                    ControlRoomEvents.RaisePatrolRunRequested(ControlRoomState.Instance.SelectedRobotId);
+                };
         }
 
         void RotateMap(float delta)

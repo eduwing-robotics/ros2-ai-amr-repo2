@@ -5,6 +5,7 @@ using UnityEngine.UIElements;
 using URHYNIX.ControlRoom.App;
 using URHYNIX.ControlRoom.Data;
 using URHYNIX.ControlRoom.Map.Actions;
+using URHYNIX.ControlRoom.Services;
 
 namespace URHYNIX.ControlRoom.Map
 {
@@ -49,6 +50,17 @@ namespace URHYNIX.ControlRoom.Map
 
         void OnDown(PointerDownEvent e)
         {
+            // 순찰 편집 모드: 좌클릭=지점 추가, 우클릭=마지막 제거 (레퍼런스 UX).
+            if (ControlRoomState.Instance.PatrolEditMode && (e.button == 0 || e.button == 1))
+            {
+                if (!ToWorld((Vector2)e.localPosition, out float ewx, out float ewy)) return;
+                if (e.button == 0) PatrolService.Instance.Add(ewx, ewy);
+                else PatrolService.Instance.RemoveLast();
+                menu.Close();
+                e.StopPropagation();
+                return;
+            }
+
             if (e.button == 0) { menu.Close(); return; }   // 좌클릭 → 닫기
             if (e.button != 1) return;                       // 우클릭만 메뉴
             if (!ToWorld((Vector2)e.localPosition, out float wx, out float wy)) return;

@@ -16,6 +16,9 @@ namespace URHYNIX.ControlRoom.Map.Actions
             actions.Add(new DispatchHereAction());
             LoadSituations();                       // SSOT 상황 출동 액션
             actions.Add(new AddWaypointAction());
+            actions.Add(new RemoveWaypointAction());
+            actions.Add(new ClearWaypointsAction());
+            actions.Add(new RunPatrolAction());
             actions.Add(new MarkProtectedTargetAction());
         }
 

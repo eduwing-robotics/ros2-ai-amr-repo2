@@ -107,6 +107,11 @@
 - "라이브 SLAM 맵을 Unity 맵뷰에 띄우고 로봇 마커/우클릭 출동/회전 보정" -> `unity-live-map-twin`
 - "배터리·카메라·맵·센서 5트랙을 한 로봇에 동시에 띄워 Unity에 다 표시" -> `urhynix-fullstack-bringup`
 - "unityctl로 코드 검증하는데 컴파일이 stale/스크린샷 검정/에디터 묶임" -> `unity-unityctl-ops`
+- "다른 PC가 라이다/Nav2 돌리는 중인데 위치값만 방해 없이 읽고 싶다" -> `ros2-noninvasive-pose-tap`
+- "텔레옵으로 로봇 세워가며 실측 순찰 웨이포인트를 만들고 싶다" -> `urhynix-teleop-waypoint-capture`
+- "저장맵에서 안전 순찰 좌표를 자동으로 뽑고 싶다" -> `map-pgm-waypoint-autogen`
+- "DB 살았나/연결됐나 5초에 확인하고 싶다" -> `supabase-db-health-ping`
+- "팀원 파일 없이 운영 중 도메인에서 현재 맵을 직접 떠오고 싶다" -> `live-map-pull-from-domain`
 
 ## Writing Rules
 

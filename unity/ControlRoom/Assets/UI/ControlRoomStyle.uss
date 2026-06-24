@@ -97,7 +97,7 @@
 }
 
 .right-panel {
-    width: 280px;
+    width: 260px;
     height: 100%;
     background-color: var(--color-surface);
     border-left-width: 1px;
@@ -404,12 +404,18 @@
     -unity-font-style: italic;
 }
 
-/* ─── Camera + Log row (240px 고정 — 맵이 나머지 다 차지) ─── */
+/* ─── Camera + Log row (190px 고정 — 맵이 화면 대부분을 차지하도록 축소) ─── */
 .camera-log-row {
     flex-direction: row;
     flex-grow: 0;
     flex-shrink: 0;
-    height: 240px;
+    height: 190px;
+}
+
+/* 맵 슬롯 드롭다운 (저장맵/라이브 전환) */
+.map-slot-dropdown {
+    min-width: 150px;
+    margin-left: var(--space-sm);
 }
 
 .camera-panel {

@@ -1,0 +1,14 @@
+{
+  "map": {
+    "mapId": "genji_arena",
+    "displayName": "젠지 아레나",
+    "originX": -2.142,
+    "originY": -0.892,
+    "resolution": 0.05,
+    "widthPx": 57,
+    "heightPx": 58,
+    "displayRotationDeg": 0
+  },
+  "waypoints": [],
+  "protectedTargets": []
+}

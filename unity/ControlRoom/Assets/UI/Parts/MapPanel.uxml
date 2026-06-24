@@ -5,10 +5,14 @@
     <ui:VisualElement name="map-panel" class="map-panel card">
         <ui:VisualElement class="map-toolbar">
             <ui:Label text="맵 뷰" class="card-title" />
+            <ui:DropdownField name="map-slot-dropdown" class="map-slot-dropdown" tooltip="맵 슬롯 선택 (저장맵/라이브)" />
             <ui:VisualElement class="spacer" />
             <ui:Button name="btn-map-rot-ccw" text="⟲" class="btn-map-mode" />
             <ui:Label name="map-rot-angle" text="0°" class="map-rot-angle" />
             <ui:Button name="btn-map-rot-cw" text="⟳" class="btn-map-mode" />
+            <ui:Button name="btn-patrol-edit" text="✎ 순찰편집" class="btn-map-mode" tooltip="좌클릭=지점추가, 우클릭=마지막제거" />
+            <ui:Button name="btn-patrol-run" text="▶ 순찰시작" class="btn-map-mode" tooltip="현재 경로를 선택 로봇으로 실행" />
+            <ui:Button name="btn-patrol-clear" text="전체삭제" class="btn-map-mode" tooltip="순찰 웨이포인트 전체삭제" />
             <ui:Button name="btn-map-2d" text="2D" class="btn-map-mode active" />
             <ui:Button name="btn-map-3d" text="3D" class="btn-map-mode" />
         </ui:VisualElement>

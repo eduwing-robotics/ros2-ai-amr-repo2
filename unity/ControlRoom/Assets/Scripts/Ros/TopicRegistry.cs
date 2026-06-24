@@ -32,6 +32,11 @@ namespace URHYNIX.ControlRoom.Ros
         // Nav2 단일 목표 좌표. 맵 우클릭 출동 → DispatchPublisher가 PoseStamped 발행.
         public const string GoalPose = "/goal_pose";
 
+        // 순찰 경로(PoseArray). FollowWaypointsPublisher가 발행 → 로봇측 patrol_waypoints_bridge.py가
+        // Nav2 FollowWaypoints로 실행(ROS-TCP 액션 미지원 우회). per-robot 네임스페이스.
+        public static string GetPatrolWaypoints(string robotId)
+            => string.IsNullOrEmpty(robotId) ? null : $"/{robotId}/patrol_waypoints";
+
         public static string GetCameraCompressed(string robotId)
         {
             switch (robotId)

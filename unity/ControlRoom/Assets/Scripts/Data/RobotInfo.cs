@@ -9,7 +9,8 @@ namespace URHYNIX.ControlRoom.Data
     {
         public string robotId;        // "tb3_1" / "tb3_2"
         public string displayName;    // "티원" / "젠지"
-        public string role;           // "vision" / "sensor"
+        public string role;           // 표시용 기본 역할 ("vision" / "sensor"). 실제 동작은 capabilities로 판정.
+        public string[] capabilities; // 수행 가능 능력: "patrol"/"sensor"/"vision"/"slam". 둘 다 patrol 보유 → 역할 상호교환.
         public string model;          // "TurtleBot3 Burger"
         public string hostAddress;    // mDNS 또는 IP (예: "urhynix-robot.local", "t1@192.168.0.250")
         public string cameraTopic;    // 예: "/tb3_1/camera/color/image_raw/compressed"

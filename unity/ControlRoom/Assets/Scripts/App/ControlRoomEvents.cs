@@ -46,5 +46,21 @@ namespace URHYNIX.ControlRoom.App
         public static event Action<string, float, float, string> OnDispatchRequested;
         public static void RaiseDispatchRequested(string robotId, float x, float y, string reason) =>
             OnDispatchRequested?.Invoke(robotId, x, y, reason);
+
+        // 맵 슬롯 선택 (slotId = 저장맵 id, 또는 "live" = 라이브 SLAM). 드롭다운 → MapImageLayer가 소비.
+        public static event Action<string> OnMapSlotSelected;
+        public static void RaiseMapSlotSelected(string slotId) => OnMapSlotSelected?.Invoke(slotId);
+
+        // 순찰 웨이포인트 목록 변경. PatrolService → PatrolMarkerLayer/리스트뷰가 소비.
+        public static event Action OnPatrolChanged;
+        public static void RaisePatrolChanged() => OnPatrolChanged?.Invoke();
+
+        // 순찰 편집 모드 토글 (true=좌클릭 추가/우클릭 마지막제거). 툴바 → MapInteractionController가 소비.
+        public static event Action<bool> OnPatrolEditModeChanged;
+        public static void RaisePatrolEditModeChanged(bool on) => OnPatrolEditModeChanged?.Invoke(on);
+
+        // 순찰 실행 요청 (robotId). 액션/버튼 → FollowWaypointsPublisher가 PoseArray 발행.
+        public static event Action<string> OnPatrolRunRequested;
+        public static void RaisePatrolRunRequested(string robotId) => OnPatrolRunRequested?.Invoke(robotId);
     }
 }

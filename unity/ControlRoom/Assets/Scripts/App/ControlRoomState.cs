@@ -46,6 +46,15 @@ namespace URHYNIX.ControlRoom.App
             ControlRoomEvents.RaiseMapViewModeChanged(mode);
         }
 
+        // 순찰 편집 모드 (true면 맵 좌클릭=지점추가, 우클릭=마지막제거)
+        public bool PatrolEditMode { get; private set; }
+        public void SetPatrolEditMode(bool on)
+        {
+            if (PatrolEditMode == on) return;
+            PatrolEditMode = on;
+            ControlRoomEvents.RaisePatrolEditModeChanged(on);
+        }
+
         // 세션 UUID (Supabase session_meta FK)
         public string SessionId { get; set; }
 

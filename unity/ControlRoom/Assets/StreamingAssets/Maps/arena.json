@@ -1,0 +1,14 @@
+{
+  "map": {
+    "mapId": "arena",
+    "displayName": "아레나(현재)",
+    "originX": -0.734,
+    "originY": -2.161,
+    "resolution": 0.05,
+    "widthPx": 57,
+    "heightPx": 58,
+    "displayRotationDeg": 270
+  },
+  "waypoints": [],
+  "protectedTargets": []
+}

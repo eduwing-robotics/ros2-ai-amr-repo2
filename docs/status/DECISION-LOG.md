@@ -2,6 +2,47 @@
 
 > **📌 최신 5건은 DECISION-CURRENT.md 참조. 이 파일은 전체 역사 기록입니다.**
 
+## 2026-06-24
+
+### 🗺️ 티원 신규 SLAM 맵 `arena_v3` 저장·검증 PASS + Unity 슬롯 등록
+
+- **결정/결과**: 2026-06-23 잔여 블로커(좌표↔맵 불일치·localize 방향)를 해소하기 위해 티원으로 텔레옵 + SLAM(`slam_toolbox`) 재매핑 → `arena_v3` 맵 저장 완료(10:49). 맵 품질 정량검증 PASS, Unity ControlRoom 슬롯으로 등록까지 완료.
+- **연결 상태**: 젠지 `kim@192.168.10.84`(kim-desktop), 티원 `t1@192.168.10.250`(rb) — 둘 다 무선 정상. alias/mDNS 죽어서 SSOT IP로 직접 접속(DHCP drift 정상). 직결 en5(192.168.10.50) 미사용.
+- **맵 검증 매트릭스** (`arena_v3.pgm` 41×42px, res 0.05, origin(-0.424446,-1.820601)):
+  - 점유(벽) 25.4% / 자유(주행가능) 74.6% / 미지 0%
+  - ASCII+PNG 시각확인: 닫힌 방 외곽선 + 내부 자유공간 + 중앙 장애물(충전소 추정) 또렷, **드리프트(벽 겹침/휨) 없음** → ✅ 정상 맵
+  - ⚠️ 실제 크기 약 2.05m × 2.1m로 작음 — 경기장 전체인지 일부인지 미확정(주인님 육안 확인 필요).
+- **해결 절차** (재현 가능):
+  1. 티원 직접 IP ssh(`t1@192.168.10.250`) → `~/arena_v3.pgm/.yaml` 확인(map_saver 산출).
+  2. pgm 픽셀 통계 + ASCII + PNG 12배 확대로 품질 판정.
+  3. `scp`로 Mac `docs/evidence/maps/arena_v3/` 복사(pgm/yaml/png).
+  4. `python3 scripts/pgm_to_map_slot.py docs/evidence/maps/arena_v3/arena_v3.pgm <yaml> arena_v3 "티원 아레나 v3"` → `StreamingAssets/Maps/arena_v3.png+json` 생성.
+- **핵심 학습 2건**: ① `MapCatalog.cs`는 `Directory.GetFiles(Maps,"*.json")` **디렉토리 스캔** 방식이라 새 슬롯 자동 인식 — 코드 등록 불필요. 기본맵만 `StaticMapLoader.defaultSlotId="arena"`로 고정(arena_v3는 런타임 선택 또는 PlayerPrefs 기억). ② 저장 맵으로 **이동(goal_pose)** 검증하려면 `slam_toolbox`(라이브 매핑)가 아니라 **Nav2(AMCL+정적맵)** 스택 필요 — 매핑과 주행 스택은 별개.
+- **부수 산출물**: `docs/evidence/maps/arena_v3/{arena_v3.pgm,.yaml,.png}`, `unity/ControlRoom/Assets/StreamingAssets/Maps/{arena_v3.png,arena_v3.json}`.
+- **다음 진입**: arena_v3 맵에서 ① 로봇 위치 마커(/tf) 표시 ② 좌표설정 goal_pose로 로봇 실이동 검증. 코드는 이미 존재(`RobotPoseSubscriber`/`MapMarkerLayer`/`DispatchPublisher`) → **신규 구현 아닌 검증**. 선행조건=티원 `slam_toolbox` 종료 후 Nav2(AMCL+arena_v3 정적맵) 전환(`urhynix-nav2-waypoint-patrol`).
+
+## 2026-06-23
+
+### 젠지 Nav2 순찰 실측 — 소프트웨어 PASS, 잔여 2건 (2026-06-23)
+
+- **결정**: Nav2 웨이포인트 순찰 소프트웨어 스택(Nav2 FollowWaypoints 액션 + patrol_waypoints_bridge.py + run_waypoints.py)을 젠지 실제 환경에서 검증 완료. 결과: 로봇 부팅, 맵 로드, AMCL localize, FollowWaypoints 액션 발행·수행 전 과정 정상 작동. Unity ControlRoom에 로봇 위치 마커 실시간 표시(맵 270° 회전 정렬) 확인. 모터 동작(제자리 회전) 정상.
+- **잔여 2건(블로커)**: ① planner_server GridBased 경로실패 — save map.pgm(57×58, origin -0.734,-2.161)의 자유공간과 웨이포인트 좌표 불일치(점유/미탐색 셀 걸침). 캡처 당시 라이브맵과 저장맵이 다른 상태. ② heading 오류 — --dynamic-start로 기존 AMCL 추정값을 쓸 때 yaw가 180° 틀어져 로봇이 반대 방향 이동 시도. (주의: Unity 270° 회전은 화면 표시 전용·주행 무관)
+- **다음 권장 액션**: 현재 공간 새 SLAM 매핑(cartographer) → 그 맵에서 웨이포인트 재캡처(urhynix-teleop-waypoint-capture) → urhynix-nav2-waypoint-patrol로 순찰 재실행. 맵-실제 방향 일치로 planner 경로실패 + heading 오류 동시 해결.
+- **영향**: Nav2 웨이포인트 기반 순찰 기능은 로봇·통신·제어·UI 모두 정상. 다음 mapping 및 좌표 정합 후 실제 주행 가능 상태. 스킬 urhynix-nav2-waypoint-patrol에 함정 6건 영구 기록 완료.
+
+## 2026-06-23
+
+### Unity 맵 웨이포인트 에디터(MWE) 구현 + 핵심 설계 결정
+
+- **결정**: 레퍼런스(PyQt UR암 그리드 에디터) 아이디어를 ROS2/Nav2 맥락으로 재설계. 기존 `unity-live-map-twin` Map 레이어 확장(신규 아키텍처 아님).
+- **결정**: ROS-TCP-Connector는 ROS2 액션 미지원 → 순찰 실행은 Unity가 `geometry_msgs/PoseArray`를 `/<robotId>/patrol_waypoints`로 발행하고, 로봇측 브리지(`scripts/patrol_waypoints_bridge.py`)가 Nav2 FollowWaypoints 액션으로 수행하는 방식 채택(액션 직접호출 fallback).
+- **결정**: 맵 슬롯화 — `StreamingAssets/Maps/<id>.png + <id>.json`(MapConfigData), 런타임 드롭다운으로 저장맵/라이브(SLAM) 전환. 슬롯 추가는 `scripts/pgm_to_map_slot.py` 한 줄. 라이브 `/map`이 오면 우선, 슬롯 직접선택 시 핀 고정.
+- **결정**: 로봇 역할 상호교환 — `RobotInfo.role`(표시용)에 더해 `capabilities[]` 추가. 젠지/티원 둘 다 "patrol" 보유 → 활성 로봇(탭 전환=`SelectedRobotId`) 기준으로 순찰/출동 대상이 따라감.
+- **결정**: 순찰 경로 영속은 로컬 우선(`persistentDataPath/patrols/<mapId>.json`, 맵별 자동 저장/복원)으로 Wi-Fi 끊겨도 무손실. Supabase 동기화는 신규 `patrol_routes` 테이블(`scripts/sql/patrol_routes.sql`) 적용 후 활성(단계화).
+- **영향**: 구현 5 Phase 전부 컴파일 PASS(unityctl, scriptCompilationFailed=false). 잔여: 로봇+Nav2 라이브 세션에서 실주행 검증, Play 시각확인(UI Toolkit 스크린샷 검정 함정으로 자동검증 보류).
+
+---
+
 ## 2026-06-23
 
 ### 🔄 프로젝트 git 원격 이관 — 기존 repo 폐기 · 새 repo로 단일 초기 커밋 force-push 완료

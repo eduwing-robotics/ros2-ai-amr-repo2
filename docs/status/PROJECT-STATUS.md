@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 2026-06-23 — **🔄 git 원격 이관 완료**: 기존 `https://github.com/URHYNIX/URHYNIX.git`에서 새 `https://github.com/eduwing-robotics/ros2-ai-amr-repo2`로 이관. 클론 무게 ~25M (경량화 완료: unity-src 60M·모델 가중치·영상·PDF·evidence 이미지 git 제외, 로컬 보존). Unity ControlRoom 6000.3.16f1 정상 열림. 앞으로 모든 push는 새 repo로 진행. 자세히: `DECISION-LOG.md` 2026-06-23 최상단. **이전(2026-06-18)**: ✅ demo_logs_rls.sql 적용 완료 + Unity→Supabase 직접쓰기 end-to-end 검증 PASS (pose_logs TF 미수신 차후 추적). **이전(2026-06-18)**: 4센서 통합 아두이노 핀맵 확정 PASS(PIR D2·레이저 D4·사운드 A1 AO·온도 A0). **이전(2026-06-10)**: Mac MPS + T1 RealSense → YOLOv8n 라이브 PASS(26 fps).
+Last updated: 2026-06-24 — **티원 신규 SLAM 맵 `arena_v3` 저장·검증 PASS + Unity 슬롯 등록**. 텔레옵+slam_toolbox 재매핑→arena_v3(41×42, res0.05, 벽25%/자유75%/미지0%, 드리프트 없음) 저장, evidence 복사, `StreamingAssets/Maps/arena_v3` 슬롯 생성(MapCatalog 자동인식). 연결: 젠지 kim@192.168.10.84·티원 t1@192.168.10.250(무선, 직접IP). 다음: arena_v3에서 로봇위치 마커+goal_pose 실이동 **검증**(코드 기존, 선행=티원 slam_toolbox→Nav2/AMCL 전환). **이전(2026-06-23)**: 젠지 Nav2 순찰 SW PASS(잔여 좌표↔맵·heading)—arena_v3로 해소 시도中. **이전(2026-06-23)**: Unity MWE 5 Phase 구현 완료(컴파일 PASS). **이전(2026-06-23)**: git 원격 이관 완료(ros2-ai-amr-repo2). **이전(2026-06-18)**: demo_logs_rls.sql + Supabase 직접쓰기 PASS.
 
 ## 2026-06-02 Addendum
 

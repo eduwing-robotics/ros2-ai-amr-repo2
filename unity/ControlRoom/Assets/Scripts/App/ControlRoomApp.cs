@@ -6,6 +6,8 @@ using UnityEngine;
 using Unity.Robotics.ROSTCPConnector;
 using URHYNIX.ControlRoom.Data;
 using URHYNIX.ControlRoom.Ros;
+using URHYNIX.ControlRoom.Map;
+using URHYNIX.ControlRoom.Persistence;
 using URHYNIX.ControlRoom.Database;
 
 namespace URHYNIX.ControlRoom.App
@@ -37,16 +39,32 @@ namespace URHYNIX.ControlRoom.App
             }
         }
 
+        [Serializable] class RosEndpointConfig { public string endpointIp; }
+
         void ConfigureRos()
         {
-            string ip = FallbackRosIp;
-            var robots = ControlRoomState.Instance.Robots;
-            if (robots != null && robots.Count > 0)
+            string ip = "";
+            // 1순위: RosConfig/ros_endpoint.json (ros_tcp_endpoint가 뜬 PC IP, 보통 Nav2 PC). shell 편집 가능.
+            var rosTa = Resources.Load<TextAsset>("RosConfig/ros_endpoint");
+            if (rosTa != null)
             {
-                var addr = robots[0].hostAddress ?? "";
-                int at = addr.IndexOf('@');
-                var host = at >= 0 ? addr.Substring(at + 1) : addr;
-                if (!string.IsNullOrEmpty(host)) ip = host;
+                var cfg = JsonUtility.FromJson<RosEndpointConfig>(rosTa.text);
+                if (cfg != null && !string.IsNullOrEmpty(cfg.endpointIp)) ip = cfg.endpointIp;
+            }
+            // 2순위: 선택된 로봇 hostAddress → 3순위: fallback.
+            if (string.IsNullOrEmpty(ip))
+            {
+                ip = FallbackRosIp;
+                var robots = ControlRoomState.Instance.Robots;
+                var src = ControlRoomState.Instance.GetSelectedRobot()
+                          ?? (robots != null && robots.Count > 0 ? robots[0] : null);
+                if (src != null)
+                {
+                    var addr = src.hostAddress ?? "";
+                    int at = addr.IndexOf('@');
+                    var host = at >= 0 ? addr.Substring(at + 1) : addr;
+                    if (!string.IsNullOrEmpty(host)) ip = host;
+                }
             }
             var ros = ROSConnection.GetOrCreateInstance();
             ros.RosIPAddress = ip;
@@ -75,6 +93,27 @@ namespace URHYNIX.ControlRoom.App
                 var go = new GameObject("DispatchPublisher");
                 go.transform.SetParent(transform, false);
                 go.AddComponent<DispatchPublisher>();
+            }
+            // 저장맵 슬롯 로더(ROS 비의존, 오프라인 표시). 라이브 /map이 오면 MapImageLayer가 우선.
+            if (FindObjectOfType<StaticMapLoader>() == null)
+            {
+                var go = new GameObject("StaticMapLoader");
+                go.transform.SetParent(transform, false);
+                go.AddComponent<StaticMapLoader>();
+            }
+            // 순찰 경로 PoseArray 발행기(로봇측 브리지가 FollowWaypoints로 실행).
+            if (FindObjectOfType<FollowWaypointsPublisher>() == null)
+            {
+                var go = new GameObject("FollowWaypointsPublisher");
+                go.transform.SetParent(transform, false);
+                go.AddComponent<FollowWaypointsPublisher>();
+            }
+            // 순찰 경로 로컬 영속(맵별 자동 저장/복원, Wi-Fi 무관).
+            if (FindObjectOfType<PatrolRepository>() == null)
+            {
+                var go = new GameObject("PatrolRepository");
+                go.transform.SetParent(transform, false);
+                go.AddComponent<PatrolRepository>();
             }
         }
 

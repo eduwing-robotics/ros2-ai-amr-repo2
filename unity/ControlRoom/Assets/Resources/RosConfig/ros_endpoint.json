@@ -1,0 +1,4 @@
+{
+  "endpointIp": "192.168.10.82",
+  "_note": "ros_tcp_endpoint가 뜬 PC IP(보통 Nav2 PC). 비우면 선택 로봇 hostAddress로 폴백. DHCP로 바뀌면 여기만 수정."
+}

@@ -18,6 +18,7 @@ namespace URHYNIX.ControlRoom.Map
 
         readonly MapImageLayer imageLayer;
         readonly MapMarkerLayer markerLayer;
+        readonly PatrolMarkerLayer patrolLayer;
         readonly MapContextMenuView contextMenu;
         readonly MapInteractionController interaction;
         readonly Label emptyHint;
@@ -34,6 +35,7 @@ namespace URHYNIX.ControlRoom.Map
             Viewport = new MapViewport(container2D);
             imageLayer = new MapImageLayer(Viewport);
             markerLayer = new MapMarkerLayer(Viewport);
+            patrolLayer = new PatrolMarkerLayer(Viewport);   // 순찰 웨이포인트 번호+연결선
             Hud = new MapHudLayer(container2D, Viewport);
 
             contextMenu = new MapContextMenuView(root);
@@ -67,6 +69,7 @@ namespace URHYNIX.ControlRoom.Map
         {
             imageLayer?.Dispose();
             markerLayer?.Dispose();
+            patrolLayer?.Dispose();
         }
     }
 }

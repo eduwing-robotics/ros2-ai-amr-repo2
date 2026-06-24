@@ -63,6 +63,7 @@ Index:
 
 > 아래 구조는 박물관/미술관 액자 보호 요구를 위한 **확장 예정안**이다. 현재 Supabase에는 아직 없다. 적용 전 별도 migration SQL 작성 + 실제 DB 조회 검증이 필요하다.
 > **`pose_logs`는 2026-06-02 적용 완료** — 표는 참고용으로 유지(Current Applied 항목과 동일 컬럼).
+> **`patrol_routes` 테이블 (아직 미적용, SQL 준비됨 `scripts/sql/patrol_routes.sql`)**: Unity 맵 웨이포인트 에디터 순찰 경로 영속용(로컬 우선, Supabase 동기화 후보).
 
 ### `pose_logs` — 이동 좌표 로그 (✅ 2026-06-02 적용 완료)
 
@@ -159,6 +160,21 @@ Index:
 - `idx_media_session` on `(session_id, ts)`
 - `idx_media_event` on `(event_id)`
 - `idx_media_type` on `(media_type, ts)`
+
+### `patrol_routes` — 순찰 경로 저장 (예정, SQL 준비됨)
+
+| Column | Type | NULL | 비고 |
+|---|---|---|---|
+| `id` | UUID PK | NO | |
+| `route_id` | TEXT | NO | 경로 고유 ID (`mapId_timestamp` 등) |
+| `map_id` | TEXT | NO | `arena` 등, StreamingAssets 맵 ID와 매칭 |
+| `robot_id` | TEXT | NO | `tb3_1` / `tb3_2` |
+| `points` | JSONB | NO | `[{seq: 0, x: -0.5, y: 2.1, theta: 0.0}, ...]` |
+| `updated_at` | TIMESTAMPTZ | NO | 마지막 수정 시각 |
+
+Index:
+- `idx_patrol_routes_map` on `(map_id, updated_at DESC)` — 맵별 최신 경로 조회
+- RLS: anon select/insert 2종 (로컬 우선, 동기화 단계)
 
 ### `protected_assets` — 박물관/미술관 보호 대상 (예정)
 

@@ -1,0 +1,14 @@
+{
+  "map": {
+    "mapId": "arena_v3",
+    "displayName": "티원 아레나 v3",
+    "originX": -0.424446,
+    "originY": -1.820601,
+    "resolution": 0.05,
+    "widthPx": 41,
+    "heightPx": 42,
+    "displayRotationDeg": 0
+  },
+  "waypoints": [],
+  "protectedTargets": []
+}

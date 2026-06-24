@@ -4,23 +4,25 @@
 > 
 > 구조: Last updated 날짜 | Top 액션 | 첫 5분 체크리스트 | 복구 명령 | More info 링크
 
-**Last updated**: 2026-06-23 (**🔄 git 원격 이관 완료** — 기존 URHYNIX repo에서 새 ros2-ai-amr-repo2로 이관. 클론 무게 ~25M, Unity ControlRoom 6000.3.16f1 정상. **⚠️ 주의**: 앞으로 모든 push는 새 repo `https://github.com/eduwing-robotics/ros2-ai-amr-repo2`로 진행. 옛 히스토리 백업 `.git.bak.20260623/`은 검증 후 삭제 예정. evidence 맵 PNG는 로컬 보존(git 제외). 자세히: `DECISION-LOG.md` 2026-06-23 최상단. **이전(2026-06-18)**: ✅ demo_logs_rls.sql 적용 완료 + Unity→Supabase 직접쓰기 검증 PASS (pose_logs TF 미수신 차후 추적). **이전(2026-06-18)**: ✅ 실센서→ROS→Unity 4카드 라이브 표시. **ROS IP SSOT**: `default_robots.json[0].hostAddress` — DHCP drift 시 먼저 여기 갱신.
+**Last updated**: 2026-06-24 — **🗺️ 티원 신규 SLAM 맵 `arena_v3` 저장·검증 PASS + Unity 슬롯 등록**. 티원 텔레옵+slam_toolbox 재매핑 → arena_v3(41×42px, res0.05, origin(-0.42,-1.82)) 저장. 품질 PASS(벽25%/자유75%/미지0%, 닫힌 방, 드리프트 없음) — 단 크기 ~2m×2.1m로 경기장 전체 여부 미확정. Mac `docs/evidence/maps/arena_v3/` 복사 + `StreamingAssets/Maps/arena_v3` 슬롯 생성(MapCatalog 자동인식, 기본맵은 아직 "arena"). **다음 액션**: arena_v3 맵에서 ① 로봇 위치 마커(/tf) 표시 ② 좌표설정 goal_pose로 로봇 실이동 — **둘 다 코드 기존(RobotPoseSubscriber/MapMarkerLayer/DispatchPublisher)이라 신규구현 아닌 검증**. 선행조건: 티원 `slam_toolbox` 종료 → Nav2(AMCL+arena_v3 정적맵) 전환(`urhynix-nav2-waypoint-patrol`). 이게 2026-06-23 잔여 블로커(좌표↔맵·heading)를 새 맵으로 해소하는 검증. **로봇 연결**: 젠지 `kim@192.168.10.84`·티원 `t1@192.168.10.250`(무선, alias/mDNS 죽어 직접 IP). **세션종료 시 로봇 셧다운 진행함**. **이전(2026-06-23)**: 젠지 Nav2 순찰 SW PASS, 잔여 좌표↔맵·heading(arena_v3로 해소 시도). **이전(2026-06-23)**: Unity MWE 5 Phase 구현 완료(컴파일 PASS). **이전(2026-06-23)**: git 원격 이관 완료(새 repo). **ROS IP SSOT**: `default_robots.json[0].hostAddress`. **검증**: urhynix-nav2-waypoint-patrol 함정표 + tf2_echo map base_footprint로 heading 확인.
 
 ---
 
 ## ⚡ Top 1 Action (가장 최신)
 
-**다음 세션 시작 전 git origin 원격 확인**
+**MWE 맵 웨이포인트 에디터 + 로봇 라이브 실주행 검증**
 
-- **배경**: 2026-06-23 git 원격을 새 repo `https://github.com/eduwing-robotics/ros2-ai-amr-repo2`로 이관 완료
-- **다음 확인**:
-  1. `git remote -v` → origin이 새 repo인지 확인
-  2. 클론 무게 `du -sh .git/` → ~25M 정상 범위
-  3. Unity ControlRoom 빌드 → 정상 실행 확인
-- **미보류**:
-  - 옛 히스토리 백업(`.git.bak.20260623/`) 삭제(새 repo 검증 후)
-  - evidence 맵 PNG 필요 시 로컬 보존 확인
-- **주의**: 앞으로 모든 push는 새 repo로만 진행
+- **배경**: 2026-06-23 Unity ControlRoom에서 맵 클릭 웨이포인트 에디터 5 Phase 전부 구현 완료(컴파일 PASS). 잔여는 실제 로봇+Nav2로 주행 검증.
+- **다음 액션**:
+  1. 로봇+Nav2 켜고 AMCL로 같은 arena 맵 로드
+  2. `scripts/patrol_waypoints_bridge.py --robot tb3_1` (또는 tb3_2) 실행 → 로봇측 subscr 활성
+  3. Unity ControlRoom Play → 맵 표시 + 웨이포인트 3~5개 클릭
+  4. "▶순찰시작" 버튼 → ros2 action list에서 follow_waypoints 액션 발행 확인
+  5. 로봇 주행 (1~2바퀴) → 성공/실패 evidence 기록
+- **병렬 작업**:
+  - Supabase `patrol_routes.sql` 적용 (로컬 저장+동기화 DB 단계)
+  - Unity Play 시각 확인 (맵 north-up 방향 이상 시 MapImageLayer v 반전)
+- **선행 조건**: 도메인 210 + AMCL 정상 + ROS-TCP-Endpoint 활성
 
 ---
 
