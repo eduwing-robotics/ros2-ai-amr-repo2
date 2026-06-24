@@ -18,6 +18,7 @@
 | `/tb3_2/scan` | `sensor_msgs/LaserScan` | `urhynix_bringup_2` | unity_bridge, nav2 | 10 | |
 | `/tb3_2/camera/image_raw` | `sensor_msgs/Image` | `urhynix_bringup_2` (Pi cam) | unity_bridge, camera_confirm | 15 | tb3_2 확인용 |
 | `/tb3_2/cmd_vel` | `geometry_msgs/Twist` | Nav2 | TurtleBot HW | — | |
+| `/<robotId>/goal_pose` | `geometry_msgs/PoseStamped` | Unity ControlRoom `DispatchPublisher` | `patrol_waypoints_bridge.py` | 단발 | 맵 우클릭 단일 출동 목표(frame_id=map). 로봇별 네임스페이스로 선택 로봇만 수신하고 브리지가 Nav2 goToPose로 수행. |
 | `/<robotId>/patrol_waypoints` | `geometry_msgs/PoseArray` | Unity ControlRoom `FollowWaypointsPublisher` | `patrol_waypoints_bridge.py` | 단발 | 순찰 경로 다점 발행(frame_id=map). 로봇측 브리지가 Nav2 FollowWaypoints 액션으로 수행. per-robot 네임스페이스. |
 | `/map` | `nav_msgs/OccupancyGrid` | `cartographer_node` (Robot 자체) | nav2, unity_bridge, map_saver_cli | 1.0 | SLAM 점유 그리드. cartographer가 robot 라즈베리파이에서 실행 (Mac Docker host networking inbound NAT 부적합, 2026-05-29 진단). 정적 매핑 시 30s 누적 후 `nav2_map_server map_saver_cli`로 `.pgm + .yaml` 저장. |
 | `/tf` | `tf2_msgs/TFMessage` | `urhynix_bringup_*` (turtlebot3_node) | cartographer, nav2, unity_bridge | 30+ | base_footprint↔odom↔map 트리. cartographer가 `map↔odom` 추정 발행. |
