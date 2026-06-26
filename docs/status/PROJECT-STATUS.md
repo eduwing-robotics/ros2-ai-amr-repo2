@@ -1,6 +1,8 @@
 # Project Status
 
-Last updated: 2026-06-24 — **티원 신규 SLAM 맵 `arena_v3` 저장·검증 PASS + Unity 슬롯 등록**. 텔레옵+slam_toolbox 재매핑→arena_v3(41×42, res0.05, 벽25%/자유75%/미지0%, 드리프트 없음) 저장, evidence 복사, `StreamingAssets/Maps/arena_v3` 슬롯 생성(MapCatalog 자동인식). 연결: 젠지 kim@192.168.10.84·티원 t1@192.168.10.250(무선, 직접IP). 다음: arena_v3에서 로봇위치 마커+goal_pose 실이동 **검증**(코드 기존, 선행=티원 slam_toolbox→Nav2/AMCL 전환). **이전(2026-06-23)**: 젠지 Nav2 순찰 SW PASS(잔여 좌표↔맵·heading)—arena_v3로 해소 시도中. **이전(2026-06-23)**: Unity MWE 5 Phase 구현 완료(컴파일 PASS). **이전(2026-06-23)**: git 원격 이관 완료(ros2-ai-amr-repo2). **이전(2026-06-18)**: demo_logs_rls.sql + Supabase 직접쓰기 PASS.
+> 상세 로그: `docs/daily/` · 주간 회고: `docs/weekly/`(SKILL-HARVEST 포함) · 구버전: `docs/archive/`
+
+Last updated: 2026-06-26 (밤) — **🛰️ 멀티로봇 도메인 충돌 해결 + ns+tf_prefix bringup 검증 PASS.** 증상=티원·젠지 둘 다 도메인210·비-ns로 `/scan`·`/tf` 발행→라이다 섞여 SLAM 깨짐(`/scan` Publisher count=2). 즉시조치=젠지 종료(티원이 SLAM 주체)→티원 `/scan` 단독 복귀. 근본해결=도메인 **210 유지**+**namespace `tb3_1`/`tb3_2` 격리**(토픽·TF 접두사 분리, 도메인 분리는 Unity 브리지/맵공유 불가라 안 씀). 유일 누수=coin_d4 라이다 frame_id(yaml 고정 `base_scan`)→`scripts/dual_bringup.launch.py`로 `tb3_X/base_scan` 봉합 + `_robot_bringup_ns.sh` 런처(기존 `_robot_nav_up.sh` 무수정). 젠지 검증 PASS: 전 토픽 `/tb3_2/*`, scan/odom frame=`tb3_2/*`, `tf2_echo tb3_2/odom tb3_2/base_scan` 룩업 성공(누수0). **다음**: 티원 SLAM 끝→맵 저장→두 로봇 210+ns bringup→**nav2 namespace화**(동시 자율주행). **이전**: 🤖 듀얼 Unity 표시 진행 + ★map5 부정확 블로커(표시↔라이다 0.9m)→새 맵 대기. **이전**: 맵 줌/팬 PASS + map5 디폴트 + "핸드오프" hook. **이전(오전)**: Confluence 3페이지+Jira 5티켓+map5 슬롯 등록. **이전(odom)**: 듀얼 마커 스킬화.
 
 ## 2026-06-02 Addendum
 
@@ -67,12 +69,17 @@ Last updated: 2026-06-24 — **티원 신규 SLAM 맵 `arena_v3` 저장·검증 
 
 | 시스템 | 페이지 | 역할 |
 |---|---|---|
-| Confluence | [기획안 (UR HYNIX) v12](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/327681) | **외부 정본 SSOT** |
+| Confluence | [기획안 (UR HYNIX) v20](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/327681) | **외부 정본 SSOT** |
 | Confluence | [역할 분배 보드](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/1605636) | 5×4 매트릭스 + PNG 2장 |
 | Confluence | [2026-05-27 회의록](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/1048633) | Day-1 작업 분담 |
 | Confluence | [2026/05/29 회의록](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/3932161) | SLAM 테스트 성공 + 경기장 Unity 좌표 정렬 예정 |
 | Confluence | [브레인스토밍 마인드맵](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/1540099) | 방향 전환 근거 |
-| Confluence | [기능 요구사항 정의서 v5](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/2555905) | 액자 보호 기능 요구사항 + 현재/예정 DB 분리 |
+| Confluence | [시스템 요구사항 정의서 v19](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/6750216) | 기능/시스템 요구사항 + 현재/예정 DB 분리 (기존 2555905에서 이관) |
+| Confluence | [사용자 요구사항 정의서 v10](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/3112961) | 40 UR + 5 NFR |
+| Confluence | [소프트웨어 아키텍처 v12](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/13729806) | 소프트웨어 구조 정본 |
+| Confluence | [하드웨어 아키텍처 v25](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/7536649) | 하드웨어 적층/핀맵 정본 |
+| Confluence | [디지털 트윈 동작 검증 시나리오 v8](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/13860874) | 시나리오 5종 정본 |
+| Confluence | [2026/06/26 회의록](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/27459586) | 최신 다이어그램(소프트웨어/하드웨어/DB) 첨부 |
 | Jira | [SCRUM-7 에픽](https://jason1127.atlassian.net/browse/SCRUM-7) · [보드](https://jason1127.atlassian.net/jira/software/projects/SCRUM/boards/1) | 18 카드 부모 |
 | Slack | 채널 `C0B5Q43A27R` (⚠️ 봇 초대 필요) | 팀 소통 |
 | GitHub | [eduwing-robotics/ros2-ai-amr-repo2](https://github.com/eduwing-robotics/ros2-ai-amr-repo2) | 코드 정본 |
@@ -123,54 +130,53 @@ Last updated: 2026-06-24 — **티원 신규 SLAM 맵 `arena_v3` 저장·검증 
 
 ## Handoff Capsule
 
-**Capsule timestamp**: 2026-05-27 (Day-1 종료 직후) · **Session closer**: 김주영
+**Capsule timestamp**: 2026-06-26 · **Session closer**: OpenCode
 
 ### Next entrypoint
-- **`docs/status/HANDOFF.md`** — 1페이지 진입 캡슐 (5분 내 컨텍스트 + Top 1 액션 + Day-2 진입 흐름)
+- **`docs/status/HANDOFF.md`** — 1페이지 진입 캡슐 (5분 내 컨텍스트 + Top 1 액션)
 
 ### Read first (3개 순서)
 1. `docs/status/HANDOFF.md` ← **1순위, 이것만 읽으면 출발 가능**
-2. `docs/status/PROJECT-STATUS.md` (이 파일 — 역할 매트릭스 + Day-1 작업 + 외부 SSOT 인덱스)
-3. `docs/status/DECISION-LOG.md` 가장 아래 5건 (오늘까지 결정 변천)
+2. `docs/status/PROJECT-STATUS.md` (이 파일 — Evidence Status + 외부 SSOT 인덱스)
+3. `docs/status/DECISION-LOG.md` 가장 아래 5건 (최근 결정 변천)
 
 ### Current phase
-- Sprint 1 / W1 Day-1 진행 중 (오늘 시작, 종료 검증 대기)
-- 3팀 동시 진행: Pi+DB(김주영·임현찬) · PIR+DB(박태진) · Unity 문서(김선일)
+- Sprint 4 진행 중 (Confluence/Jira 문서 동기화 + 새 SLAM 맵 `map5` 슬롯화)
+- 로봇 측은 이전 세션 상태 유지: 젠지 AMCL+Nav2 주행 PASS, 티원 주행 풀스택 미설치
 
 ### Blockers
-- **팀 Slack 채널 봇 권한 부족**: 채널 `C0B5Q43A27R`에 Claude 봇 멤버 초대 필요. 그때까지 결정 공지는 본인 DM으로만 발송 가능.
-  - 안전한 다음 행동: 본인 DM으로 받은 메시지를 수동으로 팀 채널에 복붙해 공유.
-- ~~DB 미선정~~ → ✅ **해소 (2026-05-28)**: Supabase `ueupkrxwybuuqxflstvg` 잠금, 마이그레이션 적용 완료. DECISION-LOG "DB 선정 완료".
-- **로봇 전원 OFF (2026-05-28)** — 라즈베리파이 셧다운 + LiDAR 정지를 위해 메인 스위치 OFF 상태. end-to-end PIR→insert 테스트는 로봇 부팅 후 진행. 절차: 메인 스위치 ON → 30s 부팅 → `tb3-up && tb3-bridge` → PIR 손 흔들기 → `events` row +1 확인.
-- **RPi `/etc/urhynix.env` 미작성 (2026-05-28)** — 로봇 부팅 후 한 번만 작성 필요 (`SUPABASE_URL`, `SUPABASE_KEY=service_role JWT`). 자세한 내용: HANDOFF Top 1.
-- 그 외 미해결 결정: **none** (방향·하드웨어·역할·Day-1 분담·정합성은 모두 잠금)
+- **none**
 
 ### Unfinished decisions
-- **none** (다음 세션이 직면할 결정은 Day-1 결과에 따라 분기만 있음)
+- **map5의 기본 시작 슬롯 지정 여부**: 현재 `StaticMapLoader`는 `arena_v*` 최신 슬롯을 기본으로 선택. `map5`를 기본으로 하려면 `StaticMapLoader.defaultSlotId`를 `"map5"`로 변경하거나, PlayerPrefs를 통해 1회 수동 선택 필요.
+- **2D 맵뷰 줌(확대) 기능 추가 여부**: `MapViewport`는 fit-only, `MapInteractionController`에 휠 이벤트 없음. `MapCameraController.cs`가 예정 파일로만 존재. 주인님 승인 시 구현.
 
 ### First verify (다음 세션이 첫 5분에 돌릴 명령)
 ```bash
-# 1. 진행 상태 빠른 점검
-git status
-ls -lh docs/dev-plan-bundle.html  # 465KB여야 정상
+# 1. 오늘 변경 상태 확인
+git status --short
+ls -la /Users/family/jason/URHYNIX/unity/ControlRoom/Assets/StreamingAssets/Maps/map5*
 
-# 2. 정합성 잔재 0건 확인 (활성 문서)
-grep -rn '/turtlebot/\|LiDAR only vs\|expansion plate\|Arduino 층은 LiDAR' docs/ref docs/status docs/dev-plan*.html 2>/dev/null | grep -v 'DECISION-LOG\|build_bundle'
+# 2. Confluence/Jira 동기화 확인 (선택)
+curl -s -u "$ATLASSIAN_EMAIL:$ATLASSIAN_TOKEN" \
+  'https://jason1127.atlassian.net/wiki/rest/api/content/27459586?expand=version' | python3 -m json.tool | grep number
+curl -s -u "$ATLASSIAN_EMAIL:$ATLASSIAN_TOKEN" \
+  'https://jason1127.atlassian.net/rest/api/3/search/jql?jql=key%20in%20(SCRUM-107,SCRUM-119,SCRUM-122,SCRUM-124,SCRUM-141)' | python3 -m json.tool | grep -E '"key"|"summary"'
 
-# 3. Day-1 통합 검증 (Top 1 액션)
-#    박태진의 Arduino PIR 이벤트가 events 테이블에 한 줄 저장됐는지
-#    psql -c "SELECT id, robot_id, event_type, severity, ts FROM events ORDER BY ts DESC LIMIT 5;"
-#    (또는 Supabase 대시보드 events 테이블)
+# 3. Unity 컴파일 및 맵 슬롯 인식 확인
+cd /Users/family/jason/URHYNIX/unity/ControlRoom && unityctl check
+#    → Playing 후 맵 드롭다운에서 map5 / map5_pretty 선택
 ```
 
 ### Files changed this session (요약)
-- SSOT 9개 + HTML 8개 + 번들 + 신규 스킬 2개(`ssot-board-sync`, `decision-broadcast`) + HANDOFF.md 신설 + CLAUDE.md 압축 + Confluence 4페이지 갱신 + Jira 24건 갱신.
-- 자세한 변경 이력: `docs/status/DECISION-LOG.md` (오늘 결정 5건 포함)
+- Confluence: 기획안 327681 v20, 사용자 요구사항 3112961 v10, 시스템 요구사항 6750216 v19, 회의록 27459586 v1 + drawio/png 첨부 6개
+- Jira: SCRUM-107/119/122/124/141 진행 중 티켓 설명 갱신
+- Unity: `StreamingAssets/Maps/map5.{png,json,meta}`, `map5_pretty.{png,json,meta}`
+- 로컬 SSOT: `docs/status/PROJECT-STATUS.md`, `docs/ref/AUTOMATION-WEEKDAY-SYNC.md`, `docs/ref/JIRA-MAP.md` (SCRUM-147 추가), `docs/status/HANDOFF.md`
 
 ### Next branch / commit context
 - 현재 브랜치: `main` (직접 commit 금지, PR로만)
-- 작업자 본인 브랜치 권장: `juyoung`
-- 미커밋 파일: PROJECT-STATUS / HANDOFF / CLAUDE.md / 그 외 오늘 변경 SSOT
+- 미커밋 파일: PROJECT-STATUS / HANDOFF / JIRA-MAP / AUTOMATION-WEEKDAY-SYNC / StreamingAssets/Maps/map5*
 
 ---
 
@@ -185,6 +191,11 @@ grep -rn '/turtlebot/\|LiDAR only vs\|expansion plate\|Arduino 층은 LiDAR' doc
 | 센서 연결 방식 상태 | ✅ | Arduino Uno R3 → Raspberry Pi USB serial, OpenCR 5V 전원 분기로 확정 |
 | dev-plan*.html 파싱 OK | ✅ | `python3 html.parser`로 8개 HTML 통과 — 브라우저 로드는 사용자가 최종 확인 |
 | dev-plan-bundle.html 브라우저 로드 | ⚠️ | Codex Browser의 `file://` URL 정책 차단으로 미실행. 파서 검증으로 대체 |
+| DB·Unity·센서·터틀봇 관계 발표 deck | ✅ | 2026-06-25 `docs/presentation/decks/db-relationship-map.js` 추가 + `presentation-bundle.html` 재빌드. 검증: HTML parser PASS, Deck JS 등록 PASS(9 slides), 번들 inline 확인. Browser 시각 검증은 도구 호출 거절로 미실행 |
+| Unity ControlRoom UI 리팩터 + Stop/Play 도메인 리로드 회복 | ✅ | 2026-06-25 중앙 맵 확대, 좌/우/하단 탭화, 기능 인벤토리 추가, UXML/USS 분리. `ui:Instance` 템플릿 래퍼 높이 전파 누락으로 맵/카메라가 얇은 줄로 접히던 문제를 USS + `ControlRoomBinder` 런타임 flex 보정으로 수정. Stop/Play 무한 `Reloading Domain` 원인 후보였던 ROS 구독자 `OnDestroy()`의 `ROSConnection.GetOrCreateInstance()` 재생성을 기존 참조 정리로 교체. 검증: `unityctl check` PASS, `unityctl status` Playing / `isDomainReloading=false`, `SensorVerifyConsole.DumpUiLayout()` 기준 map `928x320`, camera image `920x260` |
+| arena_v4_pretty 2D 관제 천장뷰 슬롯 | ✅ | 2026-06-25 `scripts/make_pretty_map_slot.py` 추가 + `scripts/pgm_to_map_slot.py` 후처리 자동 생성 연결. `arena_v4` 원본 좌표 메타(origin/resolution/widthPx/heightPx/displayRotationDeg)는 유지하고 `arena_v4_pretty.png` 1024×1024 RGBA 발표용 슬롯 생성. `StaticMapLoader`는 고해상도 텍스처 크기 대신 JSON의 맵 셀 크기를 좌표 기준으로 사용. 검증: 임시 `smoke_pretty_autogen` 슬롯 변환→`*_pretty` 자동 생성→메타 동일성 PASS 후 임시 파일 제거, `python3 -m py_compile scripts/pgm_to_map_slot.py scripts/make_pretty_map_slot.py` PASS, `unityctl check` PASS |
+| map5 슬롯 등록 + pretty 변환 | ✅ | 2026-06-26 `/Users/family/Downloads/map5.{pgm,yaml}`를 `docs/evidence/maps/map5/`로 복사 후 `python3 scripts/pgm_to_map_slot.py ... map5 "map5"` 실행. `StreamingAssets/Maps/map5.{png,json}` + `map5_pretty.{png,json}` 생성. 품질: 52×52px, res 0.05, origin(-0.566,-2.093), 2.60×2.60m, 점유 15.8%/자유 84.2%/미지 0%. `MapCatalog.SlotIds()` 스캔 시 `map5`, `map5_pretty` 자동 인식. `.meta` 파일도 생성됨 |
+| RealSense D435 3D 맵/OneCanvas식 viewer 리서치 문서화 | 🟡 | 2026-06-25 `docs/ref/REALSENSE-D435-3D-MAPPING-RESEARCH.md` 추가 + `TECH-INDEX` 라우팅. 결론: LDS-03 2D map은 정본 유지, D435는 우선 오프라인 RGB-D/PointCloud→PLY/GLB→Unity 3D scene cloud/viewpoint viewer로 사용. `pointcloud_to_laserscan`/Nav2 Voxel Layer/RTAB-Map/OneCanvas 근거와 미검증 항목 분리 기록. **아직 미검증**: T1 D435 topic, rosbag, pointcloud export, Unity 3D viewer, Nav2 병합 |
 | Jira 관리자용 7개 스프린트 에픽 + 하위 작업 | ✅ | 2026-06-02 저녁 이전 열린 SCRUM 카드 완료 처리 후 새 구조 생성. 에픽 `SCRUM-39`~`SCRUM-45`, 하위 작업 `SCRUM-46`~`SCRUM-66`. Sprint 1/2 완료 전환 확인. JQL `project = SCRUM AND statusCategory != Done ORDER BY key ASC` 검증: 20건(Sprint 3~7 에픽 5 + 하위 작업 15) |
 | TurtleBot3 live ROS2 bringup | ✅ | `192.168.0.138` / MAC `2c:cf:67:47:38:03` 검증. `/dev/ttyACM0`, `/scan`, `/odom`, `/battery_state`, `/tf` 확인. `/scan` 약 10Hz |
 | RViz visual route | ✅ | Robot `DISPLAY=:2`, TigerVNC `5902`, RViz 실행 확인. Mac Screen Sharing 경로는 `vnc://192.168.0.138:5902` |
@@ -199,7 +210,7 @@ grep -rn '/turtlebot/\|LiDAR only vs\|expansion plate\|Arduino 층은 LiDAR' doc
 | RPi USB serial 식별 + 권한 영구화 | ✅ | 2026-05-28 `/dev/ttyACM0`=OpenCR · `/dev/ttyACM1`=Arduino UNO(vendor 2341) 분리 확인. `usermod -aG dialout kim` + `/etc/udev/rules.d/99-urhynix-arduino.rules` (MODE=0666, SYMLINK `tb3_arduino`) 적용. 8초 캡처에서 `[MOTION] detected -> LED ON`, `[LDR] A0=...` 정상 수신. |
 | DB 선정 + 마이그레이션 적용 | ✅ | 2026-05-28 신규 Supabase 프로젝트 `ueupkrxwybuuqxflstvg` (ap-northeast-1) 선정. Management API SQL endpoint로 `db/migrations/2026-05-27_init_security.sql` 적용 (4테이블 + seed). service_role JWT INSERT 정상(row `c8c389b9-...`). publishable key는 RLS 차단(정상 보안). 이전 mungmungfit 시도는 egress quota 초과로 폐기. |
 | 실제 DB 구조 재확인 + 보호 컨셉 SSOT 정정 | ✅ | 2026-05-28 Supabase REST service_role 조회: `session_meta`/`events`/`dispatches`/`camera_captures` HTTP 200, `pose_logs`/`media_artifacts`/`protected_assets` HTTP 404(PGRST205). 따라서 좌표·사진·영상·사운드·액자 보호 테이블은 현재 구조가 아니라 SCRUM-23 확장 예정안으로 SCHEMA/CONTRACT/STATUS/HANDOFF/HTML에 분리 표기. `python3 docs/whiteboards/build_bundle.py` 재빌드 + 8개 dev-plan HTML 파싱 OK. |
-| Jira/Confluence 보호 컨셉 반영 | ✅ | 2026-05-28 Jira `SCRUM-7/9/14/15/16/21/23` 갱신. Confluence `기획안 (UR HYNIX)` page 327681 v12 갱신 + `기능 요구사항 정의서` page 2555905 v5 갱신 + `2026/05/28` draft 2883585 갱신. 폴더 parent 직접 생성은 Atlassian tool의 spaceId/parentId 해석 문제로 실패하여 정본 페이지 갱신으로 대체. |
+| Jira/Confluence 보호 컨셉 반영 | ✅ | 2026-05-28 Jira `SCRUM-7/9/14/15/16/21/23` 갱신. Confluence `기획안 (UR HYNIX)` page 327681 v12 갱신 + `시스템 요구사항 정의서` page 6750216 (기존 2555905) v5 갱신 + `2026/05/28` draft 2883585 갱신. 폴더 parent 직접 생성은 Atlassian tool의 spaceId/parentId 해석 문제로 실패하여 정본 페이지 갱신으로 대체. |
 | Confluence 회의록 기반 SSOT 자동화 예약 | ✅ | 2026-05-28 Codex automation `urhynix-daily-ssot-sync-from-confluence` 생성. 매일 18:00에 `/Users/family/jason/URHYNIX`에서 당일 Confluence 회의록을 찾아 로컬 SSOT 우선 갱신, 현재/예정 상태 분리, dev-plan 번들 재빌드, Confluence/Jira 반영 리포트 생성. |
 | TurtleBot ↔ Unity ROS-TCP 재기동 (`turtlebot` 프로젝트) | ✅ | 2026-05-28 새 Unity 프로젝트 `/Users/family/jason/turtlebot`에 ROS-TCP-Connector v0.7.0 + smoke 자산 설치. RegisterSubscriber 4/4(`/scan`·`/odom`·`/battery_state`·`/tf`) + ESTAB 2 세션 확인. Mac IP `192.168.0.67`(DHCP 변경), 로봇 IP `192.168.0.138` 유지. |
 | Mac → Robot SSH 공개키 인증 | ✅ | 2026-05-28 `ssh-keygen ed25519` + `ssh-copy-id kim@192.168.0.138` 완료. `ssh -o BatchMode=yes kim@... hostname` → `kim-desktop` 무대화형 응답. 이후 모든 tb3-* 명령이 비번 prompt 없이 동작. `scripts/tb3.sh`에 `tb3-key-setup` 헬퍼 추가 (협업자 머신용). |

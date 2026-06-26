@@ -2,7 +2,118 @@
 
 > **📌 최신 5건은 DECISION-CURRENT.md 참조. 이 파일은 전체 역사 기록입니다.**
 
+## 2026-06-26
+
+### 🛰️ 멀티로봇 도메인 충돌 해결 + 네임스페이스+tf_prefix bringup 설계·검증(동시 주행 기반)
+
+- **증상**: 티원·젠지 라이다가 "겹쳐서" SLAM이 깨짐. 실측 → 둘 다 `ROS_DOMAIN_ID=210` + **네임스페이스 없이(`__ns:=/`)** `/scan`·`/tf` 발행 → 한 토픽에 두 라이다 섞임(`/scan` Publisher count=2). 도메인 ID가 *틀려서*가 아니라 *같아서* 서로 보이고 토픽 이름이 같아 섞인 것. 교과서적 DDS 충돌(메모리 `urhynix-multirobot-domain-collision` 재현).
+- **즉시 조치**: 티원이 SLAM 주체(`slam_toolbox online_async`, params=`slam_nonns.yaml`)였음 → **젠지(nav2+라이다) 종료**(PID 직접 kill, `pkill -f`는 self-kill 위험이라 회피). 티원 `/scan` Publisher 1개로 복귀, SLAM 깨끗. (당시 젠지엔 `amcl`+`slam_toolbox`가 동시에 떠 `map→odom`도 충돌하던 상태.)
+- **근본 해결 설계(동시 주행용)**: 도메인은 **210 유지**(Unity 브리지는 한 도메인만 봄·맵/관제 공유 필요) + **격리는 namespace `tb3_1`/`tb3_2`**가 담당(토픽·TF가 `/tb3_X/*`·`tb3_X/*` 접두사 분리 → 구조적 충돌 불가). 도메인 분리(211 등)는 협조 주행에 부적합 → 안 씀.
+- **컴포넌트 ns/tf_prefix 지원 실측(소스 검증)**: `robot.launch.py`=`namespace` 인자+`PushRosNamespace`(토픽 ✓) · `robot_state_publisher`=xacro `namespace:=tb3_X/`로 URDF 프레임 prefix(`tb3_X/base_link·base_footprint·base_scan` ✓) · `turtlebot3_node`=`odometry.cpp:75`/`imu.cpp`/`joint_state.cpp`가 `namespace` 파라미터로 odom/imu/joint 프레임 prefix(✓, 누수 아님). **유일 누수=coin_d4 라이다**: launch가 `frame_id`/`namespace` 인자 무시하고 yaml 고정 `base_scan` → scan header가 prefix 안 돼 URDF의 `tb3_X/base_scan`과 불일치 → TF 룩업 실패.
+- **봉합**: `scripts/dual_bringup.launch.py`(robot.launch.py 최소 변형 — 라이다만 `frame_id=[namespace,'/base_scan']`로 교체) + `scripts/_robot_bringup_ns.sh`(런처). **기존 단일 경로 `_robot_nav_up.sh` 무수정**(별도 경로 추가).
+- **검증 PASS(젠지, 도메인 211 격리 — 티원 210 SLAM 무영향 테스트)**: 루트 `/scan` 없음 · `/tb3_2/scan` header=`tb3_2/base_scan` · 토픽 전부 `/tb3_2/*`(scan/odom/cmd_vel/imu/joint...) · odom frame=`tb3_2/odom`(OpenCR 정상) · **`tf2_echo tb3_2/odom tb3_2/base_scan` 룩업 성공**([-0.032,0,0.182]=라이다 오프셋) = 전체 TF 트리가 `tb3_2/`로 일관 연결, 누수 0. 테스트 인스턴스 정리 완료.
+- **★도메인 211은 테스트 한정** — 격리 검증이 티원 SLAM(210)을 오염 안 시키게 한 것. 실배포는 둘 다 210.
+- **부수 산출물**: `scripts/dual_bringup.launch.py`, `scripts/_robot_bringup_ns.sh`(둘 다 로봇 홈에 scp 후 실행).
+- **다음 진입**: ① 티원 SLAM 끝나면 맵 저장 → ② 두 로봇 다 `_robot_bringup_ns.sh tb3_1`/`tb3_2`로 **210+namespace** 기동(="ns+tf 작업" 완료) → ③ **nav2를 namespace로** 띄우기(각 로봇 amcl+costmap을 `/tb3_X/tf` 트리로) = 진짜 동시 자율주행 단계.
+
+### 🤖 듀얼 로봇 Unity 표시(젠지 nav2 + 티원 구독만) 진행 + ★map5 부정확 블로커(표시↔라이다 0.9m 불일치)
+
+- **목표**: 두 로봇을 Unity ControlRoom 맵에 동시 표시. 젠지(tb3_2)=nav2 풀스택 운영, 티원(tb3_1)=구독만(비침습, 본체 안 건드림).
+- **젠지**: `nav_up.sh`→`_robot_nav_up.sh`로 **map5 nav2 재기동**(충전소 초기포즈 0,0, endpoint `.84:10000`). `_robot_nav_up.sh`의 `MAP`을 **6번째 인자로 인자화**(map override). map5는 `~/maps/map5/map5.yaml`(52×52px·2.6m·origin −0.566,−2.093, `~/Downloads`에서 scp).
+- **티원**: `/tb3_1/pose` **정적 발행**으로 표시 — 티원 본체 무접촉, 젠지가 대신 `ros2 topic pub -r 2 /tb3_1/pose`(frame=map, x=−0.02 y=−1.53 = 순회지점1). Unity `RobotPoseFeed`가 `/tb3_1/pose`·`/tb3_2/pose` 로봇별 구독 → 젠지 마커 + 티원 마커 분리 표시.
+- **★블로커(미해결)**: 젠지 amcl 라이다추정(0.54,−0.74)이 주인님 맵 표시(젠지 주차=0.20,−1.55)와 **0.9m 불일치**. `/initialpose` 재발행 + 제자리회전(`drive_rotate`)으로도 안 좁혀짐. **원인**: map5(2.6m로 작고 GIMP 편집)가 실제 환경 벽 배치와 정합 안 됨 → 라이다 매칭이 표시와 다른 자리를 지지. **결론**: 라이다(amcl)가 실측이라 더 정확, 표시는 맵 정확할 때만 일치 → **정확한 맵 재SLAM이 근본 해결**.
+- **핵심 학습 4종**: ① `ros_tcp_endpoint`가 Unity Play 반복 stop/start 시 InvalidHandle로 죽음(버그⑦) — 줌 검증하느라 Play 여러 번 → endpoint 사망 → Connection refused → 구독 0. 해결: `~/turtlebot3_ws/install/setup.bash` overlay source로 재기동(/opt엔 ros_tcp_endpoint 없음), 새로 뜨면 Unity 자동 재연결. ② `pkill -9 -f "패턴"`에 `tb3_1/pose`가 들어가면 ssh 명령줄 self-kill — bracket `[t]opic`도 `pkill -f`엔 안 통함(grep 전용). 정리 불필요하면 pkill 빼기. ③ 젠지 wifi(.84) 불안정 — nav2 재기동 중/후 ping 무응답(ARP엔 MAC 남음=wifi 끊김), 재부팅 복구. 셧다운 `ssh 'echo 1234\|sudo -S poweroff'`는 네트워크 끊기면 불가 → 복귀 폴링 후 전송. ④ Unity 표시맵 ↔ 젠지 nav2 위치추정맵 origin 다르면 마커가 맵 밖/엉뚱(같은 맵 origin 필수).
+- **부수 산출물**: `scripts/_robot_nav_up.sh`(MAP 인자화), 젠지 `~/maps/map5/`.
+- **다음 진입**: **동료가 새 맵 보내줄 예정.** 받으면 ① 새 맵 젠지 scp + `_robot_nav_up.sh tb3_2 <ix> <iy> <iyaw> yes ~/maps/<id>/<id>.yaml` ② `saved-map-to-unity-slot`으로 Unity 슬롯 등록 + `StaticMapLoader` 디폴트 갱신 ③ amcl 정합 재검증(표시=라이다) ④ 티원 정적 pose도 새 맵 좌표로 갱신.
+
+### 🖼️ ControlRoom 맵 줌/팬(휠+드래그) PASS + map5 운영 디폴트 + 맵회전 좌표무영향 확정
+
+- **PASS**: 2D 관제 맵에 데스크탑 줌/팬 추가. 마우스 휠=커서 기준 줌(1.0~6.0배), 중간버튼 드래그=팬(클램프), 중간버튼 클릭=리셋. 주인님 Play Mode 육안 "줌 잘됨" 확인.
+- **설계 핵심(재사용)**: 맵 회전(`rotate`)과 같은 `MapViewport.Frame` transform에 `scale`+`translate`로 올라탐 → 클릭 좌표 `Frame.WorldToLocal`이 scale·translate까지 자동 역산. **클릭 정밀도 별도 보정 코드 0**(2026-06-25 회전 클릭 보정 인프라 그대로 재사용). 신규 파일 0, 기존 3파일만 확장.
+- **회전→좌표 무영향 확정**: 클릭→`WorldToLocal`(회전 역산)→world(m)→`DispatchPublisher`가 frame=map의 x,y 그대로 발행(회전 일절 없음). 즉 "맵 돌려서 로봇 경로 틀어진" 건 좌표 버그가 아니라 **화면-경기장 방향 직관 불일치**. `SetRotation`에 `%360` 정규화 추가(360°=0°). `map5.json`/`arena_v4.json` 모두 displayRotationDeg=0(경기장 정렬 확정).
+- **map5 운영 디폴트 고정**: `StaticMapLoader.Start()`에서 `HasSlot("map5")`면 map5 우선(PlayerPrefs 없어도). ponytail/ceiling 주석: arena_v5+ 운영 복귀 시 `LatestArenaSlot`으로 되돌림(`urhynix-arena-slot-no-hardcode` 임시 예외). `arena_v4_pretty`는 "더 안이쁘다"고 미사용, map5 일반 슬롯 사용.
+- **검증**: `unityctl play stop→asset refresh→check` = `scriptCompilationFailed:false`, 31 assemblies PASS + Play 육안.
+- **부수 산출물**: `unity/ControlRoom/Assets/Scripts/Map/{MapViewport,MapInteractionController,MapHudLayer,StaticMapLoader}.cs`.
+- **다음 진입**: RTAB 멀티세션 3D 맵(아래 플랜) GO 또는 듀얼 로봇 주행.
+
+### 🔧 "핸드오프" 트리거 hook + RTAB 멀티세션 3D 맵 플랜 문서화
+
+- **hook 설정**: `.claude/settings.json`에 UserPromptSubmit hook 추가 — 프롬프트에 "핸드오프"/"handoff" 포함 시 `docs/status/HANDOFF.md`를 컨텍스트 자동 주입(`jq -r .prompt | grep -qiE` + `cat $CLAUDE_PROJECT_DIR/...`). 기존 PostToolUse(`doc-drift-reminder`) 보존. 파이프테스트 + `jq -e` 검증 PASS.
+- **RTAB 플랜(보류)**: `docs/ref/RTAB-MULTISESSION-PLAN.md` 갱신. 멀티세션 append=`Mem/IncrementalMemory=true`+`--delete_db_on_start` 제거, S2 시작 시 localization 재정합. **S1(휠odom)=오프라인 replay OK, S2(들기·visual odom)=라이브 권장**(오프라인 reprocess는 추적복구 없음). **액자(중요전시품)는 빼고 정적 환경만 스캔**(시나리오②=움직임 감지 대상이라 맵에 구우면 충돌 + loop closure 정합 깨짐). 실행 런북: `~/.claude/plans/partitioned-wiggling-aurora.md`. 실행은 다음 세션 GO 후.
+
+## 2026-06-25
+
+### 🟢 티원 D435로 제자리 360° RGB-D 누적 3D 점군(1200만점 PLY) 경로 B 검증 PASS
+
+- **결정**: 티원(TurtleBot3 + RealSense D435)으로 제자리 360° 회전하며 RGB-D를 rosbag 캡처하고, Mac에서 odom tf로 누적해 1,200만 점 컬러 3D 점군을 복원하는 파이프라인을 구현·검증 PASS.
+- **경로 B 채택**: RealSense wrapper 4.57이 `pointcloud.enable`을 declare 안 해서 티원에선 점군 생성 불가. **경로 B**: 티원은 aligned_depth+color+camera_info만 가볍게 record(라즈베리 부하 최소화), Mac이 `rosbags` deproject + odom tf 누적으로 3D 복원.
+- **산출물**: `docs/evidence/3d_maps/2026-06-25-d435-rot/rot360_odom.ply`(1200만점 컬러), `docs/evidence/3d_maps/2026-06-25-d435-rot/rot_verify.png`(탑다운 360°), `docs/evidence/3d_maps/2026-06-25-d435-static/static_snapshot.ply`(정적).
+- **신규 스크립트**: `scripts/_t1_rs_pointcloud.sh`(T1 카메라), `scripts/d435_record_smoke.sh`(rosbag), `scripts/d435_bag_to_ply.py`(deproject+누적), `scripts/drive_rotate.py`(회전).
+- **핵심 함정 4종(해결)**: ① wrapper pointcloud.enable 미declare → **경로 B 우회**. ② cmd_vel=TwistStamped(매틱 stamp) → drive_rotate.py만 동작. ③ rosbag 폭주(5GB) → timeout --signal=INT. ④ **ROS_DOMAIN_ID=210**(문서 230은 오류).
+- **한계**: odom 누적 드리프트, 단일 위치 가림. 정밀=RTAB-Map.
+- **보류**: Phase 2B(RTAB A/B), Phase 3(Unity 3D 패널).
+- **스킬**: `.claude/skills/urhynix-d435-3d-pointcloud-capture/SKILL.md`.
+
+### 🟢 젠지 단일 AMCL+Nav2 좌표주행 전구간 PASS + 버그 7종 수정 (어제 목표 달성)
+
+- **결과**: 어제 목표 "실제 좌표대로 주행"을 **단일 로봇(젠지/tb3_2)에서 전구간 관통**. Unity 맵 클릭 → `/tb3_2/goal_pose`/`patrol_waypoints` → `patrol_waypoints_bridge` → Nav2 `goToPose`/`FollowWaypoints` 실주행. `scripts/nav_up.sh`(Mac)+`_robot_nav_up.sh`(로봇): non-ns 표준 런치 + 릴레이 2개(`robot_pose_publisher`→`/tb3_2/pose`, bridge). 초기포즈=충전소(0,0). 맵은 `~/maps/arena_v4/`에 격리 scp(기존 map.pgm 충돌 회피).
+- **설계**: 단일이라 non-ns 표준 런치로 충분 — `scan_frame_fix`·ns nav2 param surgery는 듀얼 전용이라 생략(ponytail).
+- **잡은 버그 7종**(상세 메모리 `urhynix-genji-nav2-driving-bringup`): ① nav2=`component_container_isolated` → pkill 개별 이름으론 안 죽어 중복 누적→lifecycle 충돌, kill에 `component_container` 필수. ② ws 오버레이 `turtlebot3_navigation2` 깨짐(symlink/param 누락)이 `/opt` 가림→FileNotFoundError, `nav2_bringup bringup_launch.py`+`/opt` burger.yaml을 ament unset+`/opt`-only 서브셸로 우회. ③ `navigation2.launch.py`의 rviz가 headless서 죽고 재시작 반복→CPU잡아 controller_server configure 타임아웃, rviz 없는 `bringup_launch.py` 사용. ④ `patrol_waypoints_bridge` 전역 executor 충돌("Executor is already spinning")→구독 전용 SingleThreadedExecutor 분리. ⑤ Unity Stop→Play시 `SelectedRobotId`가 tb3_1로 리셋→goal이 /tb3_1로 감, 명령 전 젠지 선택 필수(endpoint `RegisterPublisher` 로그로 확인). ⑥ 맵 270° 회전 클릭 어긋남(`e.localPosition`이 rotate 무시)→`MapInteractionController`에서 `Frame.WorldToLocal(e.position)`로 수정. ⑦ ros_tcp_endpoint Unity 재연결시 `InvalidHandle`로 죽음→재기동.
+- **🔴 티원 재정정**: 앞 "티원 nav2 있음"은 `nav2-amcl`만 보고 한 것. **실측: 티원은 `nav2-bringup`·`nav2-bt-navigator`·`turtlebot3-navigation2` 미설치 → 자율주행 불가**(amcl 위치추정만). 주행하려면 `sudo apt install ros-jazzy-nav2-bringup ros-jazzy-turtlebot3-navigation2`. 젠지는 풀스택 보유.
+- **부수 산출물**: `scripts/nav_up.sh`·`_robot_nav_up.sh`, 수정된 `scripts/patrol_waypoints_bridge.py`·`unity/.../Map/MapInteractionController.cs`, 메모리 `urhynix-genji-nav2-driving-bringup`.
+- **🎯 최종 목표 = 맵에 2로봇 표시 + 로봇별 좌표 명령. 남은 갭**: ① 티원 주행 패키지 apt install. ② 듀얼 동시 = ns 분리(tb3_1/tb3_2) self-AMCL + `scan_frame_fix` + ns nav2 param(non-ns는 전역 tf phantom). ③ "로봇별 좌표 명령"은 Unity 로봇선택→`/tb3_X/goal_pose`로 **이미 동작**, 듀얼 인프라만 남음. **주인님이 맵 재생성 중 → `nav_up.sh`의 arena_v4 경로 갱신 필요**.
+
+### 🟢 odom-only 듀얼 마커 한방 기동 스킬화 + 티원 nav2 정정 (재검증 PASS)
+
+- **결과**: AMCL 없이 위치만 빠르게 띄우는 `urhynix-odom-marker-quickstart` 스킬 + `scripts/dual_marker_up.sh`(+`_robot_up.sh`) 완성·**재검증 PASS**. 한 명령으로 ns bringup×2 + odom_to_pose×2 + endpoint → 티원(0,+0.1y 왼쪽)·젠지(0,-0.1y 오른쪽) 충전소 마커. 충전소≈map(0,0)(Unity 클릭→`/tb3_1/goal_pose`로 확인), **맵 x축=화면 세로**라 y로 벌림, **ns라 `/tf` fallback 유령 마커 차단**(글로벌 base_footprint 부재).
+- **정정 — 티원 nav2 있음**: 앞 entry의 "티원 nav2 없음"은 **오진**(`ros2 pkg list` 누락). 실제 **설치돼 있고**(1.3.12), 단 `nav2_lifecycle_manager`가 **ABI 충돌**(undefined symbol `diagnostic_updater::Updater`) → `ros2 lifecycle set <node> configure/activate` **수동 전환으로 우회**(amcl·map_server 바이너리는 정상). 따라서 티원도 자기 호스트에서 AMCL self-localize 가능. **크로스호스트 amcl은 시계 skew(0.5s)로 깨지니 금지** — 각 로봇 자기 호스트에서.
+- **부수 산출물**: `scripts/dual_marker_up.sh`·`_robot_up.sh`·`scan_frame_fix.py`(ns scan frame_id `base_scan`→`tb3_X/base_scan` 교정)·`drive_rotate.py`, 스킬 `urhynix-odom-marker-quickstart`. 함정: `_robot_up.sh`는 **set -u 금지**(ROS setup.bash가 `AMENT_TRACE_SETUP_FILES` 미정의로 깨짐 — 재검증서 발견·수정).
+- **🎯 다음 세션 목표 — 실제 좌표대로 주행**: odom-only 표시 → **AMCL+Nav2 격상**. 각 로봇 self-AMCL(arena_v4, scan_frame_fix 동반) + Unity goal_pose(`/tb3_X/goal_pose`)로 실주행. 초기포즈=충전소(0,0) set_initial_pose 또는 도킹 후 reinit. 단일로봇은 lifecycle_manager 정상(젠지), 티원은 수동 lifecycle 우회.
+
+### 🟢 티원 OpenCR 부활 + 듀얼 pose 파이프라인 PASS(odom-only) + 패시브 트윈 스킬화
+
+- **결과**: 어제 최우선 블로커였던 **티원 OpenCR이 재부팅으로 회복**(crash-loop→`Calibration End`/`Run!`/`/tb3_1/odom` 20Hz). 두 로봇 ns 분리(tb3_1/tb3_2)로 `/tb3_1/pose`(0.4,-0.7)·`/tb3_2/pose`(0.9,-0.7) 동시 발행 확인, 티원 ros_tcp_endpoint가 크로스 디스커버리로 양쪽 중계, 포트10000 Mac 도달까지 PASS. **Unity 육안 1스텝만 남기고 중단** — 옆 데스크탑이 로봇을 써야 해 즉시 양보(우리 프로세스만 비침습 teardown, 전원 ON 유지).
+- **원인/학습 3건**: ① OpenCR `no status packet`+`stack smashing`은 HW 일시고장 — **재부팅이 고침**(펌웨어 재플래시 불필요였음). ② 멀티로봇 ns에서 tf 체인(static `map→tb3_X/odom` + 비-ns 리스너)이 QoS/프레임으로 깨짐 → **tf 우회 odom 릴레이**(`scripts/odom_to_pose.py`)로 해결(odom-only). ③ teardown self-kill 재발: bracket 패턴이어도 **같은 ssh 줄에 비-bracket 키워드(inline verify pgrep)가 있으면** 셸 자살 → kill/verify 완전 분리.
+- **해결 절차**: 1. 티원 ns bringup→`Run!`+odom 20Hz. 2. 젠지 ns tb3_2 bringup. 3. 각 로봇 `odom_to_pose.py`(오프셋 분리). 4. 티원 endpoint. 5. 두 pose 발행·크로스디스커버리·포트 검증. 6. 옆 양보로 우리 프로세스만 비침습 teardown.
+- **부수 산출물**: `scripts/odom_to_pose.py`(신규 — odom→/tb3_X/pose 릴레이, odom-only 폴백), `.claude/skills/unity-passive-pose-twin/`(신규 스킬 — 옆에서 구독만 Unity 표시), 메모리 `pkill-f-self-kill-ssh` 보강(inline verify 자살).
+- **다음 진입**: 로봇 자유로워지면 skill `unity-passive-pose-twin`으로 Unity Play 1회 → 듀얼 마커 육안 확정. 정확 위치 필요 시 odom-only→AMCL(arena_v4 양 로봇; **젠지 nav2 O / 티원 nav2 X** 주의) 업그레이드.
+
 ## 2026-06-24
+
+### 🟢 듀얼 마커 코드 구현·컴파일 PASS + 🔴 티원 OpenCR 고장 발견 → 양 로봇 셧다운
+
+- **목표**: 젠지+티원 맵 동시표시 + 티원 경로 이동 검증. **결과**: 듀얼 마커 코드는 완성·컴파일 PASS, **라이브는 티원 OpenCR 하드웨어 고장으로 차단** → 환경 정리 위해 양 로봇 셧다운.
+- **구현 (컴파일 PASS, errorCount 0)**:
+  - `Ros/RobotPoseFeed.cs` (신규): 로봇별 `/tb3_X/pose`(PoseStamped, map프레임) 구독 → 로봇별 마커 이벤트. `LiveRobots`로 per-robot pose 수신 로봇 추적.
+  - `Map/MapMarkerLayer.cs` (재작성): 로봇별 마커 dict(각자 config 색). 전역 `/tf`(RobotPoseSubscriber)는 per-robot pose 없는 **선택 로봇에만** 적용되는 fallback → 비-ns 단일로봇 맵제작(현 PASS) 무회귀.
+  - `Ros/TopicRegistry.cs` `GetPose(robotId)`, `App/ControlRoomApp.cs` RobotPoseFeed 결선.
+  - `scripts/robot_pose_publisher.py` (신규): 로봇 tf(`map→base_footprint`)→`/tb3_X/pose` 발행. `pose_logger.py`·Unity가 이미 기대하던 빠진 계약 조각. **미테스트(라이다/하드웨어 대기)**.
+- **라이브 진단 (ground truth)**:
+  1. 도메인 210에 **이중 bringup 충돌** 발견 — 젠지(.84 `kim-desktop`)와 티원이 **둘 다 비-ns로 글로벌 `/scan`·`/tf`·`/map`** 사용. `ros2 node list`의 유령노드/이중노드가 증상.
+  2. 충돌원 정리: 젠지 bringup pkill, 티원 클린. (PC `.82/.50`의 `basic_navigator`+`go_to_goal`+rviz 세션은 ssh 차단으로 미정리 → 주인님 수동.)
+  3. 티원 클린 bringup → **`/scan` 10Hz 정상**(라이다 OK), 휠 tf OK. 그러나 **`turtlebot3_node`(OpenCR)가 `There is no status packet` + `stack smashing detected`로 69회 크래시** → `odom` tf 없음 → localize·마커 불가.
+- **🔴 블로커 (다음 세션 최우선)**: 티원 **OpenCR/다이나믹셀 고장**. 라이다·휠 tf 정상이라 **모터보드 전원/배터리/펌웨어**가 원인. 복구: ① 배터리 충전(11.5V↑) ② OpenCR 전원버튼·USB(`/dev/ttyACM0`) 재연결 ③ OpenCR 펌웨어 재플래시.
+- **핵심 학습 2건**:
+  1. **멀티로봇은 네임스페이스 필수** — 젠지·티원 둘 다 비-ns coin_d4 bringup이라 동시 구동 시 글로벌 토픽 충돌. 듀얼 표시/주행은 ns bringup(미검증)이 선행. 단일 검증 시 **다른 로봇·PC 세션을 반드시 먼저 끌 것**(글로벌 토픽 오염).
+  2. **`ros2 node list`는 daemon 캐시로 유령노드 표시** — `pgrep`(실프로세스)·`topic hz`(실발행)로 ground truth 교차검증해야 함. 젠지가 OFF인 줄 알았으나 실제 ON(.84)이었음.
+- **부수 산출물**: 위 4개 코드 파일, `robot_pose_publisher.py`, 로봇 `/tmp/_t_bringup.sh`·`_t_endpoint.sh`(재사용 가능). arena_v4 맵은 로봇 `/tmp/arena_v4/map.{pgm,yaml}`로 전송됨.
+- **다음 진입**: 티원 OpenCR 복구 → clean bringup(`LDS_MODEL=LDS-03`)에서 `turtlebot3_node` 안정 확인 → AMCL(arena_v4) localize → `/tf` fallback으로 티원 마커 검증 → 그 다음 robot_pose_publisher + ns로 젠지까지 듀얼.
+
+### 🖼️ 신규 맵 `arena_v4` 슬롯 등록 + 로봇 맵표시 검증 PASS + 마커 개선(벡터+config색)
+
+- **결정/결과**: 새 SLAM 맵을 Unity 슬롯 `arena_v4`로 등록하고, 티원이 맵 위에 표시되는 것까지 검증 PASS(주인님 육안 확인). 슬롯 id 하드코딩을 제거(주인님 지시)하고, 로봇 마커를 벡터 화살표 + 로봇별 config 색으로 개선.
+- **맵 검증 매트릭스** (`arena_v4.pgm` 56×56px, res 0.05, origin(-0.737,-2.118), 2.80×2.80m):
+  - 점유(벽) 11.8% / 자유 35.7% / 미지 52.6% — 외곽선 닫힘(루프클로저), 벽 깨끗(드리프트 없음), 내부 칸막이 1개. origin이 기존 `arena`(-0.734,-2.161)와 거의 같아 **티원 아레나 재슬램본**.
+- **해결 절차** (재현 가능):
+  1. pgm 픽셀통계+ASCII 품질판정 → `docs/evidence/maps/arena_v4/` 복사.
+  2. `python3 scripts/pgm_to_map_slot.py .../arena_v4.pgm .../arena_v4.yaml arena_v4 "티원 아레나 v4"` → 슬롯 png+json 생성.
+  3. **하드코딩 제거**: `MapCatalog.LatestArenaSlot()`이 `arena_v<N>` 최대 N을 폴더스캔으로 자동선택, `StaticMapLoader`가 PlayerPrefs 기본값으로 사용 → 새 버전 추가 시 자동 최신화.
+  4. T1(192.168.10.250)에 ros_tcp_endpoint **비침습 기동**(Cartographer 안 건드림, 추가 노드) → `ros_endpoint.json`을 T1로 지정 → Unity Play → `/tf`·`/map` 구독 등록 OK(엔드포인트 로그 확인) → arena_v4 위 로봇 마커 표시 확인.
+  5. 마커 개선: 폰트 글리프 ▲ → **Painter2D 벡터 화살촉**(글꼴 의존 없이 정면 또렷). 로봇별 색 `default_robots.json.markerColor`(+`RobotInfo.markerColor`)로 관리 — 티원 `#34D98C`, 젠지 `#4DA3FF`, 선택 로봇 변경 시 자동 갱신.
+- **핵심 학습 2건**: ① **UI Toolkit은 unityctl screenshot이 검정**으로 나옴 → 시각검증은 주인님 육안 + 엔드포인트 로그(구독 등록)/라이브 tf로 ground truth 확보. ② 마커 회전식 `90°−yawDeg`는 north-up(y-flip) 맵에서 정확(라이브 tf yaw −83.7° 정합) — displayRotationDeg=0 기준.
+- **부수 산출물**: `docs/evidence/maps/arena_v4/{pgm,yaml,png}`, `StreamingAssets/Maps/arena_v4.{png,json}`, `MapCatalog.cs`·`StaticMapLoader.cs`·`MapMarkerLayer.cs`·`Data/RobotInfo.cs`·`RobotConfig/default_robots.json`·`RosConfig/ros_endpoint.json`.
+- **미해결/리스크**: ① **듀얼 마커** — 젠지+티원이 공유 글로벌 `/tf`에 각자 `base_footprint`를 publish하면 구분 불가 → 네임스페이스 tf 또는 로봇별 pose 토픽 분리 선행 필요(다음 작업). ② `ros_endpoint.json`이 현재 T1(.250) 고정 — 별도 Nav2 PC 쓰면 그 IP로 되돌릴 것.
+- **다음 진입**: ① **젠지+티원 맵 동시표시 검증**(로봇별 pose 토픽 분리 설계 선행) → ② 그 다음 경로 이동(주행) 검증: T1 Cartographer→Nav2+AMCL(arena_v4) 전환 + Unity `/tb3_1/goal_pose` 발행 → `patrol_waypoints_bridge.py`로 goToPose 실행.
 
 ### 🗺️ 티원 신규 SLAM 맵 `arena_v3` 저장·검증 PASS + Unity 슬롯 등록
 
