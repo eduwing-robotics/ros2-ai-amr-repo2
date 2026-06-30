@@ -1,50 +1,113 @@
-// ProtectedTargetView.cs — 우측 패널 보호대상 카드. 액자 A/B + 중요품 A 더미.
-// OnScenarioTriggered("theft") 발화 시 보호대상 1개를 "미확인" 상태로 토글 (fake interaction).
-// Phase 3에서 office_base_map.json의 protectedTargets[] 기반 자동 생성으로 swap.
+// ProtectedTargetView.cs — 우측 패널 보호대상 카드를 MapConfig 기반으로 동적 생성.
+// 2026-06-30: frameA/B + objectA 하드코딩 제거 → office_base_map.json protectedTargets[] 기반.
+using System.Collections.Generic;
 using UnityEngine.UIElements;
 using URHYNIX.ControlRoom.App;
+using URHYNIX.ControlRoom.Data;
+using URHYNIX.ControlRoom.Services;
 
 namespace URHYNIX.ControlRoom.UI
 {
     public class ProtectedTargetView
     {
-        readonly Label frameAStatus;
-        readonly Label frameBStatus;
-        readonly Label objectAStatus;
+        readonly VisualElement list;
+        readonly Dictionary<string, Label> statusLabels = new();
+        readonly Dictionary<string, VisualElement> dotElements = new();
 
         public ProtectedTargetView(VisualElement root)
         {
-            frameAStatus  = root.Q<Label>("target-frame-a-status");
-            frameBStatus  = root.Q<Label>("target-frame-b-status");
-            objectAStatus = root.Q<Label>("target-object-a-status");
+            list = root.Q<VisualElement>("protected-target-list");
+            Rebuild();
 
             ControlRoomEvents.OnScenarioTriggered += OnScenarioTriggered;
             ControlRoomEvents.OnRobotChanged      += OnRobotChanged;
         }
 
+        void Rebuild()
+        {
+            list?.Clear();
+            statusLabels.Clear();
+            dotElements.Clear();
+
+            var targets = MapConfigService.Current?.protectedTargets;
+            if (targets == null || targets.Length == 0)
+            {
+                list?.Add(new Label("등록된 보호대상이 없습니다.") { name = "target-empty" });
+                return;
+            }
+
+            foreach (var t in targets)
+            {
+                var row = new VisualElement();
+                row.AddToClassList("target-row");
+
+                var dot = new VisualElement();
+                dot.name = $"target-dot-{t.targetId}";
+                dot.AddToClassList("target-dot");
+                row.Add(dot);
+
+                var nameLabel = new Label(t.displayName);
+                nameLabel.AddToClassList("target-name");
+                row.Add(nameLabel);
+
+                var statusLabel = new Label(StatusText(t.status));
+                statusLabel.name = $"target-status-{t.targetId}";
+                statusLabel.AddToClassList("target-status");
+                row.Add(statusLabel);
+
+                list?.Add(row);
+                statusLabels[t.targetId] = statusLabel;
+                dotElements[t.targetId] = dot;
+                ApplyStatus(t.targetId, t.status);
+            }
+        }
+
         void OnScenarioTriggered(string scenarioId)
         {
             if (scenarioId != "theft") return;
-            // 도난 시나리오: 중요품 A를 미확인으로 토글 (시연 인상용 fake)
-            SetStatus(objectAStatus, "미확인", "target-status-danger");
+            // 데모 시나리오: 첫 번째 보호대상을 미확인 상태로 토글.
+            foreach (var id in statusLabels.Keys)
+            {
+                ApplyStatus(id, "missing");
+                break;
+            }
         }
 
-        void OnRobotChanged(string robotId)
-        {
-            // 탭 전환 시 보호대상 상태 reset (시나리오 초기화)
-            SetStatus(frameAStatus,  "확인됨", "target-status-ok");
-            SetStatus(frameBStatus,  "확인됨", "target-status-ok");
-            SetStatus(objectAStatus, "확인됨", "target-status-ok");
-        }
+        void OnRobotChanged(string robotId) => Rebuild();
 
-        void SetStatus(Label label, string text, string statusClass)
+        void ApplyStatus(string targetId, string status)
         {
-            if (label == null) return;
-            label.text = text;
+            if (!statusLabels.TryGetValue(targetId, out var label)) return;
+            dotElements.TryGetValue(targetId, out var dot);
+
+            label.text = StatusText(status);
+
             label.RemoveFromClassList("target-status-ok");
             label.RemoveFromClassList("target-status-warn");
             label.RemoveFromClassList("target-status-danger");
-            label.AddToClassList(statusClass);
+            dot?.RemoveFromClassList("target-ok");
+            dot?.RemoveFromClassList("target-warn");
+            dot?.RemoveFromClassList("target-danger");
+
+            var cls = StatusToClass(status);
+            label.AddToClassList($"target-status-{cls}");
+            dot?.AddToClassList($"target-{cls}");
         }
+
+        static string StatusText(string status) => status?.ToLower() switch
+        {
+            "safe"    => "확인됨",
+            "check"   => "확인 필요",
+            "missing" => "미확인",
+            _         => status ?? "--"
+        };
+
+        static string StatusToClass(string status) => status?.ToLower() switch
+        {
+            "safe"    => "ok",
+            "check"   => "warn",
+            "missing" => "danger",
+            _         => "ok"
+        };
     }
 }

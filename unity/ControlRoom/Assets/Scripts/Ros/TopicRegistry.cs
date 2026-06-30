@@ -41,6 +41,16 @@ namespace URHYNIX.ControlRoom.Ros
         public static string GetPatrolWaypoints(string robotId)
             => string.IsNullOrEmpty(robotId) ? null : $"/{robotId}/patrol_waypoints";
 
+        // 수동 조종 속도 명령(TwistStamped). TeleopCmdPublisher가 발행 → TurtleBot3 HW 직접 구동(Nav2 비경유).
+        // ⚠ 메시지 타입은 TwistStamped(TurtleBot3 Jazzy 실기). CONTRACT.md의 Twist 표기는 드리프트.
+        public static string GetCmdVel(string robotId)
+            => string.IsNullOrEmpty(robotId) ? null : $"/{robotId}/cmd_vel";
+
+        // 로봇별 위치(PoseStamped, map프레임). robot_pose_publisher.py가 tf→발행, pose_logger.py도 동일 구독.
+        // 듀얼로봇 런타임에서 로봇별 마커를 구분 표시(전역 /tf는 단일로봇 맵제작용 fallback).
+        public static string GetPose(string robotId)
+            => string.IsNullOrEmpty(robotId) ? null : $"/{robotId}/pose";
+
         public static string GetCameraCompressed(string robotId)
         {
             switch (robotId)

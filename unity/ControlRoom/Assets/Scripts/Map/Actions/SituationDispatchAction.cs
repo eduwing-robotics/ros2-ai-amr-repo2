@@ -21,7 +21,7 @@ namespace URHYNIX.ControlRoom.Map.Actions
                 $"{s.displayName} 발생 — ({ctx.worldX:0.00}, {ctx.worldY:0.00}) 출동");
             ControlRoomEvents.RaiseLogAdded("dispatch", "WARN",
                 $"{s.displayName} 출동: {ctx.selectedRobotId} → ({ctx.worldX:0.00}, {ctx.worldY:0.00})");
-            ControlRoomEvents.RaiseDispatchRequested(ctx.selectedRobotId, ctx.worldX, ctx.worldY, s.situationId);
+            ControlRoomEvents.RaiseDispatchRequested(ctx.selectedRobotId, ctx.worldX, ctx.worldY, s.situationId, simulated: false);
         }
     }
 }

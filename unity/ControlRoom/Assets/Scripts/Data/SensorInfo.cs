@@ -14,6 +14,7 @@ namespace URHYNIX.ControlRoom.Data
         public string topicName;         // 예: "/sensors/temp" (root namespace, arduino_bridge_quad.py 발행)
         public float warningThreshold;   // 경고 임계값 (sensorType=boolean이면 0/1, sound는 swing 60)
         public string iconName;          // IconNames 상수와 매핑
+        public bool disabled;            // true면 "미결선" 등 하드웨어 미결선 표시
         public string robotId;           // 어느 로봇 소속인지 ("tb3_1" / "tb3_2")
     }
 

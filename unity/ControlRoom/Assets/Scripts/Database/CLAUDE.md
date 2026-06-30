@@ -14,13 +14,17 @@
 | `DispatchRepository.cs` | `dispatches` 저장/조회 |
 | `CameraRepository.cs` | `camera_captures` 저장/조회 |
 | `PoseLogRepository.cs` ✅ | `pose_logs` read 헬퍼 (coroutine) |
+| `EventRepository.cs` ✅ | `events` read 헬퍼 |
+| `DispatchRepository.cs` ✅ | `dispatches` read 헬퍼 |
+| `LogRepository.cs` ✅ | `logs` read 헬퍼 |
+| `JsonHelper.cs` ✅ | JsonUtility top-level array 파싱 래퍼 |
 | `SupabaseSettings.cs` ✅ | `Resources/SupabaseConfig/supabase.json` 로드 (anon 키, graceful 비활성) |
 | `SupabaseClient.cs` ✅ | UnityWebRequest REST 클라이언트 (INSERT/SELECT, "직접 택배") |
 | `SupabaseDbService.cs` ✅ | 단일 DB 라이터 — 이벤트→insert, throttle, 내구성 큐+오프라인 버퍼 |
 
 ## 권한 정책 (중요)
 
-- **Unity = read + 제한 INSERT만**. `dispatches`(출동), `session_meta`(사람 액션)만 쓰기.
+- **Unity = read + 제한 INSERT만**. 현재 쓰기 4종: `session_meta`(세션), `dispatches`(출동), `logs`(UI 로그/감사), `pose_logs`(throttle된 로봇 포즈). 모두 anon RLS 경로 (`SupabaseDbService` 단일 라이터).
 - **service_role 키 절대 미반입**. anon key는 `Resources/SupabaseConfig.local.asset` (`.gitignore`).
 - 민감 작업(전원 종료/RLS 우회)은 Supabase **Edge Function** 호출만.
 - **주 쓰기 주체는 로봇 PC** (Python ROS2 노드 + anon + RLS).

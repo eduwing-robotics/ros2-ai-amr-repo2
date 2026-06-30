@@ -1,8 +1,9 @@
+<!-- opencode: 2026-06-30 - 목업→실데이터 교체 로드맵 + 외부 그래프 도구 검증. Coded with OpenCode; high-cost model review recommended. -->
 # Project Status
 
 > 상세 로그: `docs/daily/` · 주간 회고: `docs/weekly/`(SKILL-HARVEST 포함) · 구버전: `docs/archive/`
 
-Last updated: 2026-06-26 (밤) — **🛰️ 멀티로봇 도메인 충돌 해결 + ns+tf_prefix bringup 검증 PASS.** 증상=티원·젠지 둘 다 도메인210·비-ns로 `/scan`·`/tf` 발행→라이다 섞여 SLAM 깨짐(`/scan` Publisher count=2). 즉시조치=젠지 종료(티원이 SLAM 주체)→티원 `/scan` 단독 복귀. 근본해결=도메인 **210 유지**+**namespace `tb3_1`/`tb3_2` 격리**(토픽·TF 접두사 분리, 도메인 분리는 Unity 브리지/맵공유 불가라 안 씀). 유일 누수=coin_d4 라이다 frame_id(yaml 고정 `base_scan`)→`scripts/dual_bringup.launch.py`로 `tb3_X/base_scan` 봉합 + `_robot_bringup_ns.sh` 런처(기존 `_robot_nav_up.sh` 무수정). 젠지 검증 PASS: 전 토픽 `/tb3_2/*`, scan/odom frame=`tb3_2/*`, `tf2_echo tb3_2/odom tb3_2/base_scan` 룩업 성공(누수0). **다음**: 티원 SLAM 끝→맵 저장→두 로봇 210+ns bringup→**nav2 namespace화**(동시 자율주행). **이전**: 🤖 듀얼 Unity 표시 진행 + ★map5 부정확 블로커(표시↔라이다 0.9m)→새 맵 대기. **이전**: 맵 줌/팬 PASS + map5 디폴트 + "핸드오프" hook. **이전(오전)**: Confluence 3페이지+Jira 5티켓+map5 슬롯 등록. **이전(odom)**: 듀얼 마커 스킬화.
+Last updated: 2026-06-30 밤 — **🗺️ 가재보맵 통합 + 컴파일 블로커 해소 + 비침습 구독 결정.** unityctl bridge 6에러(CS0453 1·CS0029 4·CS0246 1, bridge 패키지 자체 버그) 메인 패치 → 컴파일 **0에러 PASS**. 티원 마커 root cause(`dual_marker_up.sh`가 티원 `endpoint=no`) fix → Unity `/tb3_1/pose` 구독 확인. 가재보맵 `jaebo_v1` 2D 슬롯(arena regex와 격리) + 3D sdf 뷰 신설(`SdfWallSpawner`+`Map3DView`, 벽89→Cube 천장뷰, 2D/3D 탭, 컴파일 0에러, **런타임 육안 대기**). **역할분리 결정**: 로봇 운영(bringup/AMCL/주행=publish)은 데스크탑(팀), 우리 Unity는 구독만(passive twin) — 로봇 점유 0(팀 사용 보장). **다음**: Unity Play로 3D탭·가재보슬롯·티원 초록마커 육안 + 데스크탑 운영 연동. 이전: Phase 3 준비(FakeSensor/DemoScenario/Supabase 동적화)·bridge 6에러 미해결.
 
 ## 2026-06-02 Addendum
 
@@ -130,53 +131,63 @@ Last updated: 2026-06-26 (밤) — **🛰️ 멀티로봇 도메인 충돌 해�
 
 ## Handoff Capsule
 
-**Capsule timestamp**: 2026-06-26 · **Session closer**: OpenCode
+**Capsule timestamp**: 2026-06-30 · **Session closer**: OpenCode
 
 ### Next entrypoint
-- **`docs/status/HANDOFF.md`** — 1페이지 진입 캡슐 (5분 내 컨텍스트 + Top 1 액션)
+- **`docs/status/HANDOFF.md`** — Phase 3 준비 완료 + 고비용 모델 리뷰 체크리스트 + 첫 5분 명령
 
 ### Read first (3개 순서)
-1. `docs/status/HANDOFF.md` ← **1순위, 이것만 읽으면 출발 가능**
-2. `docs/status/PROJECT-STATUS.md` (이 파일 — Evidence Status + 외부 SSOT 인덱스)
-3. `docs/status/DECISION-LOG.md` 가장 아래 5건 (최근 결정 변천)
+1. `docs/status/HANDOFF.md` ← **1순위, 리뷰 체크리스트 포함**
+2. `docs/status/PROJECT-STATUS.md` (이 파일 — Evidence Status + Handoff Capsule)
+3. `docs/ref/UNITY-MOCK-TO-REAL-ROADMAP.md` §3 교체 대상표
 
 ### Current phase
-- Sprint 4 진행 중 (Confluence/Jira 문서 동기화 + 새 SLAM 맵 `map5` 슬롯화)
-- 로봇 측은 이전 세션 상태 유지: 젠지 AMCL+Nav2 주행 PASS, 티원 주행 풀스택 미설치
+- Unity ControlRoom 목업→실데이터 교체 **Phase 3 준비 완료**, **고비용 모델 리뷰 대기 중**
+- Phase 2: `SensorCardListView`/`WaypointListView`/`ProtectedTargetView` config/registry 기반 동적화 완료
+- Phase 3(준비):
+  - `FakeSensorData`: ROS 연결된 로봇은 fake 값 발화하지 않음.
+  - `DemoScenarioService`: `SituationConfig/default_situations.json` SSOT 기반, `noise` 추가, `demoMode` 플래그 추가.
+  - `ScenarioPanelView`: 시나리오 버튼 동적 생성, `demoMode=false`일 때 비활성화.
+  - `ControlRoomEvents.RaiseDispatchRequested`: `simulated` bool 인자 추가.
+  - `SupabaseDbService`: dispatch `simulated` 플래그 동적화, pose 로그 `robot_id`를 `RobotPoseFeed` per-robot 이벤트로 동적화.
 
 ### Blockers
-- **none**
+- **Unity Editor 재기동 필요**: `unityctl exec`로 `SensorVerifyConsole`을 실행한 시점에 Play Mode가 이전 UXML 캐시를 유지해 구식 라벨(`sensor-pir-value` 등)이 출력됨. Play Stop/Start 과정에서 `unityctl` bridge가 detach되어, 현재 Unity Editor 재기동 없이는 IPC exec 불가. 다음 세션 첫 5분에 Editor 재기동 후 검증 재시도.
+- **`unityctl bridge` 패키지 compile error 6건**: `Packages/com.unityctl.bridge/Editor/Commands/DescribeTypeHandler.cs`에서 본 작업과 무관한 compile error 발생 중. `unityctl check` crash, `unityctl script get-errors`는 bridge 에러 반환. 고비용 모델 리뷰 시 bridge 다운그레이드/패치 여부 결정 필요.
 
 ### Unfinished decisions
-- **map5의 기본 시작 슬롯 지정 여부**: 현재 `StaticMapLoader`는 `arena_v*` 최신 슬롯을 기본으로 선택. `map5`를 기본으로 하려면 `StaticMapLoader.defaultSlotId`를 `"map5"`로 변경하거나, PlayerPrefs를 통해 1회 수동 선택 필요.
-- **2D 맵뷰 줌(확대) 기능 추가 여부**: `MapViewport`는 fit-only, `MapInteractionController`에 휠 이벤트 없음. `MapCameraController.cs`가 예정 파일로만 존재. 주인님 승인 시 구현.
+- **FakeSensorData 완전 제거 여부**: 실제 시연 시 `FakeSensorData` 컴포넌트를 아예 비활성화할 것인가, 아니면 미연결 로봇 fallback으로 유지할 것인가?
+- **DemoScenarioService 실제 모드 동작**: `demoMode=false`일 때 실제 ROS 보안 이벤트 subscriber가 `RaiseScenarioTriggered` 또는 `RaiseAlert`를 발화할 것인지 설계 필요.
+- **출동 명령 실제 발행 검증**: `simulated=false` 출동에 대해 Nav2 `goToPose`가 실제로 실행되는지, `patrol_waypoints_bridge.py`와의 계약이 맞는지 확인 필요.
+- **DB 실제 쓰기 검증**: 실제 Supabase 설정 하에서 `dispatches`/`pose_logs`/`logs` insert가 정상 동작하는지, RLS 정책이 anon key에 맞춰져 있는지 확인 필요.
+- **Sensor topic 교차검증**: `default_sensors.json` topic `/sensors/*`가 실제 `arduino_bridge_quad` 발행 토픽명과 일치하는지 확인 필요.
 
 ### First verify (다음 세션이 첫 5분에 돌릴 명령)
 ```bash
-# 1. 오늘 변경 상태 확인
-git status --short
-ls -la /Users/family/jason/URHYNIX/unity/ControlRoom/Assets/StreamingAssets/Maps/map5*
+# 1. Unity Editor 재기동 후 컴파일 확인
+cd /Users/family/jason/URHYNIX/unity/ControlRoom
+unityctl check
+unityctl script get-errors --project /Users/family/jason/URHYNIX/unity/ControlRoom
 
-# 2. Confluence/Jira 동기화 확인 (선택)
-curl -s -u "$ATLASSIAN_EMAIL:$ATLASSIAN_TOKEN" \
-  'https://jason1127.atlassian.net/wiki/rest/api/content/27459586?expand=version' | python3 -m json.tool | grep number
-curl -s -u "$ATLASSIAN_EMAIL:$ATLASSIAN_TOKEN" \
-  'https://jason1127.atlassian.net/rest/api/3/search/jql?jql=key%20in%20(SCRUM-107,SCRUM-119,SCRUM-122,SCRUM-124,SCRUM-141)' | python3 -m json.tool | grep -E '"key"|"summary"'
+# 2. Play Mode 진입 후 SensorVerifyConsole로 동적 UI 확인
+unityctl exec --project /Users/family/jason/URHYNIX/unity/ControlRoom --code 'URHYNIX.ControlRoom.App.SensorVerifyConsole.SwitchTo("tb3_2")'
+unityctl exec --project /Users/family/jason/URHYNIX/unity/ControlRoom --code 'URHYNIX.ControlRoom.App.SensorVerifyConsole.Dump()'
+#    → tb3_2 선택 시 `sensor-value-pir`, `sensor-value-sound`, `sensor-value-temp`, `sensor-value-laser` 라벨이 동적으로 생성되어 있어야 함
 
-# 3. Unity 컴파일 및 맵 슬롯 인식 확인
-cd /Users/family/jason/URHYNIX/unity/ControlRoom && unityctl check
-#    → Playing 후 맵 드롭다운에서 map5 / map5_pretty 선택
+# 3. 정적 차단 확인
+cd /Users/family/jason/URHYNIX/unity/ControlRoom
+grep -R "sensor-(pir|sound|temp|laser)-value\|wp-[1-5]\"\|target-frame-a\|target-object-a" Assets/Scripts Assets/UI || echo "하드코딩 잔여 0건"
 ```
 
 ### Files changed this session (요약)
-- Confluence: 기획안 327681 v20, 사용자 요구사항 3112961 v10, 시스템 요구사항 6750216 v19, 회의록 27459586 v1 + drawio/png 첨부 6개
-- Jira: SCRUM-107/119/122/124/141 진행 중 티켓 설명 갱신
-- Unity: `StreamingAssets/Maps/map5.{png,json,meta}`, `map5_pretty.{png,json,meta}`
-- 로컬 SSOT: `docs/status/PROJECT-STATUS.md`, `docs/ref/AUTOMATION-WEEKDAY-SYNC.md`, `docs/ref/JIRA-MAP.md` (SCRUM-147 추가), `docs/status/HANDOFF.md`
+- Unity C#: `Assets/Scripts/Simulation/FakeSensorData.cs`, `Assets/Scripts/Simulation/DemoScenarioService.cs`, `Assets/Scripts/UI/ScenarioPanelView.cs`, `Assets/Scripts/Database/SupabaseDbService.cs`, `Assets/Scripts/App/ControlRoomEvents.cs`, `Assets/Scripts/App/ControlRoomApp.cs`, `Assets/Scripts/Ros/DispatchPublisher.cs`, `Assets/Scripts/UI/HomePageView.cs`, `Assets/Scripts/UI/ResponsePageView.cs`, `Assets/Scripts/UI/Records/RecordsPageView.cs`, `Assets/Scripts/Map/Actions/DispatchHereAction.cs`, `Assets/Scripts/Map/Actions/SituationDispatchAction.cs`
+- Unity UXML: `Assets/UI/Parts/LeftControlPanel.uxml`
+- Unity Config: `Assets/Resources/SituationConfig/default_situations.json`
+- 로컬 SSOT: `docs/ref/UNITY-MOCK-TO-REAL-ROADMAP.md`, `docs/status/PROJECT-STATUS.md`, `docs/status/HANDOFF.md`
 
 ### Next branch / commit context
 - 현재 브랜치: `main` (직접 commit 금지, PR로만)
-- 미커밋 파일: PROJECT-STATUS / HANDOFF / JIRA-MAP / AUTOMATION-WEEKDAY-SYNC / StreamingAssets/Maps/map5*
+- 미커밋 파일: Phase 2/3 변경 파일 + SSOT 문서
 
 ---
 
@@ -184,6 +195,10 @@ cd /Users/family/jason/URHYNIX/unity/ControlRoom && unityctl check
 
 | 검증 항목 | 상태 | 비고 (2026-05-29) |
 |---|---|---|
+| Unity ControlRoom 목업→실데이터 교체 로드맵 | ✅ | 2026-06-30 Phase 1(RecordsPageView 분리) + Phase 2(SensorCardListView/WaypointListView/ProtectedTargetView config/registry 동적화) + Phase 3 준비(FakeSensorData ROS 연결 감지 off, DemoScenarioService↔SituationConfig 정합, SupabaseDbService simulated/robot_id 동적화) 완료. `ControlRoomEvents.RaiseDispatchRequested`에 `simulated` 인자 추가. 실제 로봇/ROS 연동은 고비용 모델 리뷰 후 진행 |
+| Phase 3 `Assets/Scripts` 컴파일 | ✅ | 2026-06-30 `Assets/Scripts` 내 신규 error 0. `FakeSensorData`/`DemoScenarioService`/`ScenarioPanelView`/`SupabaseDbService`/`ControlRoomEvents` 및 dispatch 이벤트 구독자 6곳 갱신 후 compile OK |
+| `unityctl bridge` 패키지 컴파일 | 🟥 | 2026-06-30 `Packages/com.unityctl.bridge/Editor/Commands/DescribeTypeHandler.cs`에서 6 compile errors(`int?` generic 제약 위반, `List<JObject>`→`JToken` 형변환, `SerializeField` 미참조). 본 작업 코드와 무관. `unityctl check`는 project lock으로 crash, `unityctl script get-errors`는 bridge 에러 반환. 고비용 모델 리뷰 시 bridge 다운그레이드/패치 여부 결정 필요 |
+| SensorVerifyConsole 동적 UI 검증 | ⚠️ | 2026-06-30 `unityctl exec`로 `SensorVerifyConsole.Dump()` 실행. 실행 시점에 Play Mode가 이전 UXML 캐시를 유지하여 `sensor-pir-value` 등 구식 라벨이 잡힘. Play Stop/Start 후 `unityctl` bridge 재부착 필요. `Assets/Scripts` 컴파일 OK. 다음 세션 첫 5분에 Editor 재기동 후 `SwitchTo("tb3_2")` → `Dump()` 재실행 예정 |
 | Git 추적 PNG 제거 | ✅ | 2026-06-01 `git ls-files '*.png'` 기준 383개 PNG를 `git rm`으로 제거. 완료 검증은 동일 명령 0건으로 확인 |
 | 옛 방향/제거 범위 본문 잔재 grep | ✅ | 활성 문서에서 제거 대상 키워드와 이전 제목 잔재 없음. DECISION-LOG의 전환 기록만 예외 |
 | `tb3_1`/`tb3_2` 일관 사용 grep | ✅ | 10개 파일에서 등장 (SSOT 8 + DECISION-LOG + dev-plan.html) |
@@ -239,3 +254,6 @@ cd /Users/family/jason/URHYNIX/unity/ControlRoom && unityctl check
 | 2026-06-01 회의록(로봇 역할 분리 + UI 요구사항) SSOT 반영 | ✅ | Confluence page `5111810`의 “tb3_1=비전(D435) / tb3_2=센서+Arduino+PiCam(IMX219)” 및 UI 버튼/상호작용 정의를 **문서로만** 반영. 구현/장착/토픽 검증은 별도 evidence 필요. 반영 위치: `docs/status/DECISION-LOG.md`, `docs/ref/PROJECT-PLAN.md`. |
 | 기술별 ref 라우팅 | ✅ | 2026-06-02 `docs/ref/TECH-INDEX.md` + `docs/ref/tech/{UNITY,ROS2-ROBOT,ARDUINO-SENSORS,DATABASE-SUPABASE,VISION-CAMERA,OPS-HARNESS}.md` 추가. 루트 진입 문서와 `.claude/skills/README.md`, `task-intake-router`에서 discoverable. 검증: `rg -n "docs/ref/TECH-INDEX|docs/ref/tech/UNITY" AGENTS.md AGENT.md CLAUDE.md ai-context/START-HERE.md .claude/skills docs/ref docs/status`. |
 | ControlRoom Phase 2.7 — 젠지 Pi Camera 라이브 결선 + 4종 함정 영구 자산화 | ✅ | 2026-06-04 ControlRoom 신 프로젝트(Unity 6.3 LTS)에 `/tb3_2/camera/image_raw/compressed` 30Hz 라이브 RGB 결선 완료. 사용자 확인 "카메라 화면 잘나옴". 산출물: `Scripts/Ros/CameraStreamSubscriber.cs`(76) + `Editor/CameraStreamSetup.cs`(60) + UXML 1줄(`VisualElement`→`Image`) + `CameraPanelView.cs`(30→43 추가만) + `ControlRoomApp.cs ConfigureRos()` + `ProjectSettings: Standalone: ROS2` + robot `server.py:125` `.rstrip("\x00").strip()` 패치 + `loginctl enable-linger kim`. 잡은 함정 4종(#13 KillUserProcesses, #14 server.py [:-1], #15 macOS open -a, #16 ★ Unity ROS1 default → ROS2 define) 모두 영구 패치/스킬화. UI Contract Lock 침해 UXML 1줄(태그만)만. 컴파일 31 assemblies + Console 0 errors + robot RegisterSubscriber OK. evidence: `docs/evidence/2026-06-04-controlroom-camera-live-pass.md`. 스킬 보강: `.claude/skills/robot-camera-bringup/SKILL.md`(#13~16) + `.claude/skills/unity-camera-panel/SKILL.md`(ROS2 define + Image element + open -a). 다음: 티원 D435 같은 패턴 + Phase 2.8 Gemma 4 12B 통합. |
+| ControlRoom 디자인 토큰 SSOT 복원 + USS 하드코딩 토큰화 + Left 사이드바 정보 밀도 업 | ✅ | 2026-06-26 `ControlRoomTokens.uss` 확장 + `Assets/Scripts/Design/UiTokens.cs` 신규 + 4개 USS 하드코딩 15건+ 토큰화. `LeftControlPanel.uxml`에 로봇 역할 카드 + 퀙액션(즉시정지/충전소복귀/ArUco주차/주행잠금) + Teleop D-pad 추가. `RobotRoleCardView`/`QuickActionView`/`TeleopPadView` 신규 + `ControlRoomEvents`에 `OnTeleopCmd`/`OnQuickAction` 이벤트 추가. `docs/ref/DESIGN-DECISIONS.md` + Foxglove/Grafana 레퍼런스 PNG 저장. 검증: `unityctl check` PASS, 하드코딩 색상 grep 0건, compile 31 assemblies. |
+| ControlRoom 리뷰 반영 수정 | ✅ | 2026-06-26 `RobotRoleCardView.cs` 색상을 USS 클래스(.vision/.sensor/.unknown)로 이동, `TeleopPadView.cs`에 버튼 누름 상태 플래그 추가, `QuickActionIds.cs` 생성하여 actionId 상수화, Teleop 버튼 36px→44px, `LeftControlPanel.uxml`에 `ScrollView` 적용, role badge/icon 색상 토큰 추가. 검증: `unityctl check` PASS, `rg 'new Color('` 0건, `#RGB/rgba` 하드코딩 grep 0건. |
+| ControlRoom 토스 리스킨 + 하단 네비 4탭 골격 | ✅/⚠️ | 2026-06-29 토스 TDS 토큰 이식(USS+C#), Map 렌더링 색 변환 6파일, UXML page-host+bottom-navbar 4탭, `SetPage`/`OnPageChanged` 상태 계약, `PanelTabView.onSelected` 콜백. 컴파일 `unityctl script get-errors` **0 errors**(경고 32건 기존). **시각검증은 unityctl IPC/프로젝트 락 불안정으로 스크린샷 실패** — Editor 직접 Play로 하단 네비·탭 전환·활성 탭 색상 확인 필요. |

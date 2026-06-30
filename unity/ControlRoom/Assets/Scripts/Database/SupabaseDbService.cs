@@ -32,10 +32,16 @@ namespace URHYNIX.ControlRoom.Database
         string bufferPath;
         bool dirty;
 
-        // pose throttle 상태
-        float lastPoseTime;
-        float lastX, lastY;
-        bool hasLastPose;
+        // pose throttle 상태 (robotId별)
+        readonly Dictionary<string, PoseThrottleState> poseStates = new Dictionary<string, PoseThrottleState>();
+
+        class PoseThrottleState
+        {
+            public float lastTime;
+            public float lastX;
+            public float lastY;
+            public bool hasLast;
+        }
 
         // 검증 콘솔용 카운터
         public static int UiLogCount { get; private set; }
@@ -68,7 +74,7 @@ namespace URHYNIX.ControlRoom.Database
 
             ControlRoomEvents.OnLogAdded += OnLogAdded;
             ControlRoomEvents.OnDispatchRequested += OnDispatchRequested;
-            RobotPoseSubscriber.OnPoseUpdated += OnPoseUpdated;
+            RobotPoseFeed.OnRobotPose += OnRobotPose;
 
             StartCoroutine(DrainLoop());
             StartCoroutine(FlushBufferLoop());
@@ -80,7 +86,7 @@ namespace URHYNIX.ControlRoom.Database
             if (Instance != this) return;
             ControlRoomEvents.OnLogAdded -= OnLogAdded;
             ControlRoomEvents.OnDispatchRequested -= OnDispatchRequested;
-            RobotPoseSubscriber.OnPoseUpdated -= OnPoseUpdated;
+            RobotPoseFeed.OnRobotPose -= OnRobotPose;
             if (active) PersistBuffer();
         }
 
@@ -103,41 +109,51 @@ namespace URHYNIX.ControlRoom.Database
             Enqueue("logs", body);
         }
 
-        void OnDispatchRequested(string robotId, float x, float y, string reason)
+        void OnDispatchRequested(string robotId, float x, float y, string reason, bool simulated)
         {
             if (!active) return;
             string rid = string.IsNullOrEmpty(robotId) ? settings.defaultRobotId : robotId;
+            string sim = simulated.ToString().ToLowerInvariant();
             string body = "{" +
                 $"\"id\":\"{Guid.NewGuid()}\"," +
                 $"\"target_robot_id\":\"{Esc(rid)}\"," +
                 $"\"target_x\":{Num(x)},\"target_y\":{Num(y)}," +
                 $"\"dispatched_at\":\"{NowIso()}\"," +
-                "\"simulated\":true," +
+                $"\"simulated\":{sim}," +
                 $"\"reason\":\"{Esc(reason)}\"," +
                 "\"nav_mode\":\"dispatch\"}";
             Enqueue("dispatches", body);
         }
 
-        void OnPoseUpdated(float x, float y, float yaw)
+        void OnRobotPose(string robotId, float x, float y, float yaw)
         {
             if (!active) return;
+            string rid = string.IsNullOrEmpty(robotId) ? settings.defaultRobotId : robotId;
+
             float now = Time.unscaledTime;
             float minDt = settings.poseWriteHz > 0 ? 1f / settings.poseWriteHz : 0.5f;
-            if (hasLastPose)
+
+            if (!poseStates.TryGetValue(rid, out var state))
             {
-                if (now - lastPoseTime < minDt) return;                       // Hz throttle
-                float dx = x - lastX, dy = y - lastY;
+                state = new PoseThrottleState();
+                poseStates[rid] = state;
+            }
+
+            if (state.hasLast)
+            {
+                if (now - state.lastTime < minDt) return;                       // Hz throttle
+                float dx = x - state.lastX, dy = y - state.lastY;
                 if (dx * dx + dy * dy < settings.poseMinMoveMeters * settings.poseMinMoveMeters) return; // 정지 시 스킵
             }
-            lastPoseTime = now; lastX = x; lastY = y; hasLastPose = true;
+            state.lastTime = now; state.lastX = x; state.lastY = y; state.hasLast = true;
 
             string body = "{" +
                 $"\"id\":\"{Guid.NewGuid()}\"," +
                 $"\"session_id\":\"{sessionId}\"," +
-                $"\"robot_id\":\"{Esc(settings.defaultRobotId)}\"," +
+                $"\"robot_id\":\"{Esc(rid)}\"," +
                 $"\"ts\":\"{NowIso()}\"," +
                 $"\"x\":{Num(x)},\"y\":{Num(y)},\"theta\":{Num(yaw)}," +
-                "\"source_topic\":\"/tf\",\"nav_mode\":\"patrol\"}";
+                "\"source_topic\":\"/pose\",\"nav_mode\":\"patrol\"}";
             Enqueue("pose_logs", body);
         }
 

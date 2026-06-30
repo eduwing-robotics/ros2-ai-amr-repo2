@@ -1,0 +1,151 @@
+/* ControlRoomMap.uss — 맵/웨이포인트/로봇 마커 전용 스타일. */
+
+.btn-waypoint {
+    margin-bottom: var(--space-xxs);
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-text-primary);
+    padding-top: var(--space-xs);
+    padding-bottom: var(--space-xs);
+    -unity-text-align: middle-left;
+    padding-left: var(--space-sm);
+    font-size: var(--font-size-sm);
+    flex-shrink: 0;
+}
+
+.btn-waypoint:hover {
+    background-color: var(--color-bg-primary);
+    border-color: var(--color-accent);
+}
+
+.btn-waypoint.selected {
+    background-color: var(--color-accent);
+    color: var(--color-surface);
+    border-color: var(--color-accent);
+}
+
+.map-placeholder {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    background-color: var(--color-map-placeholder);
+    border-radius: var(--radius-sm);
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+    position: relative;
+}
+
+.map-2d {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 320px;
+    overflow: hidden;
+}
+
+.map-area-label {
+    position: absolute;
+    top: var(--space-md);
+    left: var(--space-md);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-md);
+    -unity-font-style: bold;
+    background-color: var(--color-map-label-bg);
+    padding-left: var(--space-sm);
+    padding-right: var(--space-sm);
+    padding-top: var(--space-xxs);
+    padding-bottom: var(--space-xxs);
+    border-radius: var(--radius-sm);
+}
+
+.map-waypoint {
+    position: absolute;
+    width: var(--icon-waypoint);
+    height: var(--icon-waypoint);
+    margin-left: calc(var(--icon-waypoint) * -0.5);
+    margin-top: calc(var(--icon-waypoint) * -0.5);
+    background-color: var(--color-surface);
+    border-color: var(--color-accent);
+    border-width: 2px;
+    border-radius: var(--radius-waypoint);
+    align-items: center;
+    justify-content: center;
+}
+
+.map-waypoint-num {
+    color: var(--color-accent);
+    -unity-font-style: bold;
+    font-size: var(--font-size-sm);
+}
+
+.map-protected {
+    position: absolute;
+    align-items: center;
+    margin-left: calc(var(--icon-dot-md) * -0.5);
+    margin-top: calc(var(--icon-dot-md) * -0.5);
+}
+
+.map-protected-icon {
+    width: var(--icon-dot-md);
+    height: var(--icon-dot-md);
+    background-color: var(--color-status-warn);
+    border-radius: var(--radius-protected);
+    border-width: 2px;
+    border-color: var(--color-surface);
+}
+
+.map-protected-label {
+    color: var(--color-text-primary);
+    font-size: var(--font-size-xs);
+    background-color: var(--color-surface-overlay);
+    padding-left: var(--space-xs);
+    padding-right: var(--space-xs);
+    border-radius: var(--radius-protected);
+    margin-top: var(--space-xxs);
+}
+
+.map-robot-dot {
+    position: absolute;
+    width: var(--icon-robot);
+    height: var(--icon-robot);
+    margin-left: calc(var(--icon-robot) * -0.5);
+    margin-top: calc(var(--icon-robot) * -0.5);
+    border-radius: var(--radius-robot);
+    align-items: center;
+    justify-content: center;
+    border-width: 3px;
+    border-color: var(--color-surface);
+}
+
+.map-robot-dot.robot-t1 { background-color: var(--color-accent); }
+.map-robot-dot.robot-genji { background-color: var(--color-status-ok); }
+
+.map-robot-label {
+    position: absolute;
+    top: var(--icon-robot);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-xs);
+    -unity-font-style: bold;
+    background-color: var(--color-surface-overlay);
+    padding-left: var(--space-xs);
+    padding-right: var(--space-xs);
+    border-radius: var(--radius-protected);
+}
+
+.map-3d {
+    background-color: var(--color-map-3d-bg);
+}
+
+.map-3d-label {
+    color: var(--color-map-3d-label);
+    font-size: var(--font-size-lg);
+    -unity-font-style: italic;
+}
+
+.map-slot-dropdown {
+    min-width: 150px;
+    margin-left: var(--space-sm);
+}

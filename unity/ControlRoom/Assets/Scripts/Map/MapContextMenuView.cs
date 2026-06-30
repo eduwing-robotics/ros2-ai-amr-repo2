@@ -1,3 +1,4 @@
+// opencode: 2026-06-29 - 맵 우클릭 메뉴 배경/헤더색 토스 grey 톤으로 변환. Coded with OpenCode; high-cost model review recommended.
 // MapContextMenuView.cs — 우클릭 시 커서 위치에 뜨는 플로팅 메뉴(AlertPopup 패턴: absolute + 표시/숨김).
 // 액션 목록을 버튼으로 바인딩, 선택 시 실행 후 닫힘. 바깥 클릭(scrim)으로도 닫힘.
 using System.Collections.Generic;
@@ -29,7 +30,7 @@ namespace URHYNIX.ControlRoom.Map
             menu.style.position = Position.Absolute;
             menu.style.minWidth = 160;
             menu.style.paddingTop = 4; menu.style.paddingBottom = 4;
-            menu.style.backgroundColor = new Color(0.12f, 0.14f, 0.18f, 0.98f);
+            menu.style.backgroundColor = new Color(0.125f, 0.149f, 0.196f, 0.98f); // 토스 grey900 #202632
             menu.style.borderTopLeftRadius = 6; menu.style.borderTopRightRadius = 6;
             menu.style.borderBottomLeftRadius = 6; menu.style.borderBottomRightRadius = 6;
             SetBorder(menu, new Color(1f, 1f, 1f, 0.12f));
@@ -41,7 +42,7 @@ namespace URHYNIX.ControlRoom.Map
         {
             menu.Clear();
             var header = new Label($"({ctx.worldX:0.00}, {ctx.worldY:0.00})");
-            header.style.color = new Color(0.6f, 0.66f, 0.75f, 1f);
+            header.style.color = new Color(0.545f, 0.584f, 0.631f, 1f); // 토스 grey500 #8B95A1
             header.style.fontSize = 10;
             header.style.paddingLeft = 10; header.style.paddingRight = 10;
             header.style.paddingBottom = 2;

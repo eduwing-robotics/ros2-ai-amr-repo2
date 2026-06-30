@@ -87,7 +87,11 @@ namespace URHYNIX.ControlRoom.Ros
 
         void OnDestroy()
         {
-            if (streamTexture != null) Destroy(streamTexture);
+            if (streamTexture != null)
+            {
+                if (Application.isPlaying) Destroy(streamTexture);
+                else DestroyImmediate(streamTexture);
+            }
         }
     }
 }

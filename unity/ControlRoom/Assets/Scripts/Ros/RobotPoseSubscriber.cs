@@ -28,13 +28,15 @@ namespace URHYNIX.ControlRoom.Ros
         readonly Dictionary<string, (string parent, float x, float y, float yaw)> tf
             = new Dictionary<string, (string, float, float, float)>();
 
+        ROSConnection ros;
         bool subscribed;
         bool firstLogged;
 
         void Start()
         {
             if (string.IsNullOrEmpty(topicName)) topicName = TopicRegistry.Tf;
-            ROSConnection.GetOrCreateInstance().Subscribe<TFMessageMsg>(topicName, OnTf);
+            ros = ROSConnection.GetOrCreateInstance();
+            ros.Subscribe<TFMessageMsg>(topicName, OnTf);
             subscribed = true;
             Debug.Log($"[RobotPoseSubscriber] subscribed → {topicName} (root={rootFrame})");
         }
@@ -77,9 +79,9 @@ namespace URHYNIX.ControlRoom.Ros
 
         void OnDestroy()
         {
-            if (subscribed)
+            if (subscribed && ros != null)
             {
-                try { ROSConnection.GetOrCreateInstance().Unsubscribe(topicName); }
+                try { ros.Unsubscribe(topicName); }
                 catch { /* 종료 순서상 ROS 이미 정리 가능 */ }
             }
         }

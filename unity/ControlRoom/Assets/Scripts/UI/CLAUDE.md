@@ -6,8 +6,11 @@
 
 | 파일 | 영역 |
 |---|---|
-| `ControlRoomBinder.cs` ✅ | UXML 루트와 ControlRoomState 연결, 7 View 초기화, 시계 갱신 |
+| `ControlRoomBinder.cs` ✅ | UXML 루트와 ControlRoomState 연결, View 초기화, 시계 갱신 |
 | `TopBarView.cs` ✅ | 상단바 + 로봇 탭 + 전원 버튼 + 시계 + 경보 카운트 |
+| `HomePageView.cs` ✅ | 홈 탭 대시보드 (KPI + 로봇 카드 + 최근 활동) |
+| `ResponsePageView.cs` ✅ | 대응 탭 (위험등급 보드 + 출동현황 + 히스토리) |
+| `RecordsPageView.cs` ✅ | 기록 탭 (로그 / 이벤트·출동 / KPI 3서브탭) |
 | `RobotTabView.cs` | 로봇 탭 자동 생성 |
 | `PowerButtonView.cs` | 로봇 ON/OFF/대기 버튼 |
 | `ScenarioPanelView.cs` | 위험상황 데모 버튼 |

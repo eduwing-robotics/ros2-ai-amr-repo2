@@ -7,7 +7,9 @@
 | Request hints | Read first | Then read if needed |
 |---|---|---|
 | Unity, ControlRoom, UI Toolkit, ROS-TCP, 카메라 패널, 씬, UXML/USS | `docs/ref/tech/UNITY.md` | `docs/ref/UNITY-CONTROLROOM-CONVERSION-PLAN.md`, `unity/ControlRoom/README.md`, `unity-src/CLAUDE.md` |
+| Unity UI 버튼/토글 실기능 연결, 미연결 요소, cmd_vel/quick action 배선, Teleop publisher | `docs/ref/UNITY-UI-WIRING-CONTRACT.md` | `unity/ControlRoom/Assets/Scripts/App/ControlRoomEvents.cs`, `Ros/TopicRegistry.cs`, `docs/ref/CONTRACT.md` |
 | ROS2, TurtleBot, SLAM, Nav2, tb3, robot bringup, LiDAR, map | `docs/ref/tech/ROS2-ROBOT.md` | `docs/ref/MAC-DOCKER-ROS2-PLAYBOOK.md`, `.claude/skills/slam-nav2-arena-survey/SKILL.md` |
+| RealSense D435, 3D map, point cloud, OneCanvas-style viewer, 2.5D/3D digital twin | `docs/ref/REALSENSE-D435-3D-MAPPING-RESEARCH.md` | `docs/ref/tech/VISION-CAMERA.md`, `docs/ref/tech/UNITY.md`, `docs/ref/tech/ROS2-ROBOT.md` |
 | Arduino, PIR, sound, temperature, laser, serial, OpenCR power | `docs/ref/tech/ARDUINO-SENSORS.md` | `.claude/skills/arduino-flash/SKILL.md`, `docs/ref/ARCHITECTURE.md`. (정본 v18: LDR·불꽃→온도·레이저·워터펌프 변경, DECISION-LOG 2026-06-16 참조) |
 | Supabase, DB, schema, RLS, events, dispatches, camera_captures | `docs/ref/tech/DATABASE-SUPABASE.md` | `docs/ref/SCHEMA.md`, `docs/ref/CONTRACT.md`, `db/migrations/2026-05-27_init_security.sql` |
 | camera_ros, RealSense, Pi Camera, compressed image, YOLO, vision | `docs/ref/tech/VISION-CAMERA.md` | `.claude/skills/robot-camera-bringup/SKILL.md`, `.claude/skills/unity-camera-panel/SKILL.md` |

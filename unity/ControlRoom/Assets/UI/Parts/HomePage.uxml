@@ -1,0 +1,76 @@
+<!-- opencode: 2026-06-29 - 홈 탭 대시보드 UXML. Coded with OpenCode; high-cost model review recommended.
+     HomePage.uxml — 홈 탭(대시보드) 마크업.
+     KPI 3종 + 로봇 상태 카드 2개 + 최근 활동 리스트로 구성.
+     데이터는 HomePageView.cs가 ControlRoomEvents/ControlRoomState로부터 채운다. -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="../ControlRoomTokens.uss" />
+    <Style src="../ControlRoomStyle.uss" />
+    <Style src="../ControlRoomPanels.uss" />
+
+    <ui:VisualElement name="home-page" class="home-page">
+        <!-- 헤더: 제목 + 오늘 날짜/활성 로봇 수 -->
+        <ui:VisualElement name="home-header" class="home-header">
+            <ui:Label name="home-title" text="🏠 관제 현황" class="home-title" />
+            <ui:VisualElement class="spacer" />
+            <ui:Label name="home-date" text="-" class="home-meta" />
+            <ui:Label name="home-robot-count" text="활성 로봇 0/0" class="home-meta" />
+        </ui:VisualElement>
+
+        <!-- KPI 3종 -->
+        <ui:VisualElement name="home-kpi-row" class="home-kpi-row">
+            <ui:VisualElement name="kpi-events" class="home-kpi">
+                <ui:Label name="kpi-events-value" text="0" class="home-kpi-value" />
+                <ui:Label text="이벤트" class="home-kpi-label" />
+            </ui:VisualElement>
+            <ui:VisualElement name="kpi-alerts" class="home-kpi home-kpi-danger">
+                <ui:Label name="kpi-alerts-value" text="0" class="home-kpi-value" />
+                <ui:Label text="경보" class="home-kpi-label" />
+            </ui:VisualElement>
+            <ui:VisualElement name="kpi-dispatches" class="home-kpi">
+                <ui:Label name="kpi-dispatches-value" text="0" class="home-kpi-value" />
+                <ui:Label text="출동" class="home-kpi-label" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 로봇 상태 카드 2개 -->
+        <ui:VisualElement name="home-robots-row" class="home-robots-row">
+            <ui:VisualElement name="robot-card-tb3_1" class="home-robot-card">
+                <ui:VisualElement class="home-robot-card-header">
+                    <ui:Label name="robot-name-tb3_1" text="티원" class="home-robot-name" />
+                    <ui:Label name="robot-status-tb3_1" text="오프라인" class="home-status-chip home-status-offline" />
+                    <ui:Label name="robot-role-tb3_1" text="vision" class="role-badge vision" />
+                </ui:VisualElement>
+                <ui:VisualElement class="home-battery-wrap">
+                    <ui:Label name="robot-battery-tb3_1" text="-- %" class="home-battery-percent" />
+                    <ui:VisualElement class="battery-bar-bg">
+                        <ui:VisualElement name="robot-battery-fill-tb3_1" class="battery-bar-fill" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:Label name="robot-sensors-tb3_1" text="-" class="home-sensor-summary" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="robot-card-tb3_2" class="home-robot-card">
+                <ui:VisualElement class="home-robot-card-header">
+                    <ui:Label name="robot-name-tb3_2" text="젠지" class="home-robot-name" />
+                    <ui:Label name="robot-status-tb3_2" text="오프라인" class="home-status-chip home-status-offline" />
+                    <ui:Label name="robot-role-tb3_2" text="sensor" class="role-badge sensor" />
+                </ui:VisualElement>
+                <ui:VisualElement class="home-battery-wrap">
+                    <ui:Label name="robot-battery-tb3_2" text="-- %" class="home-battery-percent" />
+                    <ui:VisualElement class="battery-bar-bg">
+                        <ui:VisualElement name="robot-battery-fill-tb3_2" class="battery-bar-fill" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:Label name="robot-sensors-tb3_2" text="-" class="home-sensor-summary" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 최근 활동 -->
+        <ui:VisualElement name="home-activity" class="home-activity">
+            <ui:Label text="최근 활동" class="dash-section-title" />
+            <ui:ScrollView name="home-activity-scroll" class="home-activity-scroll">
+                <ui:VisualElement name="home-activity-list" class="home-activity-list" />
+            </ui:ScrollView>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

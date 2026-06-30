@@ -1,0 +1,320 @@
+<!--
+  db-erd.html — URHYNIX Supabase 스키마 관계도 (발표용 단일 HTML)
+  출처: docs/ref/SCHEMA.md (Supabase 프로젝트 ueupkrxwybuuqxflstvg)
+  목적: 테이블=노드 / FK=연결선 으로 DB 구조를 Supabase 대시보드처럼 시각화.
+  사용: 더블클릭으로 오프라인 실행. 노드 드래그·호버 강조·예정 테이블 토글 지원. 외부 의존성 0.
+-->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>URHYNIX · DB 관계도</title>
+<style>
+  :root{
+    --bg:#171717; --grid:#222; --panel:#1f1f1f; --node:#242424; --node-hd:#2b2b2b;
+    --border:#323232; --text:#ededed; --muted:#8a8a8a; --dim:#666;
+    --green:#3ecf8e; --green-dk:#2a9d6e; --blue:#5b9dff; --amber:#e8b34a;
+    --edge:#454545; --edge-hi:#3ecf8e; --edge-plan:#3a3a3a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;
+    background:var(--bg); color:var(--text); overflow:hidden;
+  }
+  /* ---- 상단 바 ---- */
+  header{
+    position:fixed; top:0; left:0; right:0; height:58px; z-index:30;
+    display:flex; align-items:center; gap:18px; padding:0 22px;
+    background:rgba(23,23,23,.92); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+  .brand{display:flex; align-items:center; gap:10px; font-weight:700; font-size:16px; letter-spacing:.2px}
+  .brand .dot{width:11px;height:11px;border-radius:3px;background:var(--green);box-shadow:0 0 10px var(--green)}
+  .brand small{color:var(--muted); font-weight:500; font-size:12px}
+  .sub{color:var(--muted); font-size:12.5px; border-left:1px solid var(--border); padding-left:18px}
+  .sub b{color:var(--green); font-weight:600}
+  .spacer{flex:1}
+  .ctrl{display:flex; align-items:center; gap:14px}
+  .toggle{display:flex; align-items:center; gap:7px; font-size:13px; color:var(--muted); cursor:pointer; user-select:none}
+  .toggle input{display:none}
+  .switch{width:34px;height:19px;border-radius:20px;background:#3a3a3a;position:relative;transition:.2s}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#bbb;transition:.2s}
+  .toggle input:checked + .switch{background:var(--green-dk)}
+  .toggle input:checked + .switch::after{left:17px;background:#fff}
+  .btn{font-size:12.5px;color:var(--muted);background:#262626;border:1px solid var(--border);
+       padding:6px 12px;border-radius:7px;cursor:pointer;transition:.15s}
+  .btn:hover{color:var(--text);border-color:#454545}
+
+  /* ---- 캔버스 ---- */
+  #stage{position:absolute; inset:58px 0 0 0; overflow:hidden;
+    background:
+      radial-gradient(circle at 1px 1px, var(--grid) 1px, transparent 0) 0 0/26px 26px;
+  }
+  #canvas{position:relative; width:1560px; height:1080px; transform-origin:top left}
+  #edges{position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1}
+  #edges path{fill:none; stroke:var(--edge); stroke-width:1.6; transition:stroke .15s, opacity .15s}
+  #edges path.plan{stroke:var(--edge-plan); stroke-dasharray:5 5}
+  #edges path.hi{stroke:var(--edge-hi); stroke-width:2.4; opacity:1}
+  #edges path.faded{opacity:.12}
+
+  /* ---- 노드 카드 ---- */
+  .node{position:absolute; width:236px; background:var(--node); border:1px solid var(--border);
+    border-radius:11px; z-index:2; box-shadow:0 8px 28px rgba(0,0,0,.45);
+    transition:opacity .15s, box-shadow .15s, border-color .15s; overflow:hidden}
+  .node.faded{opacity:.28}
+  .node.active{border-color:var(--green); box-shadow:0 0 0 1px var(--green),0 12px 34px rgba(0,0,0,.55)}
+  .node.neighbor{border-color:var(--green-dk)}
+  .node.plan{border-style:dashed; opacity:.92}
+  .node.plan.faded{opacity:.22}
+  .node-hd{display:flex; align-items:center; gap:9px; padding:11px 13px; cursor:grab;
+    background:var(--node-hd); border-bottom:1px solid var(--border)}
+  .node-hd:active{cursor:grabbing}
+  .node-hd .ic{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;
+    background:rgba(62,207,142,.13); color:var(--green); font-size:13px; flex-shrink:0}
+  .node.plan .node-hd .ic{background:rgba(232,179,74,.13); color:var(--amber)}
+  .node-hd .nm{font-weight:700; font-size:14px; font-family:"SF Mono",ui-monospace,Menlo,monospace}
+  .node-hd .badge{margin-left:auto; font-size:10px; font-weight:600; padding:2px 7px; border-radius:20px;
+    background:rgba(62,207,142,.15); color:var(--green)}
+  .node.plan .node-hd .badge{background:rgba(232,179,74,.15); color:var(--amber)}
+  .node-desc{padding:7px 13px; font-size:11.5px; color:var(--muted); border-bottom:1px solid var(--border); line-height:1.45}
+  .col{display:flex; align-items:center; gap:8px; padding:6px 13px; font-size:12px;
+    font-family:"SF Mono",ui-monospace,Menlo,monospace; border-bottom:1px solid #262626}
+  .col:last-child{border-bottom:none}
+  .col .kc{width:15px; text-align:center; font-size:10px; flex-shrink:0}
+  .col .kc.pk{color:var(--amber)}
+  .col .kc.fk{color:var(--blue)}
+  .col .cn{color:var(--text)}
+  .col .ty{margin-left:auto; color:var(--dim); font-size:10.5px}
+  .col.key .cn{font-weight:600}
+
+  /* ---- 범례 ---- */
+  .legend{position:fixed; bottom:18px; left:18px; z-index:20; background:var(--panel);
+    border:1px solid var(--border); border-radius:10px; padding:13px 15px; font-size:12px; color:var(--muted)}
+  .legend h4{font-size:11px; color:var(--text); margin-bottom:9px; letter-spacing:.4px; text-transform:uppercase}
+  .legend .row{display:flex; align-items:center; gap:8px; margin:5px 0}
+  .legend .k{width:16px;text-align:center}
+  .lg-line{width:26px;height:0;border-top:2px solid var(--edge)}
+  .lg-line.plan{border-top:2px dashed var(--edge-plan)}
+  .legend .pk{color:var(--amber)} .legend .fk{color:var(--blue)}
+  .hint{position:fixed; bottom:18px; right:18px; z-index:20; font-size:11.5px; color:var(--dim)}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><span class="dot"></span>URHYNIX <small>디지털트윈 경비로봇</small></div>
+  <div class="sub">Supabase · <b>ueupkrxwybuuqxflstvg</b> · ap-northeast-1 · 적용 6 · 예정 3</div>
+  <div class="spacer"></div>
+  <div class="ctrl">
+    <label class="toggle"><input type="checkbox" id="togPlan" checked><span class="switch"></span>예정 테이블</label>
+    <button class="btn" id="btnReset">레이아웃 초기화</button>
+  </div>
+</header>
+
+<div id="stage">
+  <div id="canvas">
+    <svg id="edges"></svg>
+  </div>
+</div>
+
+<div class="legend">
+  <h4>범례</h4>
+  <div class="row"><span class="k pk">🔑</span> PK · 기본키 (그 행의 고유 ID)</div>
+  <div class="row"><span class="k fk">🔗</span> FK · 외래키 (부모 테이블 참조)</div>
+  <div class="row"><span class="lg-line"></span> 적용된 관계</div>
+  <div class="row"><span class="lg-line plan"></span> 예정 관계</div>
+</div>
+<div class="hint">노드 헤더를 드래그해 옮기고 · 노드에 마우스를 올리면 연결만 강조됩니다</div>
+
+<script>
+/* ===== 스키마 데이터 (SSOT: docs/ref/SCHEMA.md) ===== */
+const NODES = [
+  { id:"session_meta", x:60, y:430, badge:"적용", desc:"시연 1회 = 모든 기록의 부모",
+    cols:[["session_id","uuid","pk"],["scenario","text"],["started_at","timestamptz"],["ended_at","timestamptz"],["recorded_by","text"]] },
+
+  { id:"events", x:430, y:90, badge:"적용", desc:"센서가 잡은 감지 순간",
+    cols:[["id","uuid","pk"],["session_id","uuid","fk"],["robot_id","text"],["event_type","text"],["severity","int2"],["x · y · theta","float8"],["raw_payload","jsonb"]] },
+
+  { id:"pose_logs", x:430, y:430, badge:"적용", desc:"로봇이 지나간 좌표 (1Hz~)",
+    cols:[["id","uuid","pk"],["session_id","uuid","fk"],["robot_id","text"],["x · y · theta","float8"],["nav_mode","text"]] },
+
+  { id:"logs", x:430, y:760, badge:"적용", desc:"관제 화면 로그 한 줄",
+    cols:[["id","uuid","pk"],["session_id","uuid","fk"],["level","text"],["category","text"],["message","text"],["source","text"]] },
+
+  { id:"dispatches", x:800, y:90, badge:"적용", desc:"로봇 출동 명령 (수동 출동은 event 없이도)",
+    cols:[["id","uuid","pk"],["event_id","uuid","fk"],["target_robot_id","text"],["target_x · y","float8"],["response_time","numeric"],["simulated","bool"]] },
+
+  { id:"camera_captures", x:1170, y:90, badge:"적용", desc:"현장 카메라 확인 결과",
+    cols:[["id","uuid","pk"],["dispatch_id","uuid","fk"],["result","text"],["ai_label","text"],["image_path","text"],["protected_asset_id","text","fk"]] },
+
+  { id:"media_artifacts", x:800, y:430, badge:"예정", plan:true, desc:"사진/영상/소리 원본의 저장 위치",
+    cols:[["id","uuid","pk"],["session_id","uuid","fk"],["event_id","uuid","fk"],["dispatch_id","uuid","fk"],["media_type","text"],["storage_path","text"]] },
+
+  { id:"protected_assets", x:1170, y:430, badge:"예정", plan:true, desc:"지켜야 할 전시물 / 액자",
+    cols:[["asset_id","text","pk"],["session_id","uuid","fk"],["name","text"],["asset_type","text"],["marker_type","text"],["expected_state","text"]] },
+
+  { id:"patrol_routes", x:60, y:760, badge:"예정", plan:true, desc:"순찰 경로 (웨이포인트 묶음)",
+    cols:[["id","uuid","pk"],["route_id","text"],["map_id","text"],["points","jsonb"],["updated_at","timestamptz"]] },
+];
+
+/* from = 자식.FK  →  to = 부모.PK */
+const EDGES = [
+  { from:["events","session_id"],          to:["session_meta","session_id"] },
+  { from:["pose_logs","session_id"],        to:["session_meta","session_id"] },
+  { from:["logs","session_id"],             to:["session_meta","session_id"] },
+  { from:["dispatches","event_id"],         to:["events","id"] },
+  { from:["camera_captures","dispatch_id"], to:["dispatches","id"] },
+  // 예정
+  { from:["media_artifacts","session_id"],  to:["session_meta","session_id"], plan:true },
+  { from:["media_artifacts","event_id"],    to:["events","id"], plan:true },
+  { from:["media_artifacts","dispatch_id"], to:["dispatches","id"], plan:true },
+  { from:["protected_assets","session_id"], to:["session_meta","session_id"], plan:true },
+  { from:["camera_captures","protected_asset_id"], to:["protected_assets","asset_id"], plan:true },
+];
+
+const ICON = { session_meta:"◎", events:"◈", pose_logs:"➤", logs:"☰", dispatches:"⚑",
+  camera_captures:"▣", media_artifacts:"⛁", protected_assets:"◇", patrol_routes:"⌁" };
+
+/* ===== 렌더 ===== */
+const canvas = document.getElementById("canvas");
+const stage = document.getElementById("stage");
+const svg = document.getElementById("edges");
+const SVGNS = "http://www.w3.org/2000/svg";
+let showPlan = true;
+let scale = 1;
+
+function buildNodes(){
+  NODES.forEach(n=>{
+    const el = document.createElement("div");
+    el.className = "node" + (n.plan ? " plan" : "");
+    el.id = "node-" + n.id;
+    el.style.left = n.x + "px"; el.style.top = n.y + "px";
+    el.dataset.node = n.id;
+    let cols = n.cols.map(c=>{
+      const key = c[2] || "";
+      const ic = key==="pk" ? '<span class="kc pk">🔑</span>' : key==="fk" ? '<span class="kc fk">🔗</span>' : '<span class="kc"></span>';
+      return `<div class="col ${key?'key':''}" data-node="${n.id}" data-col="${c[0]}">
+        ${ic}<span class="cn">${c[0]}</span><span class="ty">${c[1]}</span></div>`;
+    }).join("");
+    el.innerHTML = `
+      <div class="node-hd" data-drag="${n.id}">
+        <span class="ic">${ICON[n.id]||"▦"}</span>
+        <span class="nm">${n.id}</span>
+        <span class="badge">${n.badge}</span>
+      </div>
+      <div class="node-desc">${n.desc}</div>${cols}`;
+    canvas.appendChild(el);
+  });
+}
+
+/* 좌표는 레이아웃(offset) 기준 = SVG 로컬 좌표계. CSS scale 영향 안 받음. */
+function rowCenter(node,col){
+  const host = document.getElementById("node-"+node);
+  const r = document.querySelector(`.col[data-node="${node}"][data-col="${col}"]`);
+  const y = host.offsetTop + r.offsetTop + r.offsetHeight/2;
+  return { y, left:host.offsetLeft, right:host.offsetLeft+host.offsetWidth, cx:host.offsetLeft+host.offsetWidth/2 };
+}
+
+function drawEdges(){
+  while(svg.firstChild) svg.removeChild(svg.firstChild);
+  EDGES.forEach((e,i)=>{
+    if(e.plan && !showPlan) return;
+    const a = rowCenter(e.from[0], e.from[1]); // child
+    const b = rowCenter(e.to[0],   e.to[1]);   // parent
+    // 마주보는 쪽 선택
+    let ax, bx;
+    if(a.cx < b.cx){ ax=a.right; bx=b.left; } else { ax=a.left; bx=b.right; }
+    const dx = Math.abs(bx-ax)*0.5 + 18;
+    const c1 = ax + (ax<bx?dx:-dx), c2 = bx + (ax<bx?-dx:dx);
+    const p = document.createElementNS(SVGNS,"path");
+    p.setAttribute("d",`M ${ax} ${a.y} C ${c1} ${a.y}, ${c2} ${b.y}, ${bx} ${b.y}`);
+    p.classList.add("edge"); if(e.plan) p.classList.add("plan");
+    p.dataset.from = e.from[0]; p.dataset.to = e.to[0];
+    svg.appendChild(p);
+  });
+}
+
+/* ===== 한눈에 맞춤 (fit-to-screen) ===== */
+function fitToScreen(){
+  let w=0,h=0;
+  document.querySelectorAll(".node").forEach(n=>{
+    if(n.style.display==="none") return;
+    w=Math.max(w, n.offsetLeft+n.offsetWidth);
+    h=Math.max(h, n.offsetTop+n.offsetHeight);
+  });
+  const pad=46;
+  canvas.style.width=(w+pad)+"px"; canvas.style.height=(h+pad)+"px";
+  const aw=stage.clientWidth, ah=stage.clientHeight;
+  scale=Math.min(aw/(w+pad), ah/(h+pad), 1.25);
+  canvas.style.transform="scale("+scale+")";
+  canvas.style.marginLeft=Math.max(0,(aw-(w+pad)*scale)/2)+"px";
+  canvas.style.marginTop =Math.max(0,(ah-(h+pad)*scale)/2)+"px";
+  drawEdges();
+}
+
+/* ===== 호버 강조 ===== */
+function neighborsOf(id){
+  const set = new Set([id]);
+  EDGES.forEach(e=>{ if(e.from[0]===id) set.add(e.to[0]); if(e.to[0]===id) set.add(e.from[0]); });
+  return set;
+}
+function focusNode(id){
+  const set = neighborsOf(id);
+  document.querySelectorAll(".node").forEach(n=>{
+    const nid = n.dataset.node;
+    if(nid===id) n.classList.add("active");
+    else if(set.has(nid)) n.classList.add("neighbor");
+    else n.classList.add("faded");
+  });
+  svg.querySelectorAll("path").forEach(p=>{
+    if(p.dataset.from===id || p.dataset.to===id) p.classList.add("hi");
+    else p.classList.add("faded");
+  });
+}
+function clearFocus(){
+  document.querySelectorAll(".node").forEach(n=>n.classList.remove("active","neighbor","faded"));
+  svg.querySelectorAll("path").forEach(p=>p.classList.remove("hi","faded"));
+}
+
+/* ===== 드래그 ===== */
+let drag=null;
+canvas.addEventListener("mousedown",e=>{
+  const hd = e.target.closest("[data-drag]"); if(!hd) return;
+  const node = document.getElementById("node-"+hd.dataset.drag);
+  drag = { node, sx:e.clientX, sy:e.clientY, ox:parseFloat(node.style.left), oy:parseFloat(node.style.top) };
+  e.preventDefault();
+});
+window.addEventListener("mousemove",e=>{
+  if(!drag) return;
+  drag.node.style.left = Math.max(0, drag.ox + (e.clientX-drag.sx)/scale) + "px";
+  drag.node.style.top  = Math.max(0, drag.oy + (e.clientY-drag.sy)/scale) + "px";
+  drawEdges();
+});
+window.addEventListener("mouseup",()=> drag=null);
+
+/* ===== 초기화 & 컨트롤 ===== */
+function bindHover(){
+  document.querySelectorAll(".node").forEach(n=>{
+    n.addEventListener("mouseenter",()=>{ if(!drag) focusNode(n.dataset.node); });
+    n.addEventListener("mouseleave",clearFocus);
+  });
+}
+function resetLayout(){
+  NODES.forEach(n=>{ const el=document.getElementById("node-"+n.id); el.style.left=n.x+"px"; el.style.top=n.y+"px"; });
+  fitToScreen();
+}
+document.getElementById("togPlan").addEventListener("change",e=>{
+  showPlan = e.target.checked;
+  NODES.filter(n=>n.plan).forEach(n=> document.getElementById("node-"+n.id).style.display = showPlan?"":"none");
+  fitToScreen();
+});
+document.getElementById("btnReset").addEventListener("click",resetLayout);
+window.addEventListener("resize",fitToScreen);
+
+buildNodes();
+bindHover();
+fitToScreen();
+</script>
+</body>
+</html>

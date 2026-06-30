@@ -28,7 +28,6 @@
     "com.unity.modules.unitywebrequest": "1.0.0",
     "com.unity.modules.unitywebrequesttexture": "1.0.0",
     "com.unity.modules.video": "1.0.0",
-    "com.unity.modules.xr": "1.0.0",
-    "com.unityctl.bridge": "file:../../../vendor/unityctl-plugin/src/Unityctl.Plugin"
+    "com.unity.modules.xr": "1.0.0"
   }
 }

@@ -28,7 +28,14 @@ namespace URHYNIX.ControlRoom.Map
             frame.RegisterCallback<PointerMoveEvent>(OnMove);
             frame.RegisterCallback<PointerLeaveEvent>(_ => hud.ClearCoordinate());
             frame.RegisterCallback<PointerDownEvent>(OnDown);
+            frame.RegisterCallback<PointerUpEvent>(OnUp);
+            frame.RegisterCallback<WheelEvent>(OnWheel);
         }
+
+        // 휠 줌(커서 기준) + 중간버튼 드래그 팬 상태.
+        bool panning;
+        Vector2 lastPanPointer;
+        float panAccum;
 
         bool ToWorld(Vector2 framePx, out float wx, out float wy)
         {
@@ -42,18 +49,59 @@ namespace URHYNIX.ControlRoom.Map
             return true;
         }
 
+        // 포인터 패널좌표 → frame-local px. WorldToLocal은 Frame의 rotate(displayRotationDeg)까지
+        // 역변환하므로 마커 배치(style.left/top, 회전된 Frame의 자식)와 같은 공간이 된다.
+        // (e.localPosition은 rotate 변환을 반영 안 해 맵 회전 시 클릭이 어긋남 — 2026-06-25 수정.)
+        Vector2 FrameLocal(IPointerEvent e) => viewport.Frame.WorldToLocal((Vector2)e.position);
+
+        // 휠 = 커서 기준 줌인/아웃. delta.y<0(휠 업)=확대.
+        void OnWheel(WheelEvent e)
+        {
+            if (!viewport.HasMap) return;
+            float factor = e.delta.y < 0f ? 1.15f : 1f / 1.15f;
+            viewport.SetZoom(viewport.Zoom * factor, viewport.Frame.WorldToLocal((Vector2)e.mousePosition));
+            e.StopPropagation();
+        }
+
+        void OnUp(PointerUpEvent e)
+        {
+            if (!panning || e.button != 2) return;
+            panning = false;
+            viewport.Frame.ReleasePointer(e.pointerId);
+            if (panAccum < 3f) viewport.ResetView();   // 거의 안 움직인 중간버튼 클릭 = 뷰 리셋
+            e.StopPropagation();
+        }
+
         void OnMove(PointerMoveEvent e)
         {
-            if (ToWorld((Vector2)e.localPosition, out float wx, out float wy))
+            if (panning)
+            {
+                Vector2 p = e.position;
+                Vector2 d = p - lastPanPointer;
+                lastPanPointer = p;
+                panAccum += d.magnitude;
+                viewport.Pan(d.x, d.y);
+                return;
+            }
+            if (ToWorld(FrameLocal(e), out float wx, out float wy))
                 hud.SetCoordinate(wx, wy);
         }
 
         void OnDown(PointerDownEvent e)
         {
+            if (e.button == 2)   // 중간버튼 = 팬 시작
+            {
+                panning = true; panAccum = 0f;
+                lastPanPointer = e.position;
+                viewport.Frame.CapturePointer(e.pointerId);
+                e.StopPropagation();
+                return;
+            }
+
             // 순찰 편집 모드: 좌클릭=지점 추가, 우클릭=마지막 제거 (레퍼런스 UX).
             if (ControlRoomState.Instance.PatrolEditMode && (e.button == 0 || e.button == 1))
             {
-                if (!ToWorld((Vector2)e.localPosition, out float ewx, out float ewy)) return;
+                if (!ToWorld(FrameLocal(e), out float ewx, out float ewy)) return;
                 if (e.button == 0) PatrolService.Instance.Add(ewx, ewy);
                 else PatrolService.Instance.RemoveLast();
                 menu.Close();
@@ -63,7 +111,7 @@ namespace URHYNIX.ControlRoom.Map
 
             if (e.button == 0) { menu.Close(); return; }   // 좌클릭 → 닫기
             if (e.button != 1) return;                       // 우클릭만 메뉴
-            if (!ToWorld((Vector2)e.localPosition, out float wx, out float wy)) return;
+            if (!ToWorld(FrameLocal(e), out float wx, out float wy)) return;
 
             var ctx = new MapClickContext
             {

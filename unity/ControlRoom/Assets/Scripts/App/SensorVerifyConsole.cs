@@ -2,7 +2,7 @@
 // SensorRegistry.All 동적 순회 → 새 센서 추가 시 코드 0줄로 자동 포함.
 // 호출: unityctl exec --code 'URHYNIX.ControlRoom.App.SensorVerifyConsole.Dump()'
 // 보조: SwitchTo("tb3_2") / DumpRos() (토픽 매핑 확인)
-// as-built 2026-06-18: sensorId(pir/sound/temp/laser)와 UXML 라벨ID(sensor-{id}-value) convention 일치.
+// 2026-06-30: 하드코딩 sensor 라벨 ID 제거 → sensor-value-{sensorId} convention 적용.
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -14,16 +14,8 @@ namespace URHYNIX.ControlRoom.App
 {
     public static class SensorVerifyConsole
     {
-        // sensorId → UXML 라벨 ID 매핑. as-built 4센서(2026-06-18) — sensorId와 라벨ID가 convention 일치.
-        // (battery만 특수: 탭마다 1개, 센서 카드 아님)
-        static readonly Dictionary<string, string> SensorIdToLabelId = new()
-        {
-            { "battery", "battery-percent-label" }, // 특수: 탭마다 1개, 카드 X
-            { "pir",     "sensor-pir-value" },
-            { "sound",   "sensor-sound-value" },
-            { "temp",    "sensor-temp-value" },
-            { "laser",   "sensor-laser-value" },
-        };
+        // battery는 탭마다 1개, 센서 카드 아님.
+        const string BatteryLabelId = "battery-percent-label";
 
         public static string SwitchTo(string robotId)
         {
@@ -56,13 +48,20 @@ namespace URHYNIX.ControlRoom.App
                 }
             }
 
+            var registry = new SensorRegistry();
+            registry.LoadFromResources();
+
             sb.AppendLine("--- UI labels (현재 탭 기준) ---");
-            foreach (var kv in SensorIdToLabelId)
+            var batteryLabel = root?.Q<Label>(BatteryLabelId);
+            sb.AppendLine($"  battery  -> {BatteryLabelId,-22} = '{batteryLabel?.text ?? "(no label)"}'");
+
+            foreach (var sensor in registry.All)
             {
-                var label = root?.Q<Label>(kv.Value);
+                string labelId = $"sensor-value-{sensor.sensorId}";
+                var label = root?.Q<Label>(labelId);
                 string text = label?.text ?? "(no label)";
                 string classes = label != null ? string.Join("|", label.GetClasses()) : "";
-                sb.AppendLine($"  {kv.Key,-8} → {kv.Value,-22} = '{text}' [{classes}]");
+                sb.AppendLine($"  {sensor.sensorId,-8} -> {labelId,-22} = '{text}' [{classes}]");
             }
             return sb.ToString();
         }
@@ -80,6 +79,32 @@ namespace URHYNIX.ControlRoom.App
                 sb.AppendLine($"    sound         = {TopicRegistry.GetSound(rid) ?? "(null)"}");
                 sb.AppendLine($"    temp          = {TopicRegistry.GetTemp(rid) ?? "(null)"}");
                 sb.AppendLine($"    laser         = {TopicRegistry.GetLaser(rid) ?? "(null)"}");
+            }
+            return sb.ToString();
+        }
+
+        public static string DumpUiLayout()
+        {
+            var doc = UnityEngine.Object.FindObjectOfType<UIDocument>();
+            var root = doc?.rootVisualElement;
+            if (root == null) return "UIDocument/rootVisualElement 없음";
+
+            var sb = new StringBuilder();
+            foreach (var name in new[]
+            {
+                "body", "center-panel", "center-map-slot", "map-panel", "map-2d-container", "map-frame",
+                "center-bottom-slot", "camera-log-row", "bottom-panel-camera", "camera-panel", "camera-image"
+            })
+            {
+                var e = root.Q<VisualElement>(name);
+                if (e == null)
+                {
+                    sb.AppendLine($"{name}: null");
+                    continue;
+                }
+
+                var r = e.resolvedStyle;
+                sb.AppendLine($"{name}: {r.width:0.0}x{r.height:0.0} display={r.display}");
             }
             return sb.ToString();
         }

@@ -1,10 +1,18 @@
-<!-- ControlRoomMain.uxml — 관제 화면 최상위 레이아웃.
-     상단바 + 좌230 / 중앙flex / 우240 3열. AlertPopup overlay 1개. Parts 5개 include. -->
+<!-- opencode: 2026-06-29 - 토스 리스킨 + page-host + bottom-navbar 4탭 뼈대. Coded with OpenCode; high-cost model review recommended.
+     ControlRoomMain.uxml — 관제 화면 최상위 레이아웃.
+     상단바 + 페이지 호스트(홈/관제/대응/기록) + 하단 네비 4탭 + AlertPopup overlay.
+     2026-06-29 토스 리스킨 + 4탭 라우팅 골격. -->
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <Style src="ControlRoomTokens.uss" />
     <Style src="ControlRoomStyle.uss" />
+    <Style src="ControlRoomLayout.uss" />
+    <Style src="ControlRoomMap.uss" />
+    <Style src="ControlRoomPanels.uss" />
 
     <ui:Template src="Parts/TopBar.uxml" name="TopBarTpl" />
+    <ui:Template src="Parts/HomePage.uxml" name="HomePageTpl" />
+    <ui:Template src="Parts/ResponsePage.uxml" name="ResponsePageTpl" />
+    <ui:Template src="Parts/RecordsPage.uxml" name="RecordsPageTpl" />
     <ui:Template src="Parts/LeftControlPanel.uxml" name="LeftPanelTpl" />
     <ui:Template src="Parts/MapPanel.uxml" name="MapPanelTpl" />
     <ui:Template src="Parts/CameraAndLogPanel.uxml" name="CameraLogTpl" />
@@ -12,13 +20,55 @@
 
     <ui:VisualElement name="root" class="root">
         <ui:Instance template="TopBarTpl" />
-        <ui:VisualElement name="body" class="body">
-            <ui:Instance template="LeftPanelTpl" />
-            <ui:VisualElement name="center-panel" class="center-panel">
-                <ui:Instance template="MapPanelTpl" />
-                <ui:Instance template="CameraLogTpl" />
+
+        <!-- 페이지 호스트: 4탭 콘텐츠. 기본은 관제탭, 나머지는 placeholder. -->
+        <ui:VisualElement name="page-host" class="page-host">
+            <ui:VisualElement name="page-operations" class="page-page">
+                <ui:VisualElement name="body" class="body">
+                    <ui:Instance template="LeftPanelTpl" />
+                    <ui:VisualElement name="center-panel" class="center-panel">
+                        <ui:VisualElement name="center-map-slot" class="center-map-slot">
+                            <ui:Instance template="MapPanelTpl" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="center-bottom-slot" class="center-bottom-slot">
+                            <ui:Instance template="CameraLogTpl" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:Instance template="RightPanelTpl" />
+                </ui:VisualElement>
             </ui:VisualElement>
-            <ui:Instance template="RightPanelTpl" />
+
+            <ui:VisualElement name="page-home" class="page-page hidden">
+                <ui:Instance template="HomePageTpl" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="page-response" class="page-page hidden">
+                <ui:Instance template="ResponsePageTpl" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="page-records" class="page-page hidden">
+                <ui:Instance template="RecordsPageTpl" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 하단 네비게이션 4탭 -->
+        <ui:VisualElement name="bottom-navbar" class="bottom-navbar">
+            <ui:Button name="btn-page-operations" class="nav-item active">
+                <ui:Label text="🛰️" class="nav-icon" />
+                <ui:Label text="관제" class="nav-label" />
+            </ui:Button>
+            <ui:Button name="btn-page-home" class="nav-item">
+                <ui:Label text="🏠" class="nav-icon" />
+                <ui:Label text="홈" class="nav-label" />
+            </ui:Button>
+            <ui:Button name="btn-page-response" class="nav-item">
+                <ui:Label text="🚨" class="nav-icon" />
+                <ui:Label text="대응" class="nav-label" />
+            </ui:Button>
+            <ui:Button name="btn-page-records" class="nav-item">
+                <ui:Label text="📊" class="nav-icon" />
+                <ui:Label text="기록" class="nav-label" />
+            </ui:Button>
         </ui:VisualElement>
 
         <!-- Alert popup overlay (절대 위치, .visible 토글로 표시) -->

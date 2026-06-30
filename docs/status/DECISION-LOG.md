@@ -1,8 +1,183 @@
+<!-- opencode: 2026-06-29 - 토스 리스킨 + 하단 네비 4탭 결정 추가. Coded with OpenCode; high-cost model review recommended. -->
 # Decision Log
 
 > **📌 최신 5건은 DECISION-CURRENT.md 참조. 이 파일은 전체 역사 기록입니다.**
 
+## 2026-06-30
+
+### 🗺️ 가재보맵 통합(2D슬롯+3D sdf) + 티원 마커 fix + unityctl bridge 6에러 패치 + 비침습 구독 역할분리
+
+- **배경**: 새 가재보맵(map1: 52×52px·0.05m·약 2.6×2.6m + 벽 89개 sdf)을 Unity·로봇에 레거시 arena와 안 섞이게 통합. 작업 중 막혀 있던 Unity 컴파일을 메인이 root-cause로 풀었다.
+- **unityctl bridge 6에러 패치(컴파일 블로커 해소)**: `Packages/com.unityctl.bridge/Editor/Commands/DescribeTypeHandler.cs` 자체 버그 — CS0453(`GetParam<int?>` 제네릭 제약 위반→`-1` sentinel) ×1, CS0029(`List<JObject>`→`JToken` 직접대입→`new JArray(...)` 래핑) ×4, CS0246(`SerializeField` 풀네임 누락→`UnityEngine.SerializeField`) ×1. 에디터 포커스 강제 재컴파일 → **0에러 PASS**(`Csc Assembly-CSharp.dll` 재빌드 + `get-errors` 0). 비포커스 stale 함정은 `set frontmost`+Cmd+R+로그 offset 검증으로 회피.
+- **티원 마커 root cause**: 젠지(파랑)만 뜨고 티원(초록) 안 뜸 = 코드 버그 아님. `RosConnectionManager`가 로봇별 IP로 전용 endpoint를 만드는데(`.250:10000`), `dual_marker_up.sh`가 티원을 `endpoint=no`로 기동해 endpoint 부재 → Unity가 `/tb3_1/pose` 수신 불가. **해결**: 티원도 `yes`(스크립트 영구수정). ep.log `Connection from .51 + RegisterSubscriber(/tb3_1/pose) OK` 확인.
+- **가재보 2D 슬롯**: `pgm_to_map_slot.py`로 `jaebo_v1`(+`_pretty`) 생성. `MapCatalog.LatestArenaSlot()`의 `^arena_v\d+` regex와 무관 → 레거시 자동선택과 100% 분리. sdf는 `jaebo_v1.sdf`로 슬롯에 묶음.
+- **Phase 3 — Unity 3D sdf 뷰(2D/3D 탭 실동작)**: 신설 `Map/SdfWallSpawner.cs`(벽89 box→Cube, map프레임→천장뷰 Unity 좌표), `Map/Map3DView.cs`(먼 오프셋 격리 + ortho 천장뷰 카메라→RenderTexture). `MapPanelView.SetMode("3d")` placeholder 제거→container3D 배경에 RT. 컴파일 0에러. **런타임 육안 미검증**(Play→3D탭→벽89; 좌표 정합은 1차 `ponytail`안이라 시각검증서 축·부호 조정).
+- **비침습 구독 역할분리 결정(중요)**: 로봇을 가재보 공간에 두고 **실제 운영(bringup·map_server·AMCL·주행/조작=publish)은 데스크탑(팀)**이, **우리 Unity는 구독만(pose/map/센서)** 하는 패시브 디지털트윈으로 간다. 이유: 우리가 로봇 도메인을 점유하면 팀이 로봇을 못 쓰는 불상사. 0 간섭 — subscriber로만 참여(토픽 충돌 0), publish 기능(teleop/goal/dispatch)은 데모 외 비사용, endpoint도 운영 시 데스크탑 이관 가능. → **Phase 2(로봇 AMCL)를 "데스크탑 AMCL + 우리 구독"으로 재정의**. ([[unity-passive-pose-twin]], [[ros2-noninvasive-pose-tap]])
+- **리뷰 반영(HANDOFF 오푸스리뷰 후속)**: `simulated` 플래그는 true 발화처 0개(scaffolding) 주석 명시, `Database/CLAUDE.md` 쓰기 정책을 실제 4종(session_meta·dispatches·logs·pose_logs)으로 정직화.
+- **부수 산출물**: `Map/SdfWallSpawner.cs`·`Map/Map3DView.cs` 신설, `StreamingAssets/Maps/jaebo_v1.{png,json,sdf}`(+pretty), `docs/evidence/maps/jaebo_v1/`, `dual_marker_up.sh`·`MapPanelView.cs`·bridge 패치.
+- **다음 진입**: ① Unity Play로 3D 탭·가재보 슬롯·티원 초록마커 육안 + 좌표 정합 조정 ② 데스크탑(팀) 운영 연동 — 우리는 구독만 ③ 가재보 공간서 데스크탑 AMCL → 우리 트윈 추종 확인.
+
+### 🗺️ Unity ControlRoom 목업→실데이터 교체 진입 + 외부 코드 그래프 도구 검증
+
+- **결정**: ControlRoom의 남은 목업/하드코딩 데이터를 실제 ROS/DB/Config 기반으로 교체하고, 파일이 커지지 않도록 컴포넌트화하며, unityctl 검증 루프로 닫는다.
+- **외부 도구 판정**:
+  - `codebase-memory-mcp`(DeusData) — 단일 바이너리, OpenCode 설정 자동화, 14개 MCP tool. **지금 도입 안 함.** C# 파일 ~50개로 현재는 grep/read + 폴드별 `CLAUDE.md`가 충분. 150개 이상 또는 멀티 레포 확장 시 재검토.
+  - `code-review-graph`(tirth8205) — Python 패키지, Tree-sitter+SQLite 그래프, PR 영향 분석. **지금 도입 안 함.** 이미 `.claude/skills/code-review-graph-ops`와 `change-impact-map` 스킬이 있음. 대규모 리팩터링 시 재검토.
+- **대안 인덱싱**: `docs/ref/UNITY-MOCK-TO-REAL-ROADMAP.md`에 교체 대상 13건, 데이터 소스, 우선순위, 상태를 표로 유지 → diff 리뷰용 인덱스로 활용.
+- **컴포넌트화**: `RecordsPageView.cs`(494줄)을 `UI/Records/*` 5개 클래스로 분리 — `RecordsPageView`(coordinator), `RecordsLogView`, `RecordsTimelineView`, `RecordsKpiView`, `RecordsChipBar`.
+- **핵심 교체 대상**:
+  - `FakeSensorData.cs` → ROS 연결 시 자동 off, 미연결 로봇만 fallback.
+  - `DemoScenarioService.cs` → `SituationConfig` 정합 + demo/실제 모드 플래그.
+  - `SensorCardListView.cs` → `SensorRegistry`/`default_sensors.json` 기반 동적 생성.
+  - `WaypointListView.cs` → `PatrolService` 기반 동적 생성.
+  - `ProtectedTargetView.cs` → `MapConfig` 기반 동적 생성.
+  - `SupabaseDbService.cs` → dispatch `simulated` 플래그화, pose robot_id 동적.
+- **검증 루프**: 매 Phase 후 `unityctl check`/`unityctl script get-errors` 0 errors. Play Mode smoke는 DB live 필요.
+- **잔여 리스크**: `protected_assets` 테이블은 아직 DB 미적용(SCRUM-23 예정) → 보호대상 실데이터는 config 단계로 한정. `RaiseDispatchRequested` 시그니처 변경 시 `Map/Actions/*` 동시 수정 필요.
+
+## 2026-06-29
+
+### 📊 Unity ControlRoom 기록 탭(Phase 3) + DB Repository 확장 + 메인 리뷰·수정
+
+- **작업**: 주인님이 고른 서브탭 + 카드형 + 칩 필터 UI를 데이터 소스 경계에 1:1로 매핑. 대응 탭에 이어 기록 탭(`page-records`)을 실제 로그검색/이벤트·출동 히스토리/KPI로 완성. Phase 4 인증은 다음 세션으로 이월.
+- **핵심 설계 — 칩 라벨 ↔ 실제 컬럼 정직 매핑**:
+  - 로그 탭 category 칩 `[전체][시스템][센서][출동][감사]`는 `logs.category=eq.` 값 그대로 필터.
+  - 로그 탭 level 칩 `[INFO][WARN][ERROR]`는 위험등급(SAFE/WATCH/DANGER)과 혼동하지 않고 `logs.level=eq.` 값 그대로 필터. 카드 좌측 색띠로 level 구분.
+  - 이벤트/출동 탭은 `events` + `dispatches`를 클라이언트 측에서 시간순 머지, `[전체][이벤트][출동]` 필터, 카드 좌측 색띠로 event severity / dispatch 구분.
+  - KPI는 PostgREST `count=exact` + `response_time.avg()` 집계를 사용.
+- **Repository 확장**:
+  - `EventRepository.CountAll(robotId?)` — `events?select=id` + `count=exact`.
+  - `DispatchRepository.AvgResponseTime()` — `dispatches?select=response_time.avg()&response_time=not.is.null`.
+  - `LogRepository.Count(category?, level?)` — `logs?select=id` + 조건 + `count=exact`.
+- **신규 UI**:
+  - `Assets/UI/Parts/RecordsPage.uxml`: 3서브탭(로그/이벤트·출동/KPI) + 동적 칩 필터 + 카드 리스트 + KPI 2×2 그리드.
+  - `Assets/Scripts/UI/RecordsPageView.cs`: `PanelTabView` 서브탭 전환 + `LogRepository`/`EventRepository`/`DispatchRepository` 조회 + 칩 필터 상태 관리 + `OnAlert`/`OnDispatchRequested`/`OnScenarioTriggered` 실시간 갱신.
+- **수정 파일**: `ControlRoomMain.uxml`(RecordsPageTpl include + page-records 교체), `ControlRoomPanels.uss`(기록 컴포넌트), `ControlRoomBinder.cs`(`recordsPage` 등록, View 25→26), `Assets/Scripts/{Data,Database}/CLAUDE.md`(파일 목록), `Assets/Scripts/UI/CLAUDE.md`, `Assets/UI/Parts/CLAUDE.md`.
+- **메인 리뷰·수정 1건(칩 중복 생성)**: `PanelTabView` 생성자가 `Select(0)→onSelected(0)`을 호출해 이미 `BuildLogChips()`+`LoadLogs()`를 수행하는데, `RecordsPageView` 생성자가 `BuildLogChips()`+`Refresh()`를 또 불러 **초기 칩이 두 벌** 쌓이고 active "전체"가 2개가 되던 버그. 각 `Build*Chips()` 첫머리에 `chipRow.Clear()`로 self-contained화 + 생성자 이중 빌드 제거. (DTO·신규 `AvgResultArray` 래퍼 모두 비제네릭 규칙 준수 — JsonUtility 제네릭 함정 없음 확인.)
+- **라이브 검증 1건(미해결)**: `DispatchRepository.AvgResponseTime`의 `response_time.avg()`는 PostgREST aggregate 기능 의존 — Supabase `db-aggregates-enabled` OFF면 400→KPI 평균응답시간 `-`(graceful, 크래시 없음). 라이브에서 `-`면 클라이언트 평균(QueryRecent 행 계산)으로 1줄 교체.
+- **검증**: opencode 구현 0 errors → 메인 리뷰 칩 중복 수정 → `Q<>` 이름 ↔ UXML 요소·USS 클래스(level-*/severity-*/dispatch stripe)·호출 메서드(CountAll/AvgResponseTime/Count) **정적 교차검증 PASS**. `unityctl asset refresh` projectLocked(에디터 종료 stale lock)로 라이브 컴파일 대기. **end-to-end(DB 조회→3서브탭 카드 렌더)는 Editor Play + Supabase 후 미검증.**
+- **다음 진입**: ① Editor Play → 📊기록 탭 → 3서브탭 + 칩 필터 + KPI count 일치 + AvgResponseTime aggregate 동작 확인 ② Phase 4 인증(운영자 선택+고정 비번 게이트+감사로그 category=audit, RLS anon open 유지).
+
+## 2026-06-29
+
+### 🚨 Unity ControlRoom DB read Repository + 대응 탭(Phase 1+2) 구현
+
+- **작업**: 대응·기록 탭의 병목이 DB read Repository 부재임을 확인하고, `EventRepository`/`DispatchRepository`/`LogRepository` 3종을 먼저 신설. Phase 2로 대응 탭을 위험등급 5단계 보드 + 출동현황 + 이벤트/출동 히스토리로 완성. Phase 3(기록 탭)/Phase 4(인증)은 다음 세션으로 이월. 칩라 갤러리는 이미지 저장소 선결 회피로 제외.
+- **신규 DTO**: `Assets/Scripts/Data/{EventRow,DispatchRow,LogRow}.cs` — `public.events`/`dispatches`/`logs` 1행 매핑(JsonUtility용).
+- **신규 Helper**: `Assets/Scripts/Database/JsonHelper.cs` — Unity `JsonUtility`가 top-level JSON 배열을 직접 파싱하지 못하므로 `{"rows":[...]}`로 감싼다(`WrapRows`). ※`JsonUtility`는 제네릭도 미지원이라 타입별 비제네릭 `*RowArray`로 `FromJson`(리뷰에서 정정 — 아래).
+- **신규 Repository**:
+  - `EventRepository`: `QueryRecent(limit, robotId?, minSeverity?)` — `events?order=ts.desc&limit=N`.
+  - `DispatchRepository`: `QueryRecent(limit, robotId?)` + `QueryActive(robotId?)` — `arrived_at=is.null`로 진행 중 출동 필터.
+  - `LogRepository`: `Query(limit, category?, level?)` — 기록 탭 로그검색 백엔드.
+  - 모두 `SupabaseClient.Select` 코루틴 래퍼. DB 비활성(`SupabaseDbService.Instance?.Client == null`) 시 `onResult(false, empty)` graceful.
+- **신규 UI**:
+  - `Assets/UI/Parts/ResponsePage.uxml`: 위험등급 SAFE/WATCH/CHECK/DANGER/EVACUATE 보드 + 진행 중/총 출동 metric + 이벤트/출동 리스트.
+  - `Assets/Scripts/UI/ResponsePageView.cs`: `ControlRoomBinder`를 host로 받아 Repository 코루틴 실행. `OnAlert`/`OnDispatchRequested`/`OnScenarioTriggered` 발생 시 자동 `Refresh()`.
+- **수정 파일**: `ControlRoomMain.uxml`(ResponsePageTpl include + page-response 교체), `ControlRoomPanels.uss`(대응 컴포넌트), `ControlRoomBinder.cs`(`responsePage` 등록, View 24→25), `Assets/Scripts/{Data,Database}/CLAUDE.md`(파일 목록).
+- **리뷰·수정 (메인, 6건)**: ① **JsonUtility 제네릭 함정** — 구현본 `JsonHelper.ParseArray<ArrayWrapper<T>>`는 Unity `JsonUtility`가 제네릭 미지원이라 런타임에 빈 배열 반환 위험(3탭 데이터 전멸 가능) → 제네릭 폐기, `WrapRows()` + **이미 만들어만 두고 방치됐던** 비제네릭 `EventRowArray`/`DispatchRowArray`/`LogRowArray`로 파싱(죽은코드 동시 부활). ② **`raw_payload`(JSONB)→string 파싱 깨짐** — events `select`에서 `raw_payload` 제거(화면 미사용, 필요 시 jsonb 전용 조회로 분리). ③ **EVACUATE 도달 불가** — `events.severity`는 0~3(SAFE~DANGER)뿐이라 EVACUATE(4)가 영구 비활성 → DANGER 누적 ≥2면 격상(`ponytail`; 업그레이드 경로 = 시간윈도우/event_type 가중치). ④ **총 출동 1000 cap** — `DispatchRepository.CountAll()`(count=exact, Content-Range)로 정확화. ⑤ **Refresh 디바운스** — 같은 프레임 다중 이벤트를 다음 프레임 1회로 합침. ⑥ JsonHelper 설명 정정(위 ①).
+- **검증**: 구현 시 `unityctl script get-errors` 0 errors. 리뷰 수정 후 라이브 컴파일은 에디터 종료+stale lock(`isRunning:false`)으로 unityctl 불가 → grep으로 잔존 참조 0·신규 심볼 정합 정적 확정. **사용자 에디터 Play "잘 켜짐"(2026-06-29) = 대응 탭 라이브 PASS.**
+- **다음 진입**: ① Phase 3 기록 탭(통합 로그검색=`LogRepository` 재사용 + 이벤트/출동 기록 + 세션 KPI; 카메라갤러리 제외) ② Phase 4 인증(운영자 선택+고정 비번 클라이언트 게이트, page-host 앞단 오버레이, 감사로그=logs category=audit, RLS anon open 유지) ③ 로봇 충전 후 D-pad 실주행(W1).
+
+## 2026-06-29
+
+### 🏠 Unity ControlRoom 홈 탭(대시보드) 구현
+
+- **작업**: 홈 탭(`page-home`)을 placeholder에서 실제 대시보드로 완성. 우선순위는 홈 → 대응 → 기록으로 한 탭씩 처리하고, 대응·기록·인증은 다음 세션으로 이월.
+- **데이터 전략**: DB read 없이 기존 `ControlRoomEvents`와 `ControlRoomState.LastSensorValues` 캐시만 사용. `FakeSensorData`/`DemoScenarioService`가 로봇 없이 값을 생성하므로 즉시 검증 가능.
+- **신규 파일**:
+  - `Assets/UI/Parts/HomePage.uxml`: 헤더(날짜·활성 로봇 수) + KPI 3종(이벤트/경보/출동) + 로봇 상태 카드 2개(티원/젠지: 온라인 칩·역할 뱃지·배터리 게이지·센서 요약) + 최근 활동 리스트.
+  - `Assets/Scripts/UI/HomePageView.cs`: `OnBatteryChanged`/`OnRobotConnectivity`/`OnSensorChanged`/`OnLogAdded`/`OnAlert`/`OnScenarioTriggered`/`OnDispatchRequested` 구독. 세션 누적 KPI 카운터(View 내 int 필드). 탭 진입 시 `LastSensorValues`로 즉시 복원.
+- **수정 파일**:
+  - `Assets/UI/ControlRoomMain.uxml`: `page-home` placeholder를 `<ui:Instance template="HomePageTpl" />`로 교체, 템플릿 선언 추가.
+  - `Assets/UI/ControlRoomPanels.uss`: `.home-page`, `.home-header`, `.home-title`, `.home-meta`, `.home-kpi-row`, `.home-kpi`, `.home-kpi-danger`, `.home-kpi-value`, `.home-kpi-label`, `.home-robots-row`, `.home-robot-card`, `.home-robot-card-header`, `.home-robot-name`, `.home-status-chip`, `.home-status-online`, `.home-status-offline`, `.home-battery-wrap`, `.home-battery-percent`, `.home-sensor-summary`, `.home-activity`, `.dash-section-title`, `.home-activity-scroll`, `.home-activity-list`, `.home-activity-entry` 추가.
+  - `Assets/Scripts/UI/ControlRoomBinder.cs`: `HomePageView homePage;` 필드 + `homePage = new HomePageView(root);` 등록, View 카운트 23→24.
+- **검증**: `unityctl asset refresh` 후 Editor 로그 `LogAssemblyErrors (0ms)`, 스크립트 카운트 1301→1312. 사용자 스샷으로 레이아웃 A 노출 확인.
+- **리뷰·수정 (메인, 사용자 시각검증 후 3종)**: ① **하단 빈 공간** — `<ui:Instance>`의 TemplateContainer가 `flex-grow:0`이라 page 높이 미수신 → `.home-activity`가 못 늘어남. `ControlRoomLayout.uss`에 `.page-page > TemplateContainer { flex-grow:1 }`(직속만 잡아 관제탭 무영향). ② **배터리 게이지 모순**(―― %인데 게이지 80% 참) — `.battery-bar-fill` USS 기본 `width:80%`가 오프라인 미갱신 상태로 노출 → `HomePageView.BindRobotRow`에서 fill `0%` 초기화. ③ 최근 활동에 `HH:mm` 시간 prefix + "아직 활동이 없습니다" empty state(`.home-activity-empty`) 추가. **수정 후 컴파일은 project-lock으로 직접 미검증, 변경 API(DateTime/Length.Percent/RemoveFromHierarchy) 정적 안전.**
+- **잔여 리뷰 노트**: KPI `eventCount`가 `OnLogAdded`(WARN/ERROR)+`OnScenarioTriggered` 양쪽 ++ → 이중 카운트 가능(데모라 무해, 정의 정리 권장).
+- **다음 진입**: ① Editor 육안 검증 ② Phase 3 대응(위험등급보드/출동현황/배터리/이벤트히스토리) ③ Phase 4 기록(칩라갤러리/로그검색/KPI/리포트) ④ DB read Repository + 인증.
+
+## 2026-06-29
+
+### 🎨 Unity ControlRoom 토스 리스킨 + 하단 네비 4탭 골격
+
+- **작업**: 기존 단일 관제 화면을 토스(Toss Design System) 톤으로 통일 리스킨하고, 17개 신규 기능(이벤트 히스토리·대응 보드·기록 등)을 담을 하단 네비게이션 4탭(🏠홈·🛰️관제·🚨대응·📊기록) 골격을 깔았다. 각 탭 본문은 다음 세션에서 구현.
+- **Phase 0 — 토스 토큰 이식**:
+  - `Assets/UI/ControlRoomTokens.uss` + `Assets/Scripts/Design/UiTokens.cs` 동시 교체. 대표 매핑: accent `#4E8AFF`, bg-primary `#F2F4F6`, border `#E5E8EB`, text-primary `#202632`, text-secondary `#8B95A1`, text-muted `#B0B8C1`, status-ok `#00C471`, status-warn `#FF9500`, status-danger `#FF4B4B`, radius-sm/md 8/12. 폰트/간격은 유지.
+  - role-badge rgba를 accent/success 기준으로 동반 교체.
+- **Phase 0b — Map C# 하드코딩 색 변환**:
+  - `Ros/MapSubscriber.cs`: free/occupied/unknown → grey100/grey900/grey400α.
+  - `Map/MapMarkerLayer.cs`: 로봇 마커 기본색 → green500 `#00C471`.
+  - `Map/PatrolMarkerLayer.cs`: 순찰 선/점 → orange500 `#FF9500`.
+  - `Map/MapHudLayer.cs`, `Map/MapContextMenuView.cs`, `Map/MapView.cs`: dark UI chrome을 grey900/grey500 톤으로 통일.
+- **Phase 1 — 4탭 라우팅 골격**:
+  - `ControlRoomMain.uxml`: root → TopBar + page-host + bottom-navbar + alert-popup. `page-host` 안에 `page-operations`(기존 body 통째 이동) + `page-home`/`page-response`/`page-records` placeholder(`.hidden`).
+  - `ControlRoomLayout.uss`: `.page-host`, `.page-page`, `.page-placeholder`, `.bottom-navbar`, `.nav-item`, `.nav-item.active`, `.nav-icon`, `.nav-label` 신규. `--bottom-navbar-height: 64px` 토큰 추가.
+  - `ControlRoomState.cs`: `CurrentPage` + `SetPage(page)` 추가.
+  - `ControlRoomEvents.cs`: `OnPageChanged`/`RaisePageChanged` 추가.
+  - `PanelTabView.cs`: 생성자에 `Action<int> onSelected` 콜백 추가(기존 사용처 호환).
+  - `ControlRoomBinder.cs`: `pageTabs` 1개 추가. 탭 클릭 시 `ControlRoomState.Instance.SetPage()` 호출.
+- **검증**: `unityctl asset refresh` → `unityctl script get-errors` = **0 errors**(경고 32건은 기존 `FindObjectOfType` deprecated 등). **시각검증(Play 스크린샷)은 unityctl IPC/project-lock 불안정으로 실패** — Editor 직접 Play로 하단 네비 노출·탭 전환·활성 탭 토스블루 강조 확인 필요.
+- **다음 진입**: ① Editor 육안 검증 ② Phase 2 홈(대시보드+알림) ③ Phase 3 대응(위험등급보드/출동현황/배터리/이벤트히스토리) ④ Phase 4 기록(칩라갤러리/로그검색/KPI/리포트) ⑤ DB read Repository(`EventRepository`/`DispatchRepository`/`LogRepository`) ⑥ 인증(운영자 선택+고정 비번 게이트+감사로그/프로필).
+
+## 2026-06-29
+
+### 🎮 Unity 관제 UI 미연결 조사 + 조종패드(W1)·연결상태(W6) 실연결
+
+- **작업**: Unity ControlRoom UI(View 22종)에서 "버튼은 있으나 실기능 미연결" 요소를 조사하고, 그중 W1(수동 조종패드)을 실제 ROS 발행에 연결.
+- **조사 결과 — 미연결 8개**: 두 유형. **A(이벤트 발화O·Publisher 없음)** = TeleopPad·QuickAction → Ros/ Publisher만 추가하면 됨(저비용). **B(핸들러가 로그/상태만)** = MovePanel 순회·PowerButton·FeatureToggle·RobotRoleCard(하드코딩 "온라인")·WaypointList → View 본문 수정 필요. 기준선(이미 연결): 맵 우클릭 출동(/goal_pose)·순찰 실행(/patrol_waypoints)·시나리오 경보·맵 슬롯. → 로봇 직접제어 라인만 비어 있었음.
+- **W1 구현 (PASS)**: `Ros/TeleopCmdPublisher.cs` 신설(`OnTeleopCmd` 구독 → `/<id>/cmd_vel` **TwistStamped** 발행, `FollowWaypointsPublisher` 패턴 복제) + `TopicRegistry.GetCmdVel()` + `ControlRoomApp.CreateRosSubscribers()` 등록. UI(`TeleopPadView`)는 수정 0 — 이미 정확히 발화 중이었음.
+- **W1 검증**: `unityctl script get-errors` → **0 errors**(경고는 전부 기존 `FindObjectOfType` deprecated). **실로봇 주행 end-to-end는 미검증** — 티원 배터리 방전, 충전 후 다음 세션 5분 작업.
+- **W6 구현·검증 (PASS)**: `RobotRoleCardView`의 하드코딩 `statusLabel="온라인"` 제거 → 실신호 기반 판정. 신규 `App/RobotConnectivityMonitor.cs`(`RobotPoseFeed.OnRobotPose` 추적, 마지막 신호 후 3초 timeout → 오프라인) + `ControlRoomEvents.OnRobotConnectivity` + `ControlRoomApp` 등록. **컴파일 0 errors + 런타임 시각검증 PASS**(티원 OFF 상태 Unity Play → 카드 "오프라인" 정확 표시, 스크린샷 확인). 로봇 켜져 `/pose` 흐르면 자동 "온라인" 전환은 충전 후. USS는 Contract Lock 존중해 텍스트만 변경.
+- **핵심 학습 2건**: ① **cmd_vel 타입 드리프트** — `CONTRACT.md`는 `geometry_msgs/Twist`로 적었으나 실기(TurtleBot3 Jazzy)는 **TwistStamped**가 ground truth. Publisher는 TwistStamped로 작성, CONTRACT.md 정정 필요. ② QuickAction의 `aruco_park`·`lock_drive`는 **로봇측 명령 인터페이스 자체가 없음** → 코드 전에 팀 협의 선행.
+- **부수 산출물**: `docs/ref/UNITY-UI-WIRING-CONTRACT.md` 신설(8개 배선 계약 W1~W7 + 미결정 6종), `docs/ref/TECH-INDEX.md` 라우팅 1줄 추가.
+- **다음 진입**: ① (충전 후) 로봇 bringup+endpoint → Unity Play → D-pad 실주행 + 카드 "온라인" 자동전환 확인 ② W2(빠른버튼 즉시정지=cmd_vel 0 / 충전소복귀=goal_pose 재사용, 저비용) 이어가기.
+
+### 🔧 멀티 endpoint 후속 4종 — ROS-TCP 패치 embed 영구화·watchdog·한방 오케스트레이터 (②④ 완료, ③ 스크립트화, ① 배터리로 중단)
+
+- **맥락**: 직전 "🛰️ 듀얼 AMCL" entry의 다음 액션 4종(①실라이다검증 ②패치embed ③set_initial_pose자동화 ④watchdog)을 이어서 처리. ②④ 완료·검증, ③ 한방 스크립트 완성, ①은 배터리 방전으로 다음 세션 이월.
+- **② ROS-TCP 패치 `Packages/` embed 영구화 [완료·검증]**: `Library/PackageCache/com.unity.robotics.ros-tcp-connector@bdad6c87bd9e`(static 버퍼→로컬변수 패치본)를 `Packages/com.unity.robotics.ros-tcp-connector/`로 복사, `manifest.json`의 git URL 줄 제거(embedded package가 git 의존을 가림). 검증: `unityctl asset refresh`→`script get-errors` **0 errors**(27 warning은 기존 CS0618 무관). 재import에도 안 날아감. 문서 `Packages/CLAUDE.md`에 embed+patch 절차 기록.
+- **④ endpoint watchdog [완료·검증]**: `scripts/ep_watchdog.sh` — 두 로봇 `default_server_endpoint`(TCP 10000)를 주기 폴링, 죽으면 `_pose_ep_up.sh <id> yes` 재기동. unreachable(로봇 off/wifi)은 스킵해 헛재기동 방지. **검증**: 젠지 endpoint가 실제로 죽어있어(procs=0) restart 경로 실행 → **0→2 복구** 실증. ssh **alias**(`t1`/`g1`) 사용으로 IP drift 무관(메모리 IP 하드코딩 금지 준수).
+- **③ set_initial_pose 자동화 [스크립트 완성, 부분검증]**: `scripts/dual_amcl_up.sh` — ns 듀얼 AMCL 멀티 endpoint **한방 기동**(dual_marker_up.sh의 AMCL 정본). 로봇별 순차: 비-ns Nav2/이전ns 정리 → 의존물 scp → `_robot_bringup_ns.sh`→`_robot_amcl_ns.sh <id> <map> <ix iy iyaw>`(시드)→`_pose_ep_up.sh <id> yes`. **모션 없음**(bringup+AMCL 수동 위치추정만). 시드 티원(0.78,−0.85)·젠지(0.78,−0.45) yaw−2.46. **부분검증**: g1(젠지) 정상 기동(amcl `active[3]`, `/tb3_2/map` pub=1, pose_publisher 10Hz) · t1(티원)은 배터리 방전→wifi 100% loss로 실패. SSH에 `ServerAliveInterval=5/CountMax=3` 하드닝(wifi stall 시 ~15s에 끊고 진행, 무한 hang 방지).
+- **① 실라이다 정확도 검증 [모니터 완성, 미실행]**: `scripts/amcl_watch.sh <t1|g1> [id]` — 로봇 ssh로 `/<id>/amcl_pose` position+cov_xx를 주기 출력해 **자연수렴 vs 대칭점 락**을 수치 판정(주행하면 x/y가 실이동 방향으로 변하고 cov 축소=정상). 배터리 방전으로 **실주행 검증 미실행** → 다음 세션 첫 액션.
+- **환경 메모**: ssh alias `t1=tiwon=rb`→.250(라즈베리파이, wifi 불안정), `g1=genzi=urhynix-robot`→.84(`kim-desktop`, 데스크톱급 안정). 젠지가 더 안정적. **티원 배터리 방전이 wifi 끊김의 실제 원인**(단순 AP 불안정 아님).
+- **다음 진입**: 두 로봇 충전·도킹 후 (1) `bash scripts/dual_amcl_up.sh` 한 줄 기동 → (2) `bash scripts/amcl_watch.sh g1`/`t1` + teleop 주행으로 **① AMCL 자연수렴 검증**(대칭점 아닌지) → (3) 검증좌표 확정 시 dual_amcl_up.sh 시드 갱신. watchdog는 `bash scripts/ep_watchdog.sh &`로 상시.
+
+### 🛰️ 듀얼 AMCL 위치정합 + Unity 멀티 endpoint — 두 마커 시각배치 완료(PARTIAL, 실제 라이다 정확도 미검증)
+
+- **목표/결과**: odom-only(부정확)를 AMCL 위치추정으로 대체해 두 마커를 맵 실좌표로 표시. 두 마커 충전소 나란히 표시 성공(**초록 티원 왼쪽 (0.78,−0.85) / 파란 젠지 오른쪽 (0.78,−0.45)**, yaw −2.46). ★단 맵 대칭으로 회전수렴이 대칭점으로 빠져 **작은 cov(0.02) initialpose 시드+회전없이 고정** → 시각배치는 맞으나 실제 라이다 정확도는 미검증.
+- **블로커 4종 해결**:
+  1. **라이다 디바이스 시계 skew** — coin_d4 scan stamp가 시스템보다 +4.6~7.8초 미래(`ros2 topic delay` odom=0.006 정상, scan만 skew). **재부팅으로 안 고쳐짐.** AMCL이 scan "earlier than transform cache"로 전부 폐기 → 위치추정 불가. 우회 = `scan_frame_fix.py`에 `m.header.stamp=now()` restamp 추가 + `_robot_amcl_ns.sh`가 `/tb3_X/scan_fixed` 구독.
+  2. **로봇간 Wi-Fi AP isolation** — 두 로봇 같은 SSID(codelab_robot_team_2_5G)인데 ping 100% loss(ICMP/UDP 차단, Mac↔로봇 TCP만 OK). cross-host DDS(UDP) 막혀 "젠지 endpoint 하나로 양쪽 중계" 불가 → 멀티 endpoint 필요.
+  3. **ROS-TCP-Connector v0.7.0 멀티 ROSConnection 미지원** — 각 로봇 endpoint 개별연결 시 static `s_FourBytes`/`s_TopicScratchSpace` 공유 race로 2번째 연결이 "No more data available"로 끊김. **패치 = `ROSConnection.cs` `ReadMessageContents`의 static 버퍼 2개를 호출별 로컬 변수로 교체.** ★임시(Library/PackageCache) — `Packages/`로 embed 영구화 필요(재import 시 덮어씀).
+  4. **맵 정사각형 대칭** — AMCL 회전수렴이 180° 대칭점으로 빠짐 → 작은 cov 시드+회전없이 고정으로 회피.
+- **좌표/맵**: `office_base_map.json` displayRotationDeg=90. 실측 매핑 **맵+x=화면아래, 맵+y=화면오른쪽**. endpoint TCP 10000 양쪽 OPEN(젠지 .84/티원 .250).
+- **부수 산출물**: 신규 `Assets/Scripts/App/RosConnectionManager.cs`(robotId별 멀티 endpoint), `scripts/_robot_amcl_ns.sh`(id일반화 self-AMCL+scan_frame_fix 내장+set_initial_pose 인자), `scripts/_pose_ep_up.sh`(pose+endpoint 런처). 수정 `RobotPoseFeed.cs`(로봇별 endpoint 구독)·`scan_frame_fix.py`(restamp)·`ros_endpoint.json`. 패치(임시) `PackageCache/.../ROSConnection.cs`.
+- **운영 함정**: 젠지 endpoint가 Unity Play/Stop·wifi로 자주 죽음(`_pose_ep_up.sh` 재기동) · ssh 인라인 setsid는 세션종료 시 죽음→**파일로 실행** · scp 자주 hang→**`ssh 'cat>file'<localfile` stdin 우회** · unityctl 0.4.0 헤드리스 검증(`script get-errors`/`asset refresh`/`await-ready`/`play start|stop`/`console get-entries`).
+- **다음 진입**: ① 실제 라이다 위치 정확도 검증(주행하며 AMCL 자연수렴, 대칭점 아닌지) ② ROS-TCP-Connector 패치 `Packages/` embed 영구화 ③ 검증좌표를 `_robot_amcl_ns.sh` `set_initial_pose`로 박아 무-teleop 자동화 ④ endpoint watchdog.
+
+### 🤖 듀얼 마커 Unity 표시 검증 — 표시 성공·위치 오류 미해결(PARTIAL) + ros_endpoint 드리프트 수정
+
+- **상황**: 두 로봇 충전소 도킹+전원 ON. 팀원 주행기록(Confluence 2026-06-26 "젠지 tb3_2 네임스페이스 전체명령")에서 젠지 `namespace=tb3_2`로 변경 → 기존 Unity 설정(`default_robots.json`/`TopicRegistry`)과 **이미 일치, 충돌 아님**. 기동 전 두 로봇 모두 ROS 미기동(ssh만 됨)이었음 → 실측으로 확인.
+- **기동**: `scripts/dual_marker_up.sh`(odom-only, AMCL 없음). 양 로봇 ns bringup + `odom_to_pose.py`(/tb3_X/odom→/tb3_X/pose, map프레임) + 젠지에 `ros_tcp_endpoint`. 오프셋: 티원 tb3_1 왼쪽(+0.1y), 젠지 tb3_2 오른쪽(−0.1y).
+- **드리프트 수정 1건**: `unity/ControlRoom/Assets/Resources/RosConfig/ros_endpoint.json`이 티원(`192.168.10.250`/`tb3_1`)으로 잘못 지정(OpenCode 2026-06-26 작업, `_note` 의도는 젠지인데 값이 어긋남) → **젠지로 교정**(`endpointRobotId=tb3_2`, `endpointIp=""`→hostAddress 자동추출=DHCP 드리프트 안전).
+- **실측 검증**: `/tb3_2/pose` 20Hz · `/tb3_1/pose` 티원 로컬 20Hz + **젠지에서 `echo --once` 수신 확인**(크로스호스트 정상, 우려했던 팀 Wi-Fi AP isolation 무관) · 젠지 endpoint 가동(192.168.10.84:10000).
+- **★함정(신규)**: `ros2 topic hz`가 cross-host 첫 호출에 `NO_DATA` 거짓 보고 → DDS discovery 워밍업 지연. `echo --once`로 재확인해야 진짜 판정.
+- **결과**: Unity Stop→Play 시 **두 마커(파랑 젠지/초록 티원) 표시됨**. ★**미해결**: 마커 **위치가 실제와 틀림**. odom-only라 충전소=odom 원점+오프셋 기준이고 저장맵 좌표/회전(`office_base_map.json` displayRotationDeg 90°) 보정과 안 맞는 것으로 추정.
+- **부수 산출물**: `ros_endpoint.json`(젠지로 교정).
+- **다음 진입**: 위치 정합 — ① odom 오프셋·맵 90°회전·좌표계 매핑 점검, 또는 ② 근본해결=2026-06-26 티원 경로처럼 **AMCL+공유맵(arena_v5)** 위치추정으로 전환(odom-only는 절대좌표 부재·드리프트가 ceiling).
+
 ## 2026-06-26
+
+### 🟢 티원 AMCL arena_v5 위치추정 → Unity 마커 (부분 PASS) + 라이브맵 override 함정
+
+- **목표**: 티원(tb3_1)을 저장맵 arena_v5로 **self-host AMCL** 위치추정 → Unity ControlRoom에 정확한 마커. 젠지는 옆에서 cartographer SLAM 중(0 충돌·안 건드림).
+- **선행(맵 준비)**: 동료 새 맵 → `arena_v5` 슬롯 등록(`saved-map-to-unity-slot`) + **레거시 슬롯 전부 삭제(arena_v5만 잔존)** + `StaticMapLoader` map5 임시핀 제거(`LatestArenaSlot` 복귀) + 삭제슬롯 pref 폴백 추가 + 맵 표시 **90° 회전**(`office_base_map.json` displayRotationDeg 85→90).
+- **7단계 절차(검증)**: `_robot_bringup_ns.sh tb3_1`(scan frame=`tb3_1/base_scan` 이미 OK) → arena_v5 scp → `_t1_amcl_ns.sh`(map_server+amcl **ns 기동**, `/tb3_1/map` 격리, **수동 lifecycle configure→activate** — lifecycle_manager ABI 우회) → 글로벌 위치추정+`drive_rotate` 회전 수렴(공분산 0.38→**0.064=±0.25m**, ≈x0.9 y−0.94 yaw−141°) → `robot_pose_publisher`(/tb3_1/pose)+`ros_tcp_endpoint`(.250:10000) → Unity endpoint `.250`로 재지정.
+- **★함정(신규)**: Unity 마커가 맵 밖으로 튀어나감 → 원인 = **pin 없으면 라이브 `/map`(젠지 cartographer)이 저장슬롯을 덮어** `viewport.SetMap` 좌표 메타까지 젠지맵 origin/크기로 바뀜 → 티원 좌표를 엉뚱한 좌표계로 픽셀변환. **해결 = 드롭다운서 arena_v5 슬롯 선택(pin)** → 라이브 override 차단·메타 복귀·마커 즉시 재배치. (메모리 `unity-livemap-overrides-static-slot`)
+- **결과**: 마커가 충전독 자리에 표시(위치 대략 맞음 ±0.25m). 충전독이 맵 free-space 가장자리라 "맵 밖" 느낌이나 좌표는 맞음(맵 자체가 그 구석을 벽으로 안 닫음).
+- **teardown 함정**: ssh 명령줄에 kill 패턴 노출 → pgrep이 셸 매칭 → self-kill(255). **PID로만 kill**해 우리 스택만 정리(cartographer 보존).
+- **부수 산출물**: `scripts/_t1_amcl_ns.sh`(신규), 스킬 `urhynix-t1-amcl-saved-map`, 메모리 `unity-livemap-overrides-static-slot`.
+- **다음 진입**: ① teleop 병진으로 ±0.05m 정밀 조임 ② 그 충전독 좌표를 `_t1_amcl_ns.sh`에 `set_initial_pose:=true initial_pose.{x,y,yaw}`로 박아 **무-teleop화**(부팅→bringup→amcl 한 줄=충전독 즉시 정확) ③ 마커 트래킹 정밀 검증. (티원 베이스 배터리 방전으로 중단.)
 
 ### 🛰️ 멀티로봇 도메인 충돌 해결 + 네임스페이스+tf_prefix bringup 설계·검증(동시 주행 기반)
 

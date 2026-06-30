@@ -1,3 +1,4 @@
+// opencode: 2026-06-29 - CurrentPage + SetPage() 상태 계약 추가. Coded with OpenCode; high-cost model review recommended.
 // ControlRoomState.cs — 전역 싱글톤 상태. 선택 로봇/모드/세션/배터리/센서 last value.
 // 변경은 setter 통해서만. 변경 시 ControlRoomEvents 발화.
 // View는 본 state를 read-only로 참조 + 이벤트 구독.
@@ -53,6 +54,15 @@ namespace URHYNIX.ControlRoom.App
             if (PatrolEditMode == on) return;
             PatrolEditMode = on;
             ControlRoomEvents.RaisePatrolEditModeChanged(on);
+        }
+
+        // 현재 페이지: operations / home / response / records
+        public string CurrentPage { get; private set; } = "operations";
+        public void SetPage(string page)
+        {
+            if (CurrentPage == page) return;
+            CurrentPage = page;
+            ControlRoomEvents.RaisePageChanged(page);
         }
 
         // 세션 UUID (Supabase session_meta FK)

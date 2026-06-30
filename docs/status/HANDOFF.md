@@ -1,56 +1,111 @@
+<!-- opencode: 2026-06-30 - Phase 3 준비 완료. 고비용 모델 리뷰 체크리스트 추가. Coded with OpenCode; high-cost model review recommended. -->
 # Session Handoff — 다음 세션 진입 캡슐
 
 > **다음 세션의 AI 에이전트가 첫 5분 안에 컨텍스트를 잡기 위한 1페이지.**
 > 
 > 구조: Last updated 날짜 | Top 액션 | 첫 5분 체크리스트 | 복구 명령 | More info 링크
 
-**Last updated**: 2026-06-26 (밤) — **🛰️ 멀티로봇 도메인 충돌 해결 + 네임스페이스+tf_prefix bringup 검증 PASS.** **증상**: 티원·젠지가 같은 도메인210에서 둘 다 **비-네임스페이스(`__ns:=/`)**로 `/scan`·`/tf`를 쏴서 라이다가 섞여 SLAM 깨짐(`/scan` Publisher count=2 = DDS 충돌). **즉시조치**: 티원이 SLAM 주체(`slam_toolbox`)였으므로 **젠지 종료**(PID 직접 kill — `pkill -f`는 self-kill 위험) → 티원 `/scan` 단독 복귀. **근본해결 설계**: 도메인은 **210 그대로**(Unity 브리지가 한 도메인만 봄·맵/관제 공유 필요), 격리는 **namespace `tb3_1`(티원)/`tb3_2`(젠지)**가 담당 → 토픽 `/tb3_X/*` + TF 프레임 `tb3_X/*` 접두사 분리 = 구조적 충돌 불가. (도메인 분리는 협조 주행에 부적합이라 안 씀.) **유일 누수=coin_d4 라이다**: launch가 namespace 인자를 무시하고 yaml 고정 `frame_id: base_scan` → scan header가 prefix 안 돼 URDF의 `tb3_X/base_scan`과 불일치 → TF 룩업 실패. **봉합**: `scripts/dual_bringup.launch.py`(robot.launch.py 최소 변형, 라이다 `frame_id=[ns,'/base_scan']`) + `scripts/_robot_bringup_ns.sh`(런처). 둘 다 로봇 홈에 scp 후 실행. **기존 단일 경로 `_robot_nav_up.sh`는 무수정**(별도 경로). **검증 PASS(젠지)**: 전 토픽 `/tb3_2/*`, scan/odom frame=`tb3_2/*`, `tf2_echo tb3_2/odom tb3_2/base_scan` 룩업 성공([-0.032,0,0.182]=라이다 오프셋) = 전체 TF 트리 `tb3_2/` 일관, 누수 0. (테스트는 도메인 211 격리로 티원 SLAM 무영향, **실배포는 둘 다 210**.) **🎯 다음 액션**: ① 티원 SLAM 끝나면 맵 저장(`map_saver_cli` 또는 slam_toolbox serialize) — 이 맵이 기존 "동료 새 맵 대기" 블로커를 대체 가능 ② 두 로봇 다 `bash _robot_bringup_ns.sh tb3_2`(젠지)·`tb3_1`(티원)로 **210+namespace** 기동 ③ **nav2를 namespace로** 띄우기(각 로봇 amcl+costmap을 `/tb3_X/tf` 트리로, `_robot_nav_up.sh`의 nav2 부분을 namespace 대응) = 진짜 동시 자율주행. **로봇**: 젠지 `kim@192.168.10.84`(1234), 티원 `t1@192.168.10.250`(123). **이전(저녁)**: 🤖 듀얼 Unity 표시 진행 + ★map5 부정확 블로커(젠지 amcl 0.54,−0.74 ↔ 표시 0.20,−1.55 = 0.9m 불일치, map5가 실제 환경과 정합 안 됨, 정확한 맵 재SLAM이 근본 해결 — 이번 티원 SLAM이 그것). 젠지=map5 nav2 재기동(충전소 0,0, endpoint `.84:10000`), 티원(tb3_1)=구독만(젠지가 대신 `/tb3_1/pose` 정적 발행 x=−0.02 y=−1.53=순회지점1, 티원 본체 무접촉). `_robot_nav_up.sh`의 MAP을 6번째 인자로 인자화. 두 마커 분리 표시됨. **★블로커**: 젠지 amcl 라이다추정(0.54,−0.74)이 주인님 표시(젠지 주차=0.20,−1.55)와 **0.9m 불일치** — map5(2.6m 작고 GIMP편집)가 실제 환경과 정합 안 됨, `/initialpose`+제자리회전으로도 안 좁혀짐. 라이다(amcl)가 실측이라 더 정확, 표시는 맵 정확할 때만 일치 → **정확한 맵 재SLAM이 근본 해결**. **🎯 다음 액션(세션 인계): 동료가 새 맵 보내줄 예정.** 받으면 ① 새 맵 pgm/yaml 젠지 `~/maps/<id>/` scp + `bash /tmp/_robot_nav_up.sh tb3_2 <ix> <iy> <iyaw> yes ~/maps/<id>/<id>.yaml` ② `saved-map-to-unity-slot`으로 Unity 슬롯(png+json) 등록 + `StaticMapLoader` 디폴트 갱신 ③ amcl 정합 재검증(표시=라이다 일치) ④ 티원 정적 pose도 새 맵 좌표로 갱신. **함정**: endpoint(ros_tcp_endpoint)는 Unity Play 반복 stop/start 시 사망 → `~/turtlebot3_ws` overlay source로 재기동(`_robot_nav_up.sh:69` 패턴) · `pkill -f`에 토픽명 넣으면 self-kill · 젠지 wifi(.84) 끊김 잦음(재부팅 복구). 순회지점1=티원주차, 2=젠지주차. **로봇**: 젠지 `kim@192.168.10.84`(1234, mDNS `urhynix-robot`)·티원 `t1@192.168.10.250`(123). Mac IP `192.168.10.48`. 색: 초록 #34D98C·파랑 #4DA3FF. 자세히: `DECISION-LOG.md` 2026-06-26 최상단. **이전(오후)**: 맵 줌/팬(휠+드래그) PASS + map5 디폴트 + 회전 좌표무영향 + "핸드오프" hook(`.claude/settings.json`). **이전(오전)**: Confluence 3페이지+Jira 5티켓+map5 슬롯 등록. **이전(2026-06-25)**: 젠지 AMCL+Nav2 좌표주행 PASS, 티원 주행 풀스택 미설치, D435 3D 점군 경로 B PASS.
+**Last updated**: 2026-06-30 밤 — **🗺️ 가재보맵 통합 + 컴파일 블로커 해소 + 비침습 구독 역할분리 결정.**
+
+- **컴파일 풀림**: unityctl bridge 6에러(CS0453 1·CS0029 4·CS0246 1, bridge 패키지 자체 버그) 메인 패치 → **0에러 PASS**(`Csc Assembly-CSharp.dll` 재빌드 + `get-errors` 0). 에디터 비포커스 stale은 `set frontmost`+Cmd+R+로그 offset으로 검증.
+- **티원 마커 fix**: root cause = `dual_marker_up.sh`가 티원을 `endpoint=no`로 기동(Unity `RosConnectionManager`는 로봇별 전용 endpoint `.250:10000` 필요). → 티원 `yes` 영구수정, ep.log `RegisterSubscriber(/tb3_1/pose) OK` 확인.
+- **가재보맵 통합**: `jaebo_v1` 2D 슬롯(`pgm_to_map_slot.py`, `arena_v\d+` regex와 격리) + `jaebo_v1.sdf`. 3D sdf 뷰 신설(`Map/SdfWallSpawner.cs` 벽89 box→Cube, `Map/Map3DView.cs` 천장뷰 RenderTexture, `MapPanelView` 2D/3D 탭 실동작). 컴파일 0에러, **런타임 육안 미검증**.
+- **역할분리 결정(중요)**: 로봇 운영(bringup·map_server·AMCL·주행=publish)은 **데스크탑(팀)**, 우리 Unity는 **구독만(passive twin)** — 로봇 도메인 점유 0(팀 사용 보장). Phase 2를 "데스크탑 AMCL + 우리 구독"으로 재정의. ([[unity-passive-pose-twin]]/[[ros2-noninvasive-pose-tap]])
+- **🎯 다음 액션**: ① Unity Play → `jaebo_v1` 슬롯·3D 탭(벽89)·티원 초록마커 육안 + 3D 좌표 정합(ponytail 1차안) 축·부호 조정 ② 데스크탑 운영 연동(우리는 구독만) ③ 가재보 공간서 데스크탑 AMCL → 트윈 추종. 자세히: `docs/status/DECISION-LOG.md` 2026-06-30 최상단.
+
+**이전(2026-06-30 낮)**: Phase 3 준비(FakeSensor ROS-off·DemoScenario SSOT·Supabase 동적화) + 기록탭 컴포넌트 분리 — bridge 6에러로 컴파일 막혔던 것 이번 해소. **이전(2026-06-29)**: 기록 탭(Phase 3) + DB Repository 확장 + 메인 리뷰.
 
 ---
 
 ## ⚡ Top 1 Action (가장 최신)
 
-**Unity ControlRoom에서 `map5` / `map5_pretty` 슬롯 시각 검증 + 줌 기능 구현 여부 결정**
+**고비용 모델 리뷰: Phase 3 준비 코드 + bridge 컴파일 에러 분기**
 
-- **배경**: 2026-06-26에 `/Users/family/Downloads/map5.{pgm,yaml}`를 `StreamingAssets/Maps/map5.{png,json}`와 `map5_pretty.{png,json}`로 변환 완료. `MapCatalog`는 두 슬롯을 자동 인식하지만, 실제 Unity Play에서 드롭다운 전환과 pretty 텍스처가 정상 표시되는지는 아직 육안 확인 전.
+- **배경**: 실제 로봇/ROS 연동은 고비용 모델과 함께 진행하기로 결정. 지금은 인터페이스 분기/설정 기반 동적화만 끝낸 준비 상태.
+- **관련 파일**:
+  - Simulation: `unity/ControlRoom/Assets/Scripts/Simulation/FakeSensorData.cs`, `unity/ControlRoom/Assets/Scripts/Simulation/DemoScenarioService.cs`
+  - UI: `unity/ControlRoom/Assets/Scripts/UI/ScenarioPanelView.cs`
+  - Config: `unity/ControlRoom/Assets/Resources/SituationConfig/default_situations.json`
+  - DB: `unity/ControlRoom/Assets/Scripts/Database/SupabaseDbService.cs`
+  - Events/Actions: `unity/ControlRoom/Assets/Scripts/App/ControlRoomEvents.cs`, `unity/ControlRoom/Assets/Scripts/Map/Actions/DispatchHereAction.cs`, `unity/ControlRoom/Assets/Scripts/Map/Actions/SituationDispatchAction.cs`
+  - App bootstrap: `unity/ControlRoom/Assets/Scripts/App/ControlRoomApp.cs`
+  - UXML: `unity/ControlRoom/Assets/UI/Parts/LeftControlPanel.uxml`
 - **다음 액션**:
-  1. `unityctl play` (또는 Unity Hub에서 ControlRoom 실행)
-  2. 중앙 맵 패널 드롭다운에서 `map5` → `map5 관제 천장뷰` 순으로 선택
-  3. 맵이 정상 로드되고 벽/자유공간 색상이 pretty 스타일로 보이는지 확인
-  4. 마우스 휠/트랙패드로 줌이 안 되는지 확인 → 안 될 경우 `MapViewport`+`MapInteractionController`에 줌 기능 추가 여부를 주인님께 확인
-- **선행 조건**: Unity Editor 사용 가능 (`unityctl` IPC 정상 또는 Unity Hub). 로봇 불필요.
+  1. 아래 **고비용 모델 리뷰 체크리스트**를 검토.
+  2. `unityctl bridge` 6 compile error가 본 작업과 무관한지 판단. 필요 시 bridge 패키지 다운그레이드/패치 결정.
+  3. Unity Editor 재기동 후 `unityctl script get-errors` 재확인.
+  4. `unityctl exec`로 `SensorVerifyConsole.SwitchTo("tb3_2")` → `Dump()` 런타임 검증.
+
+---
+
+## 🔍 고비용 모델 리뷰 체크리스트
+
+### 1. 아키텍처/계약 검토
+| # | 항목 | 파일 | 질문 |
+|---|---|---|---|
+| 1.1 | `FakeSensorData` 자동 on/off | `Simulation/FakeSensorData.cs` | `RobotConnectivityMonitor.IsOnline()`을 `Update()`에서 폴링하는 방식이 실제 연결/끊김에 충분히 빠른가? timeout 3초 이내에 fake가 덮어쓰지 않는가? |
+| 1.2 | `DemoScenarioService` 모드 분리 | `Simulation/DemoScenarioService.cs` | `demoMode=false`일 때 버튼 비활성화만으로 실제 운영 시 오동작을 막을 수 있는가? 실제 ROS 보안 이벤트 subscriber와 중복 발화 우려는 없는가? |
+| 1.3 | `RaiseDispatchRequested` 시그니처 변경 | `App/ControlRoomEvents.cs` | `simulated` bool을 5번째 인자로 추가한 설계가 향후 실제 출동/모의 출동을 명확히 구분하는가? 호출자 6곳이 모두 올바르게 갱신됐는가? |
+| 1.4 | `SupabaseDbService` pose robot_id | `Database/SupabaseDbService.cs` | `RobotPoseFeed.OnRobotPose` per-robot 이벤트를 소비해 `pose_logs.robot_id`를 동적으로 쓰는 흐름이 멀티로봇 시나리오에서 정확한가? `RobotPoseSubscriber`(`/tf`)와 중복 쓰기 가능성은 없는가? |
+| 1.5 | Simulation 서비스 생명주기 | `App/ControlRoomApp.cs` | `CreateSimulationServices()`에서 `FindObjectOfType` 후 중복 생성 방지. 씬에 이미 `FakeSensorData`/`DemoScenarioService`가 있는 경우와 충돌하지 않는가? |
+
+### 2. 코드 품질/안전성 검토
+| # | 항목 | 파일 | 질문 |
+|---|---|---|---|
+| 2.1 | null/empty 방어 | `Simulation/DemoScenarioService.cs`, `UI/ScenarioPanelView.cs` | `SituationConfig` 로드 실패 시 동작이 graceful한가? |
+| 2.2 | 딕셔너리 누수 | `Database/SupabaseDbService.cs` | `poseStates` 딕셔너리가 로봇 추가/제거 시 계속 커지지 않는가? 현재 로봇 2대라 문제 없지만, 장기 운영 시 클리어 지점이 필요한가? |
+| 2.3 | 이벤트 누수 | `Database/SupabaseDbService.cs` | `RobotPoseFeed.OnRobotPose` 구독/해제가 `OnDestroy`에서 정확히 처리됐는가? |
+| 2.4 | UI Toolkit 동적 생성 | `UI/ScenarioPanelView.cs` | `Button` 인스턴스의 `clicked` 이벤트에 람다가 캡처한 `s.situationId`가 의도한 값을 갖는가? 동일한 JSON 항목에 대한 클로저 문제는 없는가? |
+| 2.5 | JSON 직렬화 | `Resources/SituationConfig/default_situations.json` | `noise` 항목의 `sensorTrigger="sound"`가 실제 센서 ID(`SensorInfo.sensorId`)와 일치하는가? 대소문자/오타 확인 필요. |
+
+### 3. 실제 로봇 연동 준비도 검토 (고비용 모델이 채울 부분)
+| # | 항목 | 현재 상태 | 필요한 결정/작업 |
+|---|---|---|---|
+| 3.1 | FakeSensorData 완전 제거 | ROS 연결 시 skip | 실제 시연 시 `FakeSensorData` 컴포넌트를 아예 비활성화할 것인가, 아니면 미연결 fallback으로 유지할 것인가? |
+| 3.2 | DemoScenarioService 실제 모드 | `demoMode=false`일 때 버튼 비활성화 | 실제 보안 이벤트(화재/침입/소음/도난)가 ROS topic으로 들어오면 어떤 subscriber가 `ControlRoomEvents.RaiseScenarioTriggered` 또는 `RaiseAlert`를 발화할 것인가? |
+| 3.3 | 출동 명령 실제 발행 | `DispatchPublisher`가 `/goal_pose` 발행 중 | `simulated=false` 출동에 대해 Nav2 `goToPose`가 실제로 실행되는지, `patrol_waypoints_bridge.py`와의 계약이 맞는지 확인 필요. |
+| 3.4 | DB 실제 쓰기 검증 | `SupabaseDbService` 큐잉 구현됨 | 실제 Supabase 설정 하에서 `dispatches`/`pose_logs`/`logs` insert가 정상 동작하는지, RLS 정책이 anon key에 맞춰져 있는지 확인 필요. |
+| 3.5 | Sensor topic 교차검증 | `default_sensors.json` topic `/sensors/*` | 실제 `arduino_bridge_quad`의 발행 토픽명과 일치하는지, `pir`/`sound`/`temp`/`laser` 네이밍이 맞는지 확인 필요. |
+
+### 4. 문서/SSOT 동기화 검토
+| # | 항목 | 파일 | 질문 |
+|---|---|---|---|
+| 4.1 | ROADMAP 상태 | `docs/ref/UNITY-MOCK-TO-REAL-ROADMAP.md` | A1/A2/A7/A9가 ✅로 표시됐는가? Phase 3/4 체크리스트가 현재 상태와 일치하는가? |
+| 4.2 | Evidence Status | `docs/status/PROJECT-STATUS.md` | bridge 에러와 본 `Assets/Scripts` 컴파일 상태가 분리되어 기록됐는가? |
+| 4.3 | HANDOFF | `docs/status/HANDOFF.md` | 다음 세션 진입점과 고비용 모델 리뷰 항목이 명확한가? |
 
 ---
 
 ## 📋 First 5 Min Checklist
 
 ```bash
-# 0. 오늘 변경 요약 확인 (SSOT + 슬롯)
+# 0. 오늘 변경 요약 확인
+cd /Users/family/jason/URHYNIX
 git status --short
-ls -la /Users/family/jason/URHYNIX/unity/ControlRoom/Assets/StreamingAssets/Maps/map5*
-python3 /Users/family/jason/URHYNIX/scripts/pgm_to_map_slot.py --help  # 변환 스크립트 존재 확인
 
-# 1. 로봇 진입 (직결/무선 중 선택) — 로봇 작업 시에만
-ssh urhynix-robot                    # mDNS (권장)
-# 또는
-ssh kim@192.168.10.50               # 직결(en5) 사용 시 — 젠지 eth0, bootpd DHCP
-# 또는  
-ssh kim@192.168.10.87 / t1@192.168.10.250  # 무선 (DHCP drift 정상)
+# 1. Unity 컴파일 확인 (Editor 재기동 후)
+cd /Users/family/jason/URHYNIX/unity/ControlRoom
+unityctl check
+unityctl script get-errors --project /Users/family/jason/URHYNIX/unity/ControlRoom
 
-# 2. 센서/하드웨어 5단계 점검 (~5분)
-cat /sys/class/power_supply/*/uevent | grep VOLTAGE  # 배터리 11.5V 이상?
-ros2 launch turtlebot3_bringup robot.launch.py      # Burger connected, DynamixelSDK error 없나?
-ros2 run aruco_parking parking_node                 # 마커 주차 5회 시연
+# 2. 동적 UI 런타임 확인
+unityctl exec --project /Users/family/jason/URHYNIX/unity/ControlRoom \
+  --code 'URHYNIX.ControlRoom.App.SensorVerifyConsole.SwitchTo("tb3_2")'
+unityctl exec --project /Users/family/jason/URHYNIX/unity/ControlRoom \
+  --code 'URHYNIX.ControlRoom.App.SensorVerifyConsole.Dump()'
+#    → `sensor-value-pir`, `sensor-value-sound`, `sensor-value-temp`, `sensor-value-laser` 라벨이 보여야 함
 
-# 3. 양 로봇 토픽 확인 (도메인 210)
-ros2 topic list | grep -E "tb3_1|tb3_2|camera|sensor"  # 칩라·센서 토픽 보이나?
+# 3. 하드코딩 잔여 정적 확인
+grep -R "sensor-(pir|sound|temp|laser)-value\|wp-[1-5]\"\|target-frame-a\|target-object-a" \
+  /Users/family/jason/URHYNIX/unity/ControlRoom/Assets/Scripts \
+  /Users/family/jason/URHYNIX/unity/ControlRoom/Assets/UI || echo "하드코딩 잔여 0건"
 
-# 4. Unity 실행
-python3 ~/URHYNIX/unity-smoke/run.sh  # 또는 Unity Hub에서 ControlRoom 실행
-#    → ControlRoom: 맵 드롭다운에서 map5 / map5_pretty 선택
+# 4. 시나리오 버튼 동적 생성 확인
+unityctl exec --project /Users/family/jason/URHYNIX/unity/ControlRoom \
+  --code 'URHYNIX.ControlRoom.App.SensorVerifyConsole.Dump()' | grep scenario
 ```
 
-→ **통과 기준**: bringup OK + 토픽 2개 이상 + Unity 화면 LIVE
+→ **통과 기준**: `Assets/Scripts` 기준 compile error 0 + `SensorVerifyConsole.Dump()`에 `sensor-value-*` 라벨 4개 + grep 잔여 0건 + 시나리오 버튼 4개
 
 ---
 
@@ -58,13 +113,11 @@ python3 ~/URHYNIX/unity-smoke/run.sh  # 또는 Unity Hub에서 ControlRoom 실�
 
 | 증상 | 명령 |
 |------|------|
-| IP 못 찾음 | `bash .claude/skills/robot-ip-detect-fallback/resync.sh` |
-| mDNS `.local` 안 잡힘 | 무선 확인: `ifconfig wlan0` → 192.168.0.x 또는 10.x 범위인가? |
-| 무선 끊김 | 임시: `ifconfig en5 down` (직결 비활성) + 무선만 사용 |
-| 카메라 토픽 0건 | 젠지 Pi Camera / 티원 RealSense `launch` 명령 재실행 + 15초 대기 |
-| Arduino `/dev/tb3_arduino` stale | `ln -sf /dev/ttyACM0 /dev/tb3_arduino` |
-| Unity 맵 드롭다운에 `map5` 안 보임 | `*.png` + `*.json` 쌍 + `.meta` 2개가 `StreamingAssets/Maps/`에 있는지 확인 |
-| 맵 슬롯 전환 후 화면이 까맣게 나옴 | PNG가 RGBA32가 아니거나 `widthPx/heightPx`가 0인지 JSON 확인 |
+| `unityctl exec` project lock | Unity Editor 완전 종료 후 재시작, 또는 `unityctl session clean` 후 재시도 |
+| bridge 로드 안 됨 | `unityctl init --project /Users/family/jason/URHYNIX/unity/ControlRoom` 후 Editor 재기동 |
+| `SensorVerifyConsole.Dump()` 라벨 4개 안 보임 | `tb3_2` 선택 후 센서 탭 활성화 확인; `default_sensors.json`에 `robotId: tb3_2` 센서 4개 있는지 확인 |
+| 동적 UI 미생성 | `RightStatusPanel.uxml`, `LeftControlPanel.uxml`에서 고정 행/버튼 제거 여부 확인 |
+| bridge compile error 6건 | `Packages/com.unityctl.bridge/Editor/Commands/DescribeTypeHandler.cs` 확인. 본 작업과 무관하면 패키지 다운그레이드 또는 고비용 모델 판단 |
 
 ---
 
@@ -72,16 +125,14 @@ python3 ~/URHYNIX/unity-smoke/run.sh  # 또는 Unity Hub에서 ControlRoom 실�
 
 | 문서 | 용도 |
 |------|------|
-| **`HANDOFF-FULL.md`** | 이전 모든 세션 기록(506줄), 하드웨어·센서 설치 상세 |
-| **`DECISION-CURRENT.md`** | 최신 결정 5건 — 센서 교체·도메인 통일·무선 통일 |
-| **`DECISION-LOG.md`** | 전체 결정 이력 + 근거 |
-| **`PROJECT-STATUS.md`** | 한 줄 상태 + 역할 매트릭스 |
+| **`docs/ref/UNITY-MOCK-TO-REAL-ROADMAP.md`** | Phase 2/3 완료 항목 + Phase 4 체크리스트 |
+| **`docs/status/PROJECT-STATUS.md`** | Evidence Status + Handoff Capsule |
+| **`docs/status/DECISION-LOG.md`** | 외부 도구 판정 + 목업 교체 결정 이력 |
+| **`docs/status/HANDOFF-FULL.md`** | 이전 모든 세션 기록 |
 | **`../ref/TECH-INDEX.md`** | 작업별 빠른 문서 라우팅 |
-| **ROS2-ROBOT.md** | 직결/무선 접속, 센서 핀 매핑 |
-| **evidence/** | 센서 교체 / 무선 통일 / YOLO 검증 기록 |
 
 ---
 
 ## ✅ 한줄정리
 
-**2026-06-26: Confluence/Jira 동기화 + 2026/06/26 회의록(drawio 3종) + `map5` Unity 슬롯/pretty 등록 완료. 다음 세션: Unity에서 map5/m5_pretty 시각 검증 및 줌 기능 추가 여부 결정. 로봇 측은 이전 상태 유지(젠지 주행 O, 티원 apt 미설치).**
+**2026-06-30: Unity ControlRoom Phase 3 준비 완료(FakeSensorData ROS 연결 감지 off, DemoScenarioService SSOT 정합, SupabaseDbService simulated/robot_id 동적화). 실제 로봇/ROS 연동은 고비용 모델 리뷰 후 진행. `Assets/Scripts`는 컴파일 OK, `unityctl bridge` 패키지에서 6 compile error 발생 중. 다음 세션: 고비용 모델 리뷰 → Editor 재기동 → SensorVerifyConsole 런타임 검증.**

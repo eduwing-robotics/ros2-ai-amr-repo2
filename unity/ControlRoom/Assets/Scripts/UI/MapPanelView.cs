@@ -18,6 +18,7 @@ namespace URHYNIX.ControlRoom.UI
         readonly VisualElement container3D;
         readonly MapView mapView;   // 2D 맵 서브시스템
         Label angleLabel;           // 회전 각도 표시
+        Map3DView map3D;            // 3D sdf 뷰 (첫 3D 진입 시 lazy 생성)
 
         public MapPanelView(VisualElement root)
         {
@@ -119,10 +120,29 @@ namespace URHYNIX.ControlRoom.UI
         void SetMode(string mode)
         {
             ControlRoomState.Instance.SetMapViewMode(mode);
+            if (mode == "3d") EnsureMap3D();
+            map3D?.SetActive(mode == "3d");
             ControlRoomEvents.RaiseLogAdded("map", "INFO",
-                mode == "3d"
-                    ? "3D 맵 — Phase 6에서 URDF Importer로 채워질 예정"
-                    : "2D 맵 모드");
+                mode == "3d" ? "3D 맵 모드 (sdf 벽)" : "2D 맵 모드");
+        }
+
+        // 첫 3D 진입 시 Map3DView를 만들고 RenderTexture를 container3D 배경으로 건다.
+        // 현재 로드된 슬롯(StaticMapLoader)의 .sdf로 벽을 세운다 — jaebo_v1이면 89벽, sdf 없는 슬롯이면 바닥만.
+        void EnsureMap3D()
+        {
+            if (map3D != null || container3D == null) return;
+            var go = new GameObject("Map3DView");
+            map3D = go.AddComponent<Map3DView>();
+            string slot = string.IsNullOrEmpty(StaticMapLoader.LatestSlotId) ? "jaebo_v1" : StaticMapLoader.LatestSlotId;
+            map3D.Build(slot, StaticMapLoader.LatestOriginX, StaticMapLoader.LatestOriginY,
+                        StaticMapLoader.LatestWidth, StaticMapLoader.LatestHeight,
+                        StaticMapLoader.LatestResolution > 0f ? StaticMapLoader.LatestResolution : 0.05f);
+            if (map3D.Texture != null)
+            {
+                container3D.style.backgroundImage = Background.FromRenderTexture(map3D.Texture);
+                var overlay = container3D.Q<Label>("map-3d-overlay");
+                if (overlay != null) overlay.style.display = DisplayStyle.None;
+            }
         }
 
         void SyncUI(string mode)

@@ -23,16 +23,21 @@ namespace URHYNIX.ControlRoom.Map
         public static float LatestOriginY { get; private set; }
         public static float LatestOriginYaw { get; private set; }
 
-        [SerializeField] string defaultSlotId = "arena";
+        // 최종 fallback. arena_v* 슬롯이 하나도 없을 때만 사용(보통은 MapCatalog가 최신 버전을 동적 선택).
+        [SerializeField] string defaultSlotId = "arena_v5";
 
         void OnEnable() => ControlRoomEvents.OnMapSlotSelected += OnSlotSelected;
         void OnDisable() => ControlRoomEvents.OnMapSlotSelected -= OnSlotSelected;
 
         void Start()
         {
-            // 마지막 선택(없으면 기본). "live"면 자동 모드라 정적 로드는 생략(MapImageLayer가 라이브 대기).
-            string slot = PlayerPrefs.GetString(ActiveSlotPrefKey, defaultSlotId);
-            if (slot == MapCatalog.LiveSlotId) slot = MapCatalog.HasSlot(defaultSlotId) ? defaultSlotId : slot;
+            // 마지막 선택 우선. 없으면 운영 디폴트. "live"면 자동 모드라 정적 로드 생략.
+            // arena_v5(동료 신규 SLAM 정확맵, 2026-06-26) 운영 복귀 — map5 임시핀 제거, LatestArenaSlot으로 복귀.
+            string latest = MapCatalog.LatestArenaSlot(defaultSlotId);
+            string slot = PlayerPrefs.GetString(ActiveSlotPrefKey, latest);
+            // 삭제된 레거시 슬롯이 PlayerPrefs에 잔존하면(map5 등) 최신 슬롯으로 폴백 — 맵이 안 뜨는 상태 방지.
+            if (slot != MapCatalog.LiveSlotId && !MapCatalog.HasSlot(slot)) slot = latest;
+            if (slot == MapCatalog.LiveSlotId) slot = MapCatalog.HasSlot(latest) ? latest : slot;
             if (MapCatalog.HasSlot(slot)) Load(slot);
             else Debug.LogWarning($"[StaticMapLoader] 슬롯 없음: {slot} (StreamingAssets/Maps 확인)");
         }
@@ -63,13 +68,16 @@ namespace URHYNIX.ControlRoom.Map
             var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
             if (!tex.LoadImage(File.ReadAllBytes(png))) { Debug.LogWarning($"[StaticMapLoader] PNG 디코드 실패: {png}"); return; }
 
+            int widthCells = meta.widthPx > 0 ? meta.widthPx : tex.width;
+            int heightCells = meta.heightPx > 0 ? meta.heightPx : tex.height;
+
             LatestMap = tex; LatestSlotId = slotId;
-            LatestWidth = tex.width; LatestHeight = tex.height;
+            LatestWidth = widthCells; LatestHeight = heightCells;
             LatestResolution = meta.resolution; LatestOriginX = meta.originX; LatestOriginY = meta.originY; LatestOriginYaw = 0f;
             PlayerPrefs.SetString(ActiveSlotPrefKey, slotId); PlayerPrefs.Save();
 
-            OnStaticMapLoaded?.Invoke(slotId, tex, tex.width, tex.height, meta.resolution, meta.originX, meta.originY, 0f);
-            Debug.Log($"[StaticMapLoader] 슬롯 '{slotId}' 로드 {tex.width}x{tex.height} origin({meta.originX},{meta.originY})");
+            OnStaticMapLoaded?.Invoke(slotId, tex, widthCells, heightCells, meta.resolution, meta.originX, meta.originY, 0f);
+            Debug.Log($"[StaticMapLoader] 슬롯 '{slotId}' 로드 tex={tex.width}x{tex.height} map={widthCells}x{heightCells} origin({meta.originX},{meta.originY})");
         }
     }
 }

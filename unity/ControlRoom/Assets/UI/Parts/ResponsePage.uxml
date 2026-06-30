@@ -1,0 +1,66 @@
+<!-- opencode: 2026-06-29 - 대응 탭 UXML. Coded with OpenCode; high-cost model review recommended.
+     ResponsePage.uxml — 대응 탭(위험등급 보드 + 출동현황 + 이벤트/출동 히스토리).
+     데이터는 ResponsePageView.cs가 ControlRoomEvents/Repository로부터 채운다.
+     외관 미세조정은 시각검증 단계에서 주인님 결정. -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="../ControlRoomTokens.uss" />
+    <Style src="../ControlRoomStyle.uss" />
+    <Style src="../ControlRoomPanels.uss" />
+
+    <ui:VisualElement name="response-page" class="response-page">
+        <ui:Label text="🚨 대응 현황" class="response-title" />
+
+        <!-- 위험등급 5단계 보드 -->
+        <ui:VisualElement name="severity-board" class="severity-board">
+            <ui:VisualElement name="severity-safe" class="severity-card severity-safe">
+                <ui:Label text="SAFE" class="severity-label" />
+                <ui:Label text="안전" class="severity-desc" />
+            </ui:VisualElement>
+            <ui:VisualElement name="severity-watch" class="severity-card severity-watch">
+                <ui:Label text="WATCH" class="severity-label" />
+                <ui:Label text="관찰" class="severity-desc" />
+            </ui:VisualElement>
+            <ui:VisualElement name="severity-check" class="severity-card severity-check">
+                <ui:Label text="CHECK" class="severity-label" />
+                <ui:Label text="확인" class="severity-desc" />
+            </ui:VisualElement>
+            <ui:VisualElement name="severity-danger" class="severity-card severity-danger">
+                <ui:Label text="DANGER" class="severity-label" />
+                <ui:Label text="위험" class="severity-desc" />
+            </ui:VisualElement>
+            <ui:VisualElement name="severity-evacuate" class="severity-card severity-evacuate">
+                <ui:Label text="EVACUATE" class="severity-label" />
+                <ui:Label text="대피" class="severity-desc" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- 출동 현황 -->
+        <ui:VisualElement name="dispatch-status" class="response-section">
+            <ui:Label text="출동 현황" class="dash-section-title" />
+            <ui:VisualElement name="dispatch-active-row" class="response-metric-row">
+                <ui:VisualElement class="response-metric">
+                    <ui:Label name="dispatch-active-count" text="0" class="response-metric-value" />
+                    <ui:Label text="진행 중" class="response-metric-label" />
+                </ui:VisualElement>
+                <ui:VisualElement class="response-metric">
+                    <ui:Label name="dispatch-total-count" text="0" class="response-metric-value" />
+                    <ui:Label text="총 출동" class="response-metric-label" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:ScrollView name="dispatch-active-list" class="response-list-scroll">
+                <ui:VisualElement name="dispatch-active-items" class="response-list" />
+            </ui:ScrollView>
+        </ui:VisualElement>
+
+        <!-- 이벤트/출동 히스토리 -->
+        <ui:VisualElement name="response-history" class="response-section response-history">
+            <ui:VisualElement class="response-history-header">
+                <ui:Label text="이벤트 히스토리" class="dash-section-title" />
+                <ui:Button name="btn-refresh-response" text="새로고침" class="btn-action" />
+            </ui:VisualElement>
+            <ui:ScrollView name="event-history-scroll" class="response-list-scroll">
+                <ui:VisualElement name="event-history-items" class="response-list" />
+            </ui:ScrollView>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

@@ -1,7 +1,8 @@
 {
   "situations": [
-    { "situationId": "fire",     "displayName": "화재",   "sensorTrigger": "fire", "severity": 3, "icon": "🔥" },
-    { "situationId": "intruder", "displayName": "침입",   "sensorTrigger": "pir",  "severity": 2, "icon": "🚨" },
-    { "situationId": "theft",    "displayName": "도난",   "sensorTrigger": "",     "severity": 2, "icon": "🕵" }
+    { "situationId": "fire",     "displayName": "화재",   "sensorTrigger": "fire",  "severity": 3, "icon": "🔥" },
+    { "situationId": "intruder", "displayName": "침입",   "sensorTrigger": "pir",   "severity": 2, "icon": "🚨" },
+    { "situationId": "noise",    "displayName": "소음",   "sensorTrigger": "sound", "severity": 1, "icon": "🔊" },
+    { "situationId": "theft",    "displayName": "도난",   "sensorTrigger": "",      "severity": 2, "icon": "🕵" }
   ]
 }

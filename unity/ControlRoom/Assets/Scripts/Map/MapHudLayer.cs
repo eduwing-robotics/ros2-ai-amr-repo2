@@ -1,3 +1,4 @@
+// opencode: 2026-06-29 - HUD 스케일바/필 배경색 토스 grey 톤으로 변환. Coded with OpenCode; high-cost model review recommended.
 // MapHudLayer.cs — 맵 위 HUD: 방위(N), 스케일바, 좌표 readout. 남는 여백을 정보로 활용.
 // 스케일바는 viewport 프레임 크기/해상도에 맞춰 길이 갱신. 좌표는 hover 시 SetCoordinate로 갱신(Phase 3).
 using UnityEngine;
@@ -30,7 +31,7 @@ namespace URHYNIX.ControlRoom.Map
             scaleWrap.style.alignItems = Align.Center;
             scaleBar = new VisualElement { pickingMode = PickingMode.Ignore };
             scaleBar.style.height = 3;
-            scaleBar.style.backgroundColor = new Color(0.9f, 0.93f, 0.97f, 0.9f);
+            scaleBar.style.backgroundColor = new Color(0.545f, 0.584f, 0.631f, 0.9f); // 토스 grey500 #8B95A1
             scaleLabel = new Label("—") { name = "map-scale-label", pickingMode = PickingMode.Ignore };
             StylePill(scaleLabel);
             scaleWrap.Add(scaleBar);
@@ -53,7 +54,8 @@ namespace URHYNIX.ControlRoom.Map
         void UpdateScaleBar()
         {
             if (!viewport.HasMap || viewport.MapW <= 0f) return;
-            float pxPerM = viewport.FrameWidth / viewport.MapW;
+            // HUD는 container 좌표라 frame scale이 자동 반영 안 됨 → Zoom 곱해 화면 실제 px/m.
+            float pxPerM = viewport.FrameWidth * viewport.Zoom / viewport.MapW;
             if (pxPerM <= 0f) return;
 
             float meters = NiceMeters[0];
@@ -75,7 +77,7 @@ namespace URHYNIX.ControlRoom.Map
         static void StylePill(Label l)
         {
             l.style.color = new Color(0.92f, 0.95f, 0.98f, 1f);
-            l.style.backgroundColor = new Color(0.10f, 0.12f, 0.16f, 0.66f);
+            l.style.backgroundColor = new Color(0.125f, 0.149f, 0.196f, 0.66f); // 토스 grey900 #202632
             l.style.paddingLeft = 6; l.style.paddingRight = 6;
             l.style.paddingTop = 2; l.style.paddingBottom = 2;
             l.style.fontSize = 11;

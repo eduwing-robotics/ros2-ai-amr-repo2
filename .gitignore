@@ -131,3 +131,7 @@ docs/evidence/**/*.gif
 docs/evidence/**/*.webp
 docs/evidence/**/*.bmp
 docs/evidence/**/*.h264
+
+# OpenCode 정찰 스크래치(휘발성, 커밋 금지)
+docs/status/SCOUT.md
+SCOUT.md

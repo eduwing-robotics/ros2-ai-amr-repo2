@@ -1,105 +1,136 @@
-// SensorCardListView.cs — 우측 패널 센서 카드 4종(인체감지/소음/온도/레이저). as-built 2026-06-18.
-// OnSensorChanged 이벤트로 갱신. PIR/소음/레이저는 전이 발행(latching X), 온도는 1Hz 연속.
-// PIR(pir): 0/1 → 감지!/감지 안 됨 + USS sensor-ok/danger. 소음(sound): swing 값 + 임계 60 색 토글.
-// 온도(temp): raw 값 텍스트(°C 보정 후속). 레이저(laser): 수신부 미결선 → "미결선" disabled 고정.
-// Phase 3에서 default_sensors.json + SensorRegistry 기반 자동 생성으로 swap.
+// SensorCardListView.cs — 우측 패널 센서 카드를 default_sensors.json + SensorRegistry 기반으로 동적 생성.
+// 로봇 변경 시 카드 재구성; 센서값 이벤트로 실시간 갱신. disabled 센서는 "미결선" 고정.
+// 2026-06-30: 4개 하드코딩 라벨 제거 → 동적 생성.
+using System.Collections.Generic;
 using UnityEngine.UIElements;
 using URHYNIX.ControlRoom.App;
+using URHYNIX.ControlRoom.Data;
+using URHYNIX.ControlRoom.Sensors;
 
 namespace URHYNIX.ControlRoom.UI
 {
     public class SensorCardListView
     {
-        readonly Label pirValue;
-        readonly Label soundValue;
-        readonly Label tempValue;
-        readonly Label laserValue;
-
-        const int SoundThreshold = 60;
+        readonly VisualElement list;
+        readonly SensorRegistry registry = new SensorRegistry();
+        readonly Dictionary<string, Label> valueLabels = new();
+        readonly Dictionary<string, SensorInfo> sensorInfos = new();
 
         public SensorCardListView(VisualElement root)
         {
-            pirValue   = root.Q<Label>("sensor-pir-value");
-            soundValue = root.Q<Label>("sensor-sound-value");
-            tempValue  = root.Q<Label>("sensor-temp-value");
-            laserValue = root.Q<Label>("sensor-laser-value");
+            list = root.Q<VisualElement>("sensor-card-list");
+            registry.LoadFromResources();
 
-            // 레이저는 수신부 미결선 → 항상 비활성 표시.
-            SetSensorState(laserValue, "미결선", "sensor-disabled");
+            Rebuild();
 
             ControlRoomEvents.OnSensorChanged    += OnSensorChanged;
             ControlRoomEvents.OnRobotChanged     += OnRobotChanged;
             ControlRoomEvents.OnScenarioTriggered += OnScenarioTriggered;
         }
 
-        bool IsCurrent(string robotId) =>
-            robotId == ControlRoomState.Instance.SelectedRobotId;
+        void Rebuild()
+        {
+            list?.Clear();
+            valueLabels.Clear();
+            sensorInfos.Clear();
+
+            var robotId = ControlRoomState.Instance.SelectedRobotId;
+            var sensors = registry.GetSensorsForRobot(robotId);
+            if (sensors.Count == 0)
+            {
+                list?.Add(new Label("이 로봇에 등록된 센서가 없습니다.") { name = "sensor-empty" });
+                return;
+            }
+
+            foreach (var s in sensors)
+            {
+                var row = new VisualElement();
+                row.AddToClassList("sensor-row");
+
+                var nameLabel = new Label(s.displayName);
+                nameLabel.AddToClassList("sensor-name");
+                row.Add(nameLabel);
+
+                var valueLabel = new Label("--");
+                valueLabel.name = $"sensor-value-{s.sensorId}";
+                valueLabel.AddToClassList("sensor-value");
+                row.Add(valueLabel);
+
+                list?.Add(row);
+                valueLabels[s.sensorId] = valueLabel;
+                sensorInfos[s.sensorId] = s;
+
+                if (s.disabled)
+                    SetSensorState(valueLabel, "미결선", "sensor-disabled");
+                else
+                    ApplyDefault(valueLabel, s);
+            }
+
+            // State 캐시가 있으면 즉시 반영.
+            ApplyCachedValues();
+        }
+
+        void ApplyCachedValues()
+        {
+            var robotId = ControlRoomState.Instance.SelectedRobotId;
+            if (ControlRoomState.Instance.LastSensorValues.TryGetValue(robotId, out var dict))
+            {
+                foreach (var kv in dict)
+                    if (valueLabels.TryGetValue(kv.Key, out var label) && !sensorInfos[kv.Key].disabled)
+                        UpdateValue(sensorInfos[kv.Key], kv.Value);
+            }
+        }
 
         void OnSensorChanged(string robotId, string sensorId, float value)
         {
-            if (!IsCurrent(robotId)) return;
-            switch (sensorId)
-            {
-                case "pir":
-                    bool detected = value >= 0.5f;
-                    SetSensorState(pirValue,
-                        detected ? "감지!" : "감지 안 됨",
-                        detected ? "sensor-danger" : "sensor-ok");
-                    break;
-                case "sound":
-                    bool noisy = value >= SoundThreshold;
-                    SetSensorState(soundValue,
-                        noisy ? $"소음 감지! (swing={value:F0})" : $"조용함 (swing={value:F0})",
-                        noisy ? "sensor-danger" : "sensor-ok");
-                    break;
-                case "temp":
-                    if (tempValue != null) tempValue.text = $"raw {value:F0}";
-                    break;
-                case "laser":
-                    // 수신부 미결선 — 값과 무관하게 비활성 고정.
-                    SetSensorState(laserValue, "미결선", "sensor-disabled");
-                    break;
-            }
+            if (robotId != ControlRoomState.Instance.SelectedRobotId) return;
+            if (!valueLabels.TryGetValue(sensorId, out var label)) return;
+            if (!sensorInfos.TryGetValue(sensorId, out var info) || info.disabled) return;
+            UpdateValue(info, value);
         }
 
-        void OnRobotChanged(string robotId)
+        void UpdateValue(SensorInfo info, float value)
         {
-            // 탭 전환 시 State 캐시에서 즉시 redraw — Subscriber는 두 로봇 모두 항상 sub중.
-            // 메시지 도착 대기 없이 마지막 알려진 값 그대로 표시.
-            var s = ControlRoomState.Instance;
-            if (s != null && s.LastSensorValues != null
-                && s.LastSensorValues.TryGetValue(robotId, out var dict))
+            if (!valueLabels.TryGetValue(info.sensorId, out var label)) return;
+            switch (info.sensorType)
             {
-                if (dict.TryGetValue("pir",   out var p)) OnSensorChanged(robotId, "pir",   p);
-                else SetSensorState(pirValue, "감지 안 됨", "sensor-ok");
-
-                if (dict.TryGetValue("sound", out var n)) OnSensorChanged(robotId, "sound", n);
-                else SetSensorState(soundValue, "--", "sensor-ok");
-
-                if (dict.TryGetValue("temp",  out var t) && tempValue != null) tempValue.text = $"raw {t:F0}";
-                else if (tempValue != null) tempValue.text = "--";
+                case "boolean":
+                    bool on = value >= info.warningThreshold;
+                    SetSensorState(label,
+                        on ? "감지!" : "감지 안 됨",
+                        on ? "sensor-danger" : "sensor-ok");
+                    break;
+                case "analog":
+                default:
+                    bool warn = info.warningThreshold > 0f && value >= info.warningThreshold;
+                    string suffix = string.IsNullOrEmpty(info.unit) ? "" : $" {info.unit}";
+                    SetSensorState(label,
+                        warn ? $"{info.displayName} 감지! ({value:F0}{suffix})" : $"{value:F0}{suffix}",
+                        warn ? "sensor-danger" : "sensor-ok");
+                    break;
             }
-            else
-            {
-                // State 비었음 → 전체 reset
-                SetSensorState(pirValue,  "감지 안 됨", "sensor-ok");
-                SetSensorState(soundValue, "--", "sensor-ok");
-                if (tempValue != null) tempValue.text = "--";
-            }
-
-            // 레이저는 로봇과 무관하게 항상 미결선 비활성.
-            SetSensorState(laserValue, "미결선", "sensor-disabled");
         }
+
+        void ApplyDefault(Label label, SensorInfo info)
+        {
+            switch (info.sensorId)
+            {
+                case "pir": SetSensorState(label, "감지 안 됨", "sensor-ok"); break;
+                default:    SetSensorState(label, "--", "sensor-ok"); break;
+            }
+        }
+
+        void OnRobotChanged(string robotId) => Rebuild();
 
         void OnScenarioTriggered(string scenarioId)
         {
-            switch (scenarioId)
-            {
-                case "intruder": SetSensorState(pirValue, "감지!", "sensor-danger"); break;
-            }
+            if (scenarioId != "intruder") return;
+            if (valueLabels.TryGetValue("pir", out var label) &&
+                sensorInfos.TryGetValue("pir", out var info) && !info.disabled)
+                SetSensorState(label, "감지!", "sensor-danger");
         }
 
-        void SetSensorState(Label label, string text, string statusClass)
+        static void SetSensorState(Label label, string text, string statusClass)
         {
             if (label == null) return;
             label.text = text;

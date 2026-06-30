@@ -1,26 +1,79 @@
-/* ControlRoomTokens.uss — 디자인 토큰 SSOT. C# UiTokens.cs와 1:1.
-   박물관 고품격 밝은 슬레이트 톤. 색상/간격/라운드 모두 변수로. */
+/* opencode: 2026-06-29 - 토스 TDS 디자인 토큰 SSOT(USS). Coded with OpenCode; high-cost model review recommended.
+   ControlRoomTokens.uss — 디자인 토큰 SSOT. C# UiTokens.cs와 1:1.
+   토스 TDS(Toss Design System) 이식(2026-06-29): 색상·radius 중심, 폰트/간격은 데스크톱 밀집 레이아웃 보호를 위해 유지. */
 
 :root {
-    --color-bg-primary: #f1f5f9;
+    /* Surface */
+    --color-bg-primary: #F2F4F6;
     --color-surface: #ffffff;
-    --color-border: #e2e8f0;
+    --color-surface-overlay: rgba(255, 255, 255, 0.9);
+    --color-border: #E5E8EB;
 
-    --color-text-primary: #1e293b;
-    --color-text-secondary: #64748b;
+    /* Text */
+    --color-text-primary: #202632;
+    --color-text-secondary: #8B95A1;
+    --color-text-muted: #B0B8C1;
+    --color-text-inverse: #ffffff;
 
-    --color-accent: #2563eb;
-    --color-status-ok: #10b981;
-    --color-status-warn: #f59e0b;
-    --color-status-danger: #dc2626;
-    --color-status-info: #06b6d4;
+    /* Accent / Status */
+    --color-accent: #4E8AFF;
+    --color-status-ok: #00C471;
+    --color-status-warn: #FF9500;
+    --color-status-danger: #FF4B4B;
+    --color-status-info: #6EAAFF;
 
+    /* Domain surfaces */
+    --color-camera-bg: #202632;
+    --color-camera-placeholder: #4E5968;
+    --color-camera-crosshair: rgba(139, 149, 161, 0.3);
+    --color-map-placeholder: #D1D6DB;
+    --color-map-3d-bg: #4E5968;
+    --color-map-label-bg: rgba(255, 255, 255, 0.85);
+    --color-map-3d-label: rgba(255, 255, 255, 0.85);
+
+    /* Role badges (left panel robot role card) */
+    --color-role-vision-fg: var(--color-accent);
+    --color-role-vision-bg: rgba(78, 138, 255, 0.12);
+    --color-role-vision-icon-bg: rgba(78, 138, 255, 0.2);
+    --color-role-sensor-fg: var(--color-status-ok);
+    --color-role-sensor-bg: rgba(0, 196, 113, 0.12);
+    --color-role-sensor-icon-bg: rgba(0, 196, 113, 0.2);
+
+    /* Border */
+    --border-width: 1px;
+
+    /* Spacing */
+    --space-xxs: 2px;
     --space-xs: 4px;
     --space-sm: 8px;
     --space-md: 12px;
     --space-lg: 16px;
     --space-xl: 24px;
 
-    --radius-sm: 4px;
-    --radius-md: 8px;
+    /* Font sizes */
+    --font-size-xs: 10px;
+    --font-size-sm: 11px;
+    --font-size-md: 12px;
+    --font-size-lg: 14px;
+    --font-size-xl: 22px;
+
+    /* Layout */
+    --panel-width: 236px;
+    --bottom-panel-height: 260px;
+    --topbar-height: 48px;
+    --bottom-navbar-height: 64px;
+
+    /* Icon / Marker sizes */
+    --icon-dot-sm: 8px;
+    --icon-dot-md: 16px;
+    --icon-waypoint: 24px;
+    --icon-robot: 28px;
+
+    /* Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-waypoint: 12px;
+    --radius-protected: 2px;
+    --radius-robot: 14px;
+    --radius-full: 999px;
 }

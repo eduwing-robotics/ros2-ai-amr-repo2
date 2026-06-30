@@ -75,10 +75,33 @@ namespace URHYNIX.ControlRoom.Persistence
                     var route = JsonUtility.FromJson<PatrolRoute>(File.ReadAllText(path));
                     PatrolService.Instance.Replace(route?.points);
                 }
-                else PatrolService.Instance.Replace(null);   // 그 맵엔 경로 없음 → 비움
+                else
+                {
+                    // 저장된 경로 없으면 MapConfig 기본 웨이포인트로 fallback.
+                    var fallback = MapConfigService.Current?.waypoints;
+                    PatrolService.Instance.Replace(WaypointsToPatrolPoints(fallback));
+                }
             }
             catch (System.Exception e) { Debug.LogWarning($"[PatrolRepository] 로드 실패: {e.Message}"); }
             finally { loading = false; }
+        }
+
+        static PatrolPoint[] WaypointsToPatrolPoints(WaypointInfo[] waypoints)
+        {
+            if (waypoints == null || waypoints.Length == 0) return null;
+            var pts = new PatrolPoint[waypoints.Length];
+            for (int i = 0; i < waypoints.Length; i++)
+            {
+                var w = waypoints[i];
+                pts[i] = new PatrolPoint
+                {
+                    seq = i + 1,
+                    x = w.x,
+                    y = w.y,
+                    theta = w.theta
+                };
+            }
+            return pts;
         }
     }
 }

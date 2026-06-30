@@ -1,0 +1,251 @@
+/* opencode: 2026-06-29 - page-host/bottom-navbar/nav-item 4탭 레이아웃 스타일 추가. Coded with OpenCode; high-cost model review recommended.
+   ControlRoomLayout.uss — 화면 배치와 탭 컨테이너.
+   토큰은 ControlRoomTokens.uss를 참조하고 도메인 세부 스타일은 Panels에 둔다. */
+
+/* Page host + bottom nav (4-tab routing skeleton) */
+.page-host {
+    flex-direction: column;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-height: 0;
+    width: 100%;
+}
+
+.page-page {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    width: 100%;
+}
+
+/* Instance(TemplateContainer)가 page 높이를 못 받아 하단이 비는 문제 해소.
+   page-page 직속 TemplateContainer만 잡아 관제탭 내부 Instance에는 영향 없음. */
+.page-page > TemplateContainer {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-height: 0;
+    width: 100%;
+}
+
+.page-placeholder {
+    flex-grow: 1;
+    -unity-text-align: middle-center;
+    color: var(--color-text-secondary);
+    -unity-font-style: bold;
+    white-space: normal;
+}
+
+.bottom-navbar {
+    flex-direction: row;
+    flex-shrink: 0;
+    height: var(--bottom-navbar-height);
+    background-color: var(--color-surface);
+    border-top-width: var(--border-width);
+    border-top-color: var(--color-border);
+    align-items: center;
+    width: 100%;
+}
+
+.nav-item {
+    flex-grow: 1;
+    flex-basis: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background-color: var(--color-surface);
+    border-width: 0;
+    color: var(--color-text-secondary);
+    padding: 0;
+    margin: 0;
+}
+
+.nav-item.active {
+    color: var(--color-accent);
+}
+
+.nav-icon {
+    font-size: 20px;
+    height: 26px;
+    margin-bottom: 2px;
+    flex-shrink: 0;
+    -unity-text-align: middle-center;
+}
+
+.nav-label {
+    font-size: var(--font-size-sm);
+    height: 16px;
+    flex-shrink: 0;
+    -unity-text-align: middle-center;
+}
+
+.body {
+    flex-direction: row;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-height: 0;
+    width: 100%;
+}
+
+.left-panel,
+.right-panel {
+    width: var(--panel-width);
+    height: 100%;
+    background-color: var(--color-surface);
+    flex-direction: column;
+    flex-shrink: 0;
+    flex-grow: 0;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.left-panel {
+    border-right-width: var(--border-width);
+    border-right-color: var(--color-border);
+}
+
+.right-panel {
+    border-left-width: var(--border-width);
+    border-left-color: var(--color-border);
+}
+
+.center-panel {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    flex-direction: column;
+    padding: var(--space-sm);
+    padding-bottom: 0;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+}
+
+.center-map-slot {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.center-map-slot > *,
+.center-map-slot .unity-template-container {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.center-bottom-slot {
+    height: var(--bottom-panel-height);
+    min-height: var(--bottom-panel-height);
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-direction: column;
+}
+
+.center-bottom-slot > *,
+.center-bottom-slot .unity-template-container {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.left-panel .unity-scroll-view__content-container,
+.right-panel .unity-scroll-view__content-container {
+    flex-direction: column;
+    min-width: 0;
+    max-width: 100%;
+    padding-bottom: var(--space-sm);
+    flex-grow: 1;
+    min-height: 100%;
+}
+
+.left-panel .unity-scroll-view__content-viewport,
+.right-panel .unity-scroll-view__content-viewport {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.left-panel .unity-scroller--horizontal,
+.right-panel .unity-scroller--horizontal,
+.left-panel .unity-scroll-view__horizontal-scroller,
+.right-panel .unity-scroll-view__horizontal-scroller {
+    display: none;
+}
+
+.left-panel-scroll {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    min-height: 0;
+}
+
+.panel-tabs,
+.bottom-tabs {
+    flex-direction: row;
+    flex-shrink: 0;
+    margin-bottom: var(--space-xs);
+}
+
+.panel-tab {
+    flex-grow: 1;
+    flex-basis: 0;
+    margin-left: 1px;
+    margin-right: 1px;
+    font-size: var(--font-size-sm);
+}
+
+.panel-page,
+.bottom-page {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.map-panel {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    margin-bottom: var(--space-xs);
+    height: 100%;
+    min-height: 0;
+}
+
+.map-toolbar {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-xs);
+    flex-shrink: 0;
+}
+
+.map-toolbar .btn-map-mode {
+    margin-left: var(--space-xs);
+}
+
+.camera-log-row {
+    flex-direction: column;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    height: 100%;
+    min-height: 0;
+    margin-bottom: 0;
+}

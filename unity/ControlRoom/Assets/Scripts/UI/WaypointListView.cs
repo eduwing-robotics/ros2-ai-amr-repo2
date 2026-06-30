@@ -1,25 +1,46 @@
-// WaypointListView.cs — 좌측 패널의 순회 지점 5개 더미 버튼.
-// 클릭 → selected 클래스 토글 + 로그 push. Phase 3에서 office_base_map.json 기반으로 swap.
-using System.Collections.Generic;
+// WaypointListView.cs — 좌측 패널의 순회 지점 목록을 PatrolService SSOT 기반으로 동적 생성.
+// 2026-06-30: wp-1~wp-5 하드코딩 버튼 제거 → PatrolService.Points 변화 시 자동 재구성.
 using UnityEngine.UIElements;
 using URHYNIX.ControlRoom.App;
+using URHYNIX.ControlRoom.Services;
 
 namespace URHYNIX.ControlRoom.UI
 {
     public class WaypointListView
     {
-        readonly List<Button> buttons = new();
+        readonly VisualElement list;
         Button selected;
 
         public WaypointListView(VisualElement root)
         {
-            for (int i = 1; i <= 5; i++)
+            list = root.Q<VisualElement>("waypoint-list");
+
+            Rebuild();
+            ControlRoomEvents.OnPatrolChanged += Rebuild;
+        }
+
+        void Rebuild()
+        {
+            list?.Clear();
+            selected = null;
+
+            var points = PatrolService.Instance.Points;
+            if (points.Count == 0)
             {
-                var btn = root.Q<Button>($"wp-{i}");
-                if (btn == null) continue;
+                list?.Add(new Label("등록된 순회 지점이 없습니다.") { name = "waypoint-empty" });
+                return;
+            }
+
+            for (int i = 0; i < points.Count; i++)
+            {
+                var pt = points[i];
+                var btn = new Button();
+                btn.text = $"#{pt.seq} ({pt.x:0.0}, {pt.y:0.0})";
+                btn.name = $"wp-{pt.seq}";
+                btn.AddToClassList("btn-waypoint");
                 var captured = btn;
                 btn.clicked += () => OnSelect(captured);
-                buttons.Add(btn);
+                list?.Add(btn);
             }
         }
 

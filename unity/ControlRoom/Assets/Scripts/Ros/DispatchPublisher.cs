@@ -23,7 +23,7 @@ namespace URHYNIX.ControlRoom.Ros
             Debug.Log("[DispatchPublisher] ready");
         }
 
-        void OnDispatch(string robotId, float x, float y, string reason)
+        void OnDispatch(string robotId, float x, float y, string reason, bool simulated)
         {
             string topic = string.IsNullOrEmpty(topicName) ? TopicRegistry.GetGoalPose(robotId) : topicName;
             if (string.IsNullOrEmpty(topic)) return;

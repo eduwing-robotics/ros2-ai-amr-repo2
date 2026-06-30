@@ -16,6 +16,7 @@ namespace URHYNIX.ControlRoom.Data
         public string cameraTopic;    // 예: "/tb3_1/camera/color/image_raw/compressed"
         public string poseTopic;      // 예: "/tb3_1/pose"
         public string iconName;       // IconNames.TurtlebotBadge 등
+        public string markerColor;    // 맵 마커 색 (hex "#RRGGBB"). 비면 기본색. 로봇별 config로 관리.
     }
 
     [Serializable]

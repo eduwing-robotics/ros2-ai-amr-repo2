@@ -45,7 +45,7 @@
 - 알려진 page:
   - **`327681`** — 기획안 (UR HYNIX) — 정본 SSOT
   - **`3112961`** — 사용자 요구사항 정의서 (라이브 페이지)
-  - **`2555905`** — 기능 요구사항 정의서
+  - **`6750216`** — 시스템 요구사항 정의서 (기존 `2555905`에서 이관/재작성됨)
 
 ### 로컬 SSOT (working_dir 상대 경로)
 - `docs/status/HANDOFF.md`, `PROJECT-STATUS.md`, `DECISION-LOG.md`
@@ -144,9 +144,9 @@ mcp__codex_apps__atlassian_rovo._createconfluencefootercomment
 ※ 참고: Codex Atlassian Rovo 도구의 `getConfluencePage`는 `markdown`/`adf`만 지원하는 경우가 있어(`html` round-trip 가정이 깨짐) 본문 patch는 실패 가능성이 높다.
 
 매핑 가이드:
-- 회의록 (a) 결정 → `327681` 기획안 또는 `2555905` 기능 요구사항
+- 회의록 (a) 결정 → `327681` 기획안 또는 `6750216` 시스템 요구사항 정의서
 - 회의록 (b) 진척 (사용자 요구) → `3112961` 사용자 요구사항 정의서
-- 회의록 (b) 진척 (시스템 기능) → `2555905` 기능 요구사항 정의서
+- 회의록 (b) 진척 (시스템 기능) → `6750216` 시스템 요구사항 정의서
 
 ### Step 6 — dev-plan HTML 번들 재빌드
 
@@ -188,7 +188,7 @@ print('All HTML OK')
 |---|---|---|---|
 | 327681 | 기획안 | v12 → v13 | 카메라 인식 + 매핑 한계 |
 | 3112961 | 사용자 요구사항 정의서 | vN → vN+1 | ... |
-| 2555905 | 기능 요구사항 정의서 | v5 → v6 | YOLO 4 클래스 + Pi 카메라 토픽 |
+| 6750216 | 시스템 요구사항 정의서 | v18 → v19 | YOLO 4 클래스 + Pi 카메라 토픽 |
 
 ### Jira (board 1)
 | SCRUM-N | 변경 |
@@ -269,7 +269,7 @@ ls docs/evidence/sync/$(date "+%Y-%m-%d")-*
 | 회의록 추출 | 김주영 (매핑) + 박태진 (UR) + 임현찬 (카메라+YOLO) |
 | 핵심 발견 | "라이다 높이 > 가벽 높이" 진단 정정 |
 | 로컬 SSOT 갱신 | DECISION-LOG +2, PROJECT-STATUS +2 행, HANDOFF Top 1 정정, eval.md 정정 |
-| Confluence 갱신 | (예정) 327681 v13 / 3112961 / 2555905 v6 |
+| Confluence 갱신 | (예정) 327681 v13 / 3112961 / 6750216 v6 |
 | Jira 갱신 | (예정) SCRUM-10/16/19 본문 정정 |
 
 ---

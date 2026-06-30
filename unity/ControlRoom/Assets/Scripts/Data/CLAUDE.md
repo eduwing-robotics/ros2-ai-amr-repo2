@@ -19,6 +19,9 @@
 | `DispatchInfo.cs` | 출동 명령 + 도착 기록 |
 | `CameraInfo.cs` | 카메라 라벨/토픽/해상도 |
 | `RobotPoseEntry.cs` ✅ | 시계열 pose 1건 (Supabase `pose_logs` 1행 매핑) |
+| `EventRow.cs` ✅ | `events` 1행 매핑 |
+| `DispatchRow.cs` ✅ | `dispatches` 1행 매핑 |
+| `LogRow.cs` ✅ | `logs` 1행 매핑 |
 
 ## 규칙
 

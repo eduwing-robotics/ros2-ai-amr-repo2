@@ -1,0 +1,265 @@
+<!--
+  파일: docs/whiteboards/weekly-review-2026-06-15_06-25.html
+  목적: 최근 2주(2026-06-15~06-25) 진행 기록을 발표용 슬라이드로 정리 (키워드 중심 · 힘들었던 점→해결).
+  근거: docs/status/DECISION-LOG.md 2026-06-15 ~ 2026-06-25 섹션.
+  조작: ← → 또는 Space / 클릭으로 이동, F11 풀스크린. 생성: 2026-06-25.
+-->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>UR HYNIX · 2주 회고 (2026-06-15 ~ 06-25)</title>
+<style>
+  :root{
+    --bg:#0b1020; --bg2:#131a33; --fg:#e9edf7; --muted:#98a2c0;
+    --accent:#6ee7ff; --accent2:#ffb86b; --ok:#4ade80; --warn:#fbbf24; --bad:#f87171; --line:#2a345a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg);color:var(--fg);
+    font-family:-apple-system,"Pretendard","Apple SD Gothic Neo","Segoe UI",sans-serif;overflow:hidden}
+  .deck{position:relative;width:100vw;height:100vh}
+  .slide{position:absolute;inset:0;padding:52px 72px;display:none;flex-direction:column;
+    background:radial-gradient(1200px 600px at 80% -10%,rgba(110,231,255,.10),transparent 60%),
+               radial-gradient(900px 500px at -10% 110%,rgba(255,184,107,.08),transparent 55%),
+               linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);
+    animation:fade .35s ease both}
+  .slide.active{display:flex}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  h1{font-size:46px;line-height:1.18;margin-bottom:10px}
+  h2{font-size:30px;color:var(--accent);margin-bottom:14px;letter-spacing:-.3px}
+  h3{font-size:19px;color:var(--accent2);margin:0 0 8px}
+  p,li,td,th{font-size:17px;line-height:1.55}
+  .lead{color:var(--muted);font-size:18px;margin-bottom:20px}
+  .tag{display:inline-block;padding:3px 11px;border-radius:999px;background:rgba(110,231,255,.12);
+    color:var(--accent);border:1px solid rgba(110,231,255,.35);font-size:13px;margin:0 6px 6px 0}
+  .tag.warn{background:rgba(251,191,36,.12);color:var(--warn);border-color:rgba(251,191,36,.35)}
+  .tag.ok{background:rgba(74,222,128,.12);color:var(--ok);border-color:rgba(74,222,128,.35)}
+  .tag.bad{background:rgba(248,113,113,.12);color:var(--bad);border-color:rgba(248,113,113,.35)}
+  .grid{display:grid;gap:18px;margin-top:6px}
+  .grid.cols-2{grid-template-columns:1fr 1fr}
+  .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+  .card{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:14px;padding:16px 20px}
+  .card.hard{border-color:rgba(251,191,36,.35)}
+  .card.win{border-color:rgba(74,222,128,.35)}
+  .card h3.hard{color:var(--warn)} .card h3.win{color:var(--ok)}
+  ul{padding-left:20px}
+  li{margin-bottom:6px}
+  li b{color:var(--fg)}
+  .kw{color:var(--accent)}
+  .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;
+    color:var(--muted);font-size:13px;padding-top:18px;border-top:1px solid var(--line)}
+  .timeline{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+  .trow{display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:start;
+    padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px}
+  .trow .d{color:var(--accent);font-weight:600}
+  .big{font-size:40px}
+  .center{justify-content:center;align-items:flex-start}
+  .pill{font-size:14px;color:var(--muted)}
+  .nav{position:fixed;bottom:16px;right:22px;color:var(--muted);font-size:13px;z-index:10}
+  .dots{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:7px;z-index:10}
+  .dot{width:8px;height:8px;border-radius:50%;background:#2a345a;cursor:pointer}
+  .dot.active{background:var(--accent)}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+  <!-- 1 표지 -->
+  <section class="slide active center">
+    <span class="tag">2026-06-15 → 06-25 · 2주 회고</span>
+    <h1>UR HYNIX 2주 진행 기록</h1>
+    <p class="lead">경비 로봇 만들기 · "무엇이 힘들었고, 어떻게 풀었나"를 쉬운 말로</p>
+    <div class="grid cols-3">
+      <div class="card"><h3>통신·센서</h3><p class="pill">통신망 통일 · 센서 4종 · 기록 자동저장</p></div>
+      <div class="card"><h3>지도·화면</h3><p class="pill">지도 새로 그리기 · 화면 등록 · 로봇 점 표시</p></div>
+      <div class="card"><h3>자율주행</h3><p class="pill">젠지 좌표주행 <span class="tag ok">성공</span></p></div>
+    </div>
+    <div class="foot"><span>docs/whiteboards/weekly-review-2026-06-15_06-25.html</span><span>출처: DECISION-LOG.md</span></div>
+  </section>
+
+  <!-- 2 타임라인 -->
+  <section class="slide">
+    <h2>한눈에 보기 — 2주 타임라인</h2>
+    <div class="timeline">
+      <div class="trow"><span class="d">06-15</span><span><span class="kw">로봇끼리 같은 채널로 통일</span> + 화면(Unity)에서 두 로봇 보기 + 카메라/센서 잘 들어옴</span></div>
+      <div class="trow"><span class="d">06-16~18</span><span><span class="kw">센서 4종을 한 보드에</span>(사람감지·레이저·소리·온도) 붙이고 작동 확인</span></div>
+      <div class="trow"><span class="d">06-18</span><span><span class="kw">화면에서 누른 기록을 데이터베이스에 자동 저장</span> + 진짜 센서값 실시간 표시</span></div>
+      <div class="trow"><span class="d">06-16~17</span><span><span class="kw">경비 시나리오 5개를 그림(순서도)으로</span> 만들어 발표·편집까지</span></div>
+      <div class="trow"><span class="d">06-23~24</span><span><span class="kw">방 지도를 새로 그려서</span> 화면에 등록 + 지도 위에 로봇 표시 성공</span></div>
+      <div class="trow"><span class="d">06-24~25</span><span><span class="kw">로봇 두 대 점 찍기</span> · 티원 부품 고장 → 재부팅으로 살림</span></div>
+      <div class="trow"><span class="d">06-25</span><span><span class="kw">화면에서 좌표 찍으면 젠지가 거기로 주행</span> 🎯 (문제 7개 다 해결)</span></div>
+    </div>
+    <div class="foot"><span>2주 흐름: 통신 → 센서 → 저장 → 지도 → 주행 순으로 한 칸씩 전진</span><span>2 / 9</span></div>
+  </section>
+
+  <!-- 3 네트워크 -->
+  <section class="slide">
+    <h2>① 두 로봇을 같은 통신망으로</h2>
+    <p class="lead">로봇·컴퓨터가 서로 신호를 주고받게 채널을 하나로 맞췄어요</p>
+    <div class="grid cols-2">
+      <div class="card hard"><h3 class="hard">⚠️ 힘들었던 점</h3>
+        <ul>
+          <li>젠지 로봇이 <b>와이파이로 안 잡힘</b>(랜선과 와이파이를 동시에 꽂아 신호가 엉킴)</li>
+          <li>로봇마다 <b>통신 채널 번호가 달라서</b> 서로 못 봄</li>
+          <li>팀 와이파이가 <b>가끔 끊겨서</b> 시연이 불안</li>
+        </ul></div>
+      <div class="card win"><h3 class="win">✅ 어떻게 풀었나</h3>
+        <ul>
+          <li>랜선을 빼고 <b>와이파이 하나로만</b> 연결</li>
+          <li>로봇·컴퓨터 <b>채널 번호를 똑같이(210)</b> 맞춤</li>
+          <li>서로 잘 보이고 <b>카메라·센서도 잘 들어옴</b></li>
+        </ul></div>
+    </div>
+    <div style="margin-top:14px"><span class="tag">채널 통일</span><span class="tag">로봇 이름 분리</span><span class="tag ok">연결 성공</span><span class="tag warn">가끔 끊김</span></div>
+    <div class="foot"><span>06-15</span><span>3 / 9</span></div>
+  </section>
+
+  <!-- 4 센서 -->
+  <section class="slide">
+    <h2>② 센서 4종을 한 보드에</h2>
+    <p class="lead">사람 감지 · 레이저 · 소리 · 온도 센서를 하나의 작은 보드에 붙였어요</p>
+    <div class="grid cols-2">
+      <div class="card hard"><h3 class="hard">⚠️ 힘들었던 점</h3>
+        <ul>
+          <li>레이저를 <b>엉뚱한 자리에 꽂아</b> 보드에 프로그램이 안 올라감</li>
+          <li>소리 센서가 <b>불량</b>이라 박수를 못 알아들음</li>
+          <li>온도 센서 일부가 <b>아예 값을 안 줌</b></li>
+        </ul></div>
+      <div class="card win"><h3 class="win">✅ 어떻게 풀었나</h3>
+        <ul>
+          <li>센서마다 <b>꽂는 자리를 정리</b>해서 다시 연결</li>
+          <li>소리는 <b>소리 크기 변화로 직접 감지</b>하게 바꿈</li>
+          <li>온도는 <b>다른 부품으로 교체</b>해서 값이 나오게 함</li>
+        </ul></div>
+    </div>
+    <div style="margin-top:14px"><span class="tag ok">4종 동시 작동</span><span class="tag">소리 감지 우회</span><span class="tag warn">온도 눈금 보정 남음</span></div>
+    <div class="foot"><span>06-16 ~ 06-18</span><span>4 / 9</span></div>
+  </section>
+
+  <!-- 5 DB -->
+  <section class="slide">
+    <h2>③ 화면 기록을 자동 저장</h2>
+    <p class="lead">화면에서 누른 일·출동 좌표·로봇 위치를 클라우드 저장소에 자동으로 남겨요</p>
+    <div class="grid cols-2">
+      <div class="card hard"><h3 class="hard">⚠️ 힘들었던 점</h3>
+        <ul>
+          <li>저장소가 <b>안 쓰면 자동으로 잠들어</b> 접속이 막힘</li>
+          <li>저장 방식을 <b>복잡한 것 vs 간단한 것</b> 중 골라야 함</li>
+          <li>화면 편집기가 <b>변경을 바로 반영 안 함</b></li>
+        </ul></div>
+      <div class="card win"><h3 class="win">✅ 어떻게 풀었나</h3>
+        <ul>
+          <li><b>가벼운 방식</b> 선택(끊겨도 모았다가 다시 보냄)</li>
+          <li>저장소를 <b>다시 깨우고</b> 접근 권한 설정</li>
+          <li>편집기 창을 <b>띄워주면</b> 바로 반영 → 저장 성공</li>
+        </ul></div>
+    </div>
+    <div style="margin-top:14px"><span class="tag ok">저장까지 성공</span><span class="tag">진짜 센서값 실시간</span><span class="tag warn">위치 기록 일부 남음</span></div>
+    <div class="foot"><span>06-18</span><span>5 / 9</span></div>
+  </section>
+
+  <!-- 6 시나리오 -->
+  <section class="slide">
+    <h2>④ 경비 시나리오를 그림으로</h2>
+    <p class="lead">박물관 경비 상황 5가지를 한눈에 보이는 순서도(흐름 그림)로 만들었어요</p>
+    <div class="grid cols-2">
+      <div class="card hard"><h3 class="hard">⚠️ 힘들었던 점</h3>
+        <ul>
+          <li>파일이 <b>여러 개로 쪼개져</b> 남에게 보내면 깨짐</li>
+          <li>웹 페이지라 <b>수정한 걸 바로 저장하기 어려움</b></li>
+        </ul></div>
+      <div class="card win"><h3 class="win">✅ 어떻게 풀었나</h3>
+        <ul>
+          <li><b>파일 하나로 합쳐서</b> 어디서나 열리게 함</li>
+          <li>고친 내용을 <b>브라우저에 저장 + 내려받기</b>로 보관</li>
+          <li>발표·편집·드래그까지 다 <b>작동 확인</b></li>
+        </ul></div>
+    </div>
+    <div style="margin-top:14px"><span class="tag">위험 5단계 색표시</span><span class="tag">자동 재생</span><span class="tag ok">전부 작동</span></div>
+    <div class="foot"><span>06-16 ~ 06-17 · docs/presentation/scenarios/</span><span>6 / 9</span></div>
+  </section>
+
+  <!-- 7 맵 -->
+  <section class="slide">
+    <h2>⑤ 방 지도 새로 그리고 로봇 표시</h2>
+    <p class="lead">로봇이 방을 돌며 지도를 새로 그리고, 화면 지도 위에 로봇을 점으로 띄웠어요</p>
+    <div class="grid cols-2">
+      <div class="card hard"><h3 class="hard">⚠️ 힘들었던 점</h3>
+        <ul>
+          <li>지도와 실제 방의 <b>방향이 안 맞아</b> 로봇이 엉뚱하게 감</li>
+          <li>지도를 <b>바꿀 때마다 손으로</b> 등록해야 함</li>
+          <li>화면 <b>사진을 찍어도 까맣게</b> 나와 확인이 어려움</li>
+        </ul></div>
+      <div class="card win"><h3 class="win">✅ 어떻게 풀었나</h3>
+        <ul>
+          <li>지도를 <b>다시 그리고</b> 깨끗한지 직접 검사</li>
+          <li>새 지도를 <b>자동으로 최신 걸로</b> 골라줌</li>
+          <li>운영을 안 건드리고 <b>눈으로 확인</b> → 로봇 표시 성공</li>
+        </ul></div>
+    </div>
+    <div style="margin-top:14px"><span class="tag">새 지도</span><span class="tag">방향 화살표 점</span><span class="tag ok">지도 표시 성공</span></div>
+    <div class="foot"><span>06-23 ~ 06-24</span><span>7 / 9</span></div>
+  </section>
+
+  <!-- 8 듀얼+주행 하이라이트 -->
+  <section class="slide">
+    <h2>⑥ 로봇 두 대 표시 · 그리고 좌표주행 🎯</h2>
+    <div class="grid cols-2">
+      <div class="card hard"><h3 class="hard">⚠️ 힘들었던 점 (문제 7개)</h3>
+        <ul>
+          <li>티원 로봇 <b>부품이 고장</b> 나 자꾸 멈춤</li>
+          <li>주행 프로그램이 <b>중복 실행</b>돼 충돌</li>
+          <li>잘못된 옛 파일을 <b>먼저 찾아</b> 실행 실패</li>
+          <li>안 쓰는 보기 화면이 <b>컴퓨터를 느리게</b> 함</li>
+          <li>지도를 돌려놔서 <b>누른 위치가 어긋남</b></li>
+        </ul></div>
+      <div class="card win"><h3 class="win">✅ 어떻게 풀었나</h3>
+        <ul>
+          <li>로봇을 <b>껐다 켜니</b> 부품이 되살아남</li>
+          <li>중복 실행을 <b>제대로 종료</b>하게 고침</li>
+          <li><b>올바른 파일만</b> 쓰도록 경로 정리</li>
+          <li>필요 없는 화면을 <b>빼서</b> 가볍게</li>
+          <li>누른 위치를 <b>지도 회전에 맞춰</b> 계산</li>
+        </ul></div>
+    </div>
+    <div class="foot"><span>06-24 ~ 06-25 · 화면에서 좌표 클릭 → 젠지가 실제로 그리로 주행 성공</span><span>8 / 9</span></div>
+  </section>
+
+  <!-- 9 다음 -->
+  <section class="slide center">
+    <span class="tag ok">지금까지 도달한 곳</span>
+    <h1>로봇 한 대(젠지) 좌표주행 완성</h1>
+    <p class="lead">화면에서 좌표를 찍으면 → 실제 로봇이 그 자리로 알아서 이동해요</p>
+    <div class="grid cols-3">
+      <div class="card"><h3 class="win">✅ 된 것</h3><ul><li>지도에 로봇 표시</li><li>로봇 골라 좌표 보내기</li><li>젠지 좌표주행</li></ul></div>
+      <div class="card"><h3 class="hard">⏳ 남은 것</h3><ul><li>티원 주행 기능 설치</li><li>로봇 두 대 동시 표시</li><li>새 지도로 경로 갱신</li></ul></div>
+      <div class="card"><h3>🎯 최종 목표</h3><ul><li>지도에 <b>로봇 2대</b> 표시</li><li><b>원하는 로봇</b>에 좌표 명령</li><li>두 대 동시 주행</li></ul></div>
+    </div>
+    <div class="foot"><span>다음 할 일: 티원에 주행 기능 깔기 → 두 대 동시 운영 준비</span><span>9 / 9</span></div>
+  </section>
+
+</div>
+
+<div class="dots" id="dots"></div>
+<div class="nav">← → / Space · F11 풀스크린</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const dots=document.getElementById('dots');
+  let i=0;
+  slides.forEach((_,n)=>{const d=document.createElement('div');d.className='dot'+(n===0?' active':'');
+    d.onclick=()=>go(n);dots.appendChild(d);});
+  function go(n){i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+    [...dots.children].forEach((d,k)=>d.classList.toggle('active',k===i));}
+  function next(){go(i+1)} function prev(){go(i-1)}
+  document.addEventListener('keydown',e=>{
+    if(['ArrowRight',' ','PageDown'].includes(e.key)){e.preventDefault();next();}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev();}
+    else if(e.key==='Home')go(0); else if(e.key==='End')go(slides.length-1);});
+  document.getElementById('deck').addEventListener('click',e=>{
+    if(e.target.closest('.dot'))return; next();});
+</script>
+</body>
+</html>

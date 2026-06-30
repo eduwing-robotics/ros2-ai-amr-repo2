@@ -6,7 +6,7 @@
 
 | 패키지 | 버전 | 용도 |
 |---|---|---|
-| `com.unity.robotics.ros-tcp-connector` | v0.7.0 (git URL) | ROS2 ↔ Unity TCP 다리 |
+| `com.unity.robotics.ros-tcp-connector` | v0.7.0 (**embedded+patched**) | ROS2 ↔ Unity TCP 다리 |
 | `com.unity.render-pipelines.universal` | 17.0.4 | URP 렌더링 |
 | `com.unity.inputsystem` | 1.17.0 | 신 입력 시스템 |
 | `com.unity.ugui` | 2.0.0 | UI 기본 |
@@ -20,6 +20,12 @@
 | 6 | URDF Importer (git URL or community fork) | Unity 6 호환성 smoke 후 결정 |
 | 7 | Supabase Unity (kamyker fork or NuGetForUnity) | UniTask 의존 |
 | 7 | UniTask | Supabase 비동기 |
+
+## ros-tcp-connector embed+patch (2026-06-29)
+
+- git URL 의존을 **`Packages/com.unity.robotics.ros-tcp-connector/`로 embed**했다 (manifest 줄 제거). 이유: 멀티 endpoint race 패치를 PackageCache에 두면 재import 시 덮어쓰므로 영구화.
+- 패치: `Runtime/TcpConnector/ROSConnection.cs` `ReadMessageContents`의 static `s_FourBytes`/`s_TopicScratchSpace` → 호출별 로컬 버퍼(`fourBytes`/`topicScratch`). 2개 reader 스레드(로봇별 ROSConnection) race로 2번째 연결이 "No more data available"로 끊기던 것 해결.
+- upstream 갱신 시 폴더 통째 교체 후 위 패치 재적용. 폴더 안에 우리 파일 박지 말 것(diff 보존).
 
 ## 규칙
 

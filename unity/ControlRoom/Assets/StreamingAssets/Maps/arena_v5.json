@@ -1,0 +1,14 @@
+{
+  "map": {
+    "mapId": "arena_v5",
+    "displayName": "아레나 v5",
+    "originX": -1.373,
+    "originY": -1.777,
+    "resolution": 0.05,
+    "widthPx": 61,
+    "heightPx": 62,
+    "displayRotationDeg": 0
+  },
+  "waypoints": [],
+  "protectedTargets": []
+}

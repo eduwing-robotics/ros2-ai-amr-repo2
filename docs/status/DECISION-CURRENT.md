@@ -1,8 +1,65 @@
+<!-- opencode: 2026-06-29 - 토스 리스킨 + 하단 네비 4탭 최신 결정 추가. Coded with OpenCode; high-cost model review recommended. -->
 # Decision Current — 최신 결정 5건
 
 > **진입용 최신 5건만 모음. 전체 역사는 DECISION-LOG.md 참조.**
 > 
 > 본 문서는 DECISION-LOG.md의 복사본으로 유지됨. 매 세션 종료 시 업데이트.
+
+---
+
+## 2026-06-29 (밤8) — Unity ControlRoom 기록 탭(Phase 4) + DB Repository 확장
+
+### 결정
+- 주인님이 고른 **서브탭 + 카드형 + 칩 필터** UI를 데이터 소스 경계에 1:1로 매핑.
+- 로그 탭 level 칩은 시각적 `[INFO][WARN][ERROR]` 그대로 유지하되, 실제 필터는 `logs.level=eq.` 컬럼값에 정직하게 연결 — SAFE/WATCH/DANGER 같은 위험등급 레이블로 잘못 매핑하지 않음.
+- 이벤트/출동 탭은 `events` + `dispatches`를 클라이언트 측에서 시간순으로 머지해서 한 리스트로 그림.
+- KPI는 PostgREST `count=exact` + `avg()` 집계를 사용, 불필요한 전체 row 스캔 회피.
+- Phase 5 인증(운영자 선택+고정 비번+감사로그 category=audit)은 다음 세션으로 이월.
+
+### 구현 요약
+- **Repository 확장**:
+  - `EventRepository.CountAll` — 전체 이벤트 건수.
+  - `DispatchRepository.AvgResponseTime` — `response_time.avg()` 집계.
+  - `LogRepository.Count` — 카테고리/레벨 조건 건수.
+- **신규 UXML**: `Assets/UI/Parts/RecordsPage.uxml` — 3서브탭(로그/이벤트·출동/KPI) + 동적 칩 필터 + 카드 리스트 + KPI 2×2 그리드.
+- **신규 View**: `Assets/Scripts/UI/RecordsPageView.cs` — `PanelTabView` 서브탭 전환 + `LogRepository`/`EventRepository`/`DispatchRepository` 조회 + 칩 필터 상태 관리.
+- **연결/스타일**: `ControlRoomMain.uxml` `page-records`를 `RecordsPageTpl`로 교체, `ControlRoomPanels.uss`에 기록 컴포넌트 추가, `ControlRoomBinder.cs`에 `recordsPage` 등록.
+
+### 검증
+- Unity Editor 직접 csc 컴파일 = **0 errors**(경고는 기존 CS0618/CS0219/CS0414 유지).
+- `unityctl script validate`는 현재 **project lock**(Editor AssetImportWorker 점유)으로 blocked — 콘솔 캐시 갱신 후 `unityctl script get-errors` 재확인 필요.
+- **end-to-end DB 조회→화면 그리기는 Editor Play + Supabase 연동 후 확인 필요.** DB 없이도 graceful empty.
+
+### 다음 진입
+1. Editor Play → 📊기록 탭 → 3서브탭 + 칩 필터 동작 + KPI count 일치 확인.
+2. Phase 5 인증(운영자 선택+고정 비번 게이트+감사로그 category=audit).
+
+---
+
+## 2026-06-29 — Unity ControlRoom DB read Repository + 대응 탭(Phase 1+2) 구현
+
+### 결정
+- 대응·기록 탭의 병목이 **DB read Repository 부재**임을 확인하고, `EventRepository`/`DispatchRepository`/`LogRepository` 3종을 먼저 신설.
+- Phase 1(Repository) + Phase 2(대응 탭)을 한 묶음으로 처리. Phase 3(기록 탭)과 Phase 4(인증)는 다음 세션으로 이월.
+- 칩라 갤러리는 이미지 저장소 선결 회피로 이번 범위 제외.
+- 인증은 운영자 선택 + 고정 비번 클라이언트 게이트로 처리(RLS anon open 유지).
+
+### 구현 요약
+- **신규 DTO**: `Assets/Scripts/Data/{EventRow,DispatchRow,LogRow}.cs` — `events`/`dispatches`/`logs` 1행 매핑.
+- **신규 Helper**: `Assets/Scripts/Database/JsonHelper.cs` — `JsonUtility` top-level 배열 파싱 래퍼(`{"rows":[...]}` wrapper).
+- **신규 Repository**: `Assets/Scripts/Database/{EventRepository,DispatchRepository,LogRepository}.cs` — 읽기 전용, `SupabaseClient.Select` 코루틴 래퍼. DB 비활성 시 `onResult(false, empty)` graceful.
+- **신규 UXML**: `Assets/UI/Parts/ResponsePage.uxml` — 위험등급 5단계 보드 + 출동현황 + 이벤트/출동 히스토리.
+- **신규 View**: `Assets/Scripts/UI/ResponsePageView.cs` — Repository 조회 + `OnAlert`/`OnDispatchRequested`/`OnScenarioTriggered` 실시간 갱신. `ControlRoomBinder`(`MonoBehaviour`)를 host로 받아 `StartCoroutine` 실행.
+- **연결/스타일**: `ControlRoomMain.uxml` `page-response`를 `ResponsePageTpl`로 교체, `ControlRoomPanels.uss`에 대응 컴포넌트 추가, `ControlRoomBinder.cs`에 `responsePage` 등록.
+
+### 검증
+- `unityctl script get-errors` = **0 errors**(경고 16건은 기존 CS0618).
+- **end-to-end DB 조회→화면 그리기는 Editor Play + Supabase 연동 후 확인 필요.** DB 없이도 graceful empty.
+
+### 다음 진입
+1. Editor Play → 🚨대응 탭 → 새로고침 버튼 → DB events/dispatches 행이 리스트에 그려지는지 확인.
+2. Phase 3 기록 탭(로그검색/출동히스토리/KPI).
+3. Phase 4 인증(운영자 선택+고정 비번 게이트+감사로그 category=audit).
 
 ---
 
@@ -121,9 +178,7 @@
 3. **젠지 센서 토픽 `/sensors/*` namespace 미분리** — Phase 3에서 `/tb3_2/sensor/*`로 정합 예정.
 - evidence: `docs/evidence/2026-06-15-wireless-unify-domain210-unity-dualrobot-check.md`
 
----
 
-## 2026-06-10 — Mac MPS + T1 RealSense → YOLOv8n 라이브 PASS + 영상 끊김 정량 진단 + 자산 5종 영구화
 
 ### 비전 트랙(Mac 절반) 검증 완료
 

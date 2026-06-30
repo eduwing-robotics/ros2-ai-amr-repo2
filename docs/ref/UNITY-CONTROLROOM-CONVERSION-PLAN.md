@@ -1,3 +1,4 @@
+<!-- opencode: 2026-06-29 - 3.5절 토스 리스킨 + 하단 네비 4탭 IA 추가. Coded with OpenCode; high-cost model review recommended. -->
 # Unity Control Room Conversion Plan
 
 > 변경 목적: Gemini 단일 HTML 관제 화면(`robot_control_system.html`)을 Unity C# 관제 앱으로 전환하기 위한 정본 계획을 고정한다.
@@ -8,7 +9,7 @@
 
 - UI는 **Unity UI Toolkit**을 사용한다.
 - 화면 구조는 `UXML + USS + C# Binder`로 나눈다.
-- 디자인 토큰은 `ControlRoomTokens.uss`와 `UiTokens.cs` 양쪽에 둔다.
+- 디자인 토큰은 `ControlRoomTokens.uss`와 `UiTokens.cs` 양쪽에 둔다. (2026-06-26 확장 완료: 색상/폰트/레이아웃/아이콘/radius)
 - SVG는 사용하지 않고, 모든 아이콘은 **PNG**로 통일한다.
 - 일반 UI 아이콘은 단순 PNG 세트로 관리하고, 로봇/경보/보호대상처럼 시연 인상이 중요한 아이콘은 Imagen 생성 후 리사이징한다.
 - 3D 화면은 공식 ROBOTIS TurtleBot3 `jazzy` 브랜치의 `turtlebot3_description` URDF/mesh를 Unity URDF Importer로 가져와 prefab으로 고정한다.
@@ -29,7 +30,7 @@
 |---|---|---|
 | Top Header | `TopBarView` + `RobotTabView` + `PowerButtonView` | 로고, 로봇 탭, 시스템 상태, 시계, 경보, 전원 버튼 |
 | 위험상황 테스트 제어 | `ScenarioPanelView` | 화재, 침입, 소리, 도난 데모 트리거 |
-| 동작 제어 | `MovePanelView` | 수동 조작, 순회 시작/정지 |
+| 동작 제어 | `MovePanelView` + `QuickActionView` + `TeleopPadView` | 순회 시작/정지, 퀙액션(즉시정지/충전소복귀/ArUco주차/주행잠금), 수동 D-pad |
 | 모드 설정 | `ModePanelView` | 자동/수동 전환 |
 | 동작 특수 모드 | `FeatureToggleListView` | 스캔, 가속, SLAM, 카메라 등 기능 토글 |
 | 순회 목록 | `WaypointListView` | waypoint 표시, 순서 조정, 충전소 지정 |
@@ -42,6 +43,89 @@
 | 보호대상 목록 | `ProtectedTargetView` | 액자/작품/중요품 목록 + 상태 배지 (safe/check/missing). Phase 2.5 신설. 상세 구조는 §10 참고 |
 | 관제 옵션 토글 | `FeatureToggleListView` | 기능 목록을 config 기반 자동 생성 |
 | 경보 팝업 | `AlertPopupView` | 위험 이벤트 발생 시 modal alert |
+
+## 3.5. 토스 디자인 톤 + 하단 네비 4탭 IA (2026-06-29)
+
+> **결정**: 기존 단일 관제 화면을 토스(Toss Design System) 톤으로 리스킨하고, 17개 신규 기능(이벤트 히스토리·대응 보드·기록 등)을 담을 하단 네비게이션 4탭으로 재구성.
+
+### 3.5.1 토스 톤 리스킨
+
+- 토큰 SSOT 2파일 동시 교체: `Assets/UI/ControlRoomTokens.uss` ↔ `Assets/Scripts/Design/UiTokens.cs`.
+- 대표 매핑:
+  - accent `#2563eb` → `#4E8AFF`
+  - bg-primary `#f1f5f9` → `#F2F4F6`
+  - border `#e2e8f0` → `#E5E8EB`
+  - text-primary `#1e293b` → `#202632`
+  - text-secondary `#64748b` → `#8B95A1`
+  - text-muted `#94a3b8` → `#B0B8C1`
+  - status-ok `#10b981` → `#00C471`
+  - status-warn `#f59e0b` → `#FF9500`
+  - status-danger `#dc2626` → `#FF4B4B`
+  - radius-sm/md: 4/8 → 8/12
+- 폰트/간격은 데스크톱 밀집 관제 레이아웃 보호를 위해 유지.
+- Map 렌더링 C# 6파일의 하드코딩 색을 토스 팔레트로 변환(`MapSubscriber`, `MapMarkerLayer`, `PatrolMarkerLayer`, `MapHudLayer`, `MapContextMenuView`, `MapView`).
+
+### 3.5.2 하단 네비 4탭
+
+```text
+root
+├── TopBar
+├── page-host
+│   ├── page-operations   ← 기존 관제 화면(맵·칩라·센서·조종) 통째로 이동
+│   ├── page-home         ← HomePageTpl: KPI 3종 + 로봇 상태 카드 2개 + 최근 활동
+│   ├── page-response     ← ResponsePageTpl: 위험등급 보드 + 출동현황 + 히스토리
+│   └── page-records      ← RecordsPageTpl: 로그 / 이벤트·출동 / KPI
+├── bottom-navbar (4 버튼)
+└── alert-popup
+```
+
+- 탭: 🛰️ 관제 / 🏠 홈 / 🚨 대응 / 📊 기록.
+- `PanelTabView` 패턴 재사용: 버튼 배열 + 페이지 배열 → `.hidden`/`.active` 토글.
+- `ControlRoomState.CurrentPage` + `SetPage()` + `ControlRoomEvents.OnPageChanged`로 상태 동기화.
+- placeholder 페이지(관제 외)는 각 Phase에서 `*PageTpl` 템플릿으로 교체.
+
+### 3.5.3 Phase 2 — 홈(대시보드) 본문 (2026-06-29 구현)
+
+- `Assets/UI/Parts/HomePage.uxml`: 헤더 + KPI 3종 + 로봇 상태 카드 2개 + 최근 활동 리스트.
+- `Assets/Scripts/UI/HomePageView.cs`:
+  - `OnBatteryChanged` → 배터리 퍼센트/게이지.
+  - `OnRobotConnectivity` + `RobotConnectivityMonitor.IsOnline` → 온/오프라인 칩.
+  - `OnSensorChanged` → 센서 미니 요약(PIR · 소음 · 온도).
+  - `OnLogAdded`/`OnAlert`/`OnScenarioTriggered`/`OnDispatchRequested` → KPI 카운터(이벤트/경보/출동) + 최근 활동 리스트.
+  - 세션 누적 카운터(View 내 int 필드) — DB 없이 즉시 검증.
+- `Assets/UI/ControlRoomPanels.uss`: `.home-page`, `.home-kpi*`, `.home-robot-card`, `.home-activity*` 등 대시보드 컴포넌트.
+- `ControlRoomMain.uxml`의 `page-home`을 `<ui:Instance template="HomePageTpl" />`로 교체.
+- `ControlRoomBinder.cs`에 `homePage = new HomePageView(root);` 1줄 등록.
+
+### 3.5.4 Phase 3 — 대응(위험등급/출동/이벤트 히스토리) 본문 (2026-06-29 구현)
+
+- **Phase 3a — DB read Repository 3종**: 대응·기록 탭의 병목인 읽기 계층을 먼저 신설.
+  - `Assets/Scripts/Data/{EventRow,DispatchRow,LogRow}.cs`: 테이블 1행 DTO.
+  - `Assets/Scripts/Database/JsonHelper.cs`: `JsonUtility` top-level 배열 파싱 래퍼.
+  - `Assets/Scripts/Database/{EventRepository,DispatchRepository,LogRepository}.cs`: 읽기 전용 Repository. DB 비활성 시 `onResult(false, empty)` graceful.
+- **Phase 3b — 대응 탭 UI**:
+  - `Assets/UI/Parts/ResponsePage.uxml`: 위험등급 SAFE/WATCH/CHECK/DANGER/EVACUATE 보드 + 진행 중/총 출동 metric + 이벤트/출동 히스토리.
+  - `Assets/Scripts/UI/ResponsePageView.cs`: Repository 조회 + `OnAlert`/`OnDispatchRequested`/`OnScenarioTriggered` 실시간 갱신. `ControlRoomBinder`를 host로 받아 코루틴 실행.
+  - `ControlRoomMain.uxml`의 `page-response`를 `ResponsePageTpl`로 교체, `ControlRoomPanels.uss`에 대응 컴포넌트 추가, `ControlRoomBinder.cs`에 `responsePage` 등록.
+
+### 3.5.5 Phase 4 — 기록(로그검색/이벤트·출동 히스토리/KPI) 본문 (2026-06-29 구현)
+
+- **Repository 확장**:
+  - `EventRepository.CountAll`: 전체 이벤트 건수(`count=exact`).
+  - `DispatchRepository.AvgResponseTime`: `response_time.avg()` 집계.
+  - `LogRepository.Count`: 카테고리/레벨 조건 건수.
+- **기록 탭 UI**:
+  - `Assets/UI/Parts/RecordsPage.uxml`: 3서브탭(로그/이벤트·출동/KPI) + 동적 칩 필터 + 카드 리스트 + KPI 2×2 그리드.
+  - `Assets/Scripts/UI/RecordsPageView.cs`:
+    - `PanelTabView`로 3서브탭 전환.
+    - 로그: category 칩 `[전체][시스템][센서][출동][감사]`, level 칩 `[INFO][WARN][ERROR]` — 실제 컬럼값 `category=eq.`, `level=eq.`로 정직 매핑.
+    - 이벤트/출동: `events` + `dispatches`를 시간순 머지, `[전체][이벤트][출동]` 필터, 카드 좌측 색띠로 severity/출동 구분.
+    - KPI: 이벤트 수 · 출동 수 · 평균 응답시간 · 감사로그 수 4장.
+  - `ControlRoomMain.uxml`의 `page-records`를 `RecordsPageTpl`로 교체, `ControlRoomPanels.uss`에 기록 컴포넌트 추가, `ControlRoomBinder.cs`에 `recordsPage` 등록.
+
+### 3.5.6 다음 세션으로 미룬 범위
+
+- Phase 5 인증: 운영자 선택 + 고정 비번 클라이언트 게이트 + 감사로그 category=audit + 프로필. RLS anon open 유지.
 
 ## 4. 최종 폴더 트리
 

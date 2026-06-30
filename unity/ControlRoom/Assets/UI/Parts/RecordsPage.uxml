@@ -1,0 +1,59 @@
+<!-- opencode: 2026-06-29 - 기록 탭 UXML. Coded with OpenCode; high-cost model review recommended.
+     RecordsPage.uxml — 기록 탭(로그 / 이벤트·출동 / KPI 3개 서브탭).
+     데이터는 RecordsPageView.cs가 Repository로부터 채운다.
+     외관 미세조정은 시각검증 단계에서 주인님 결정. -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="../ControlRoomTokens.uss" />
+    <Style src="../ControlRoomStyle.uss" />
+    <Style src="../ControlRoomPanels.uss" />
+
+    <ui:VisualElement name="records-page" class="records-page">
+        <ui:Label text="📊 기록" class="records-title" />
+
+        <!-- 서브탭: 로그 / 이벤트·출동 / KPI -->
+        <ui:VisualElement name="records-subtab" class="records-subtab">
+            <ui:Button name="btn-records-logs" text="로그" class="records-subtab-btn active" />
+            <ui:Button name="btn-records-events" text="이벤트/출동" class="records-subtab-btn" />
+            <ui:Button name="btn-records-kpi" text="KPI" class="records-subtab-btn" />
+        </ui:VisualElement>
+
+        <!-- 동적 칩 필터가 여기에 붙는다 -->
+        <ui:VisualElement name="records-chip-row" class="records-chip-row" />
+
+        <!-- 서브페이지 콘텐츠 -->
+        <ui:VisualElement name="records-content" class="records-content">
+            <ui:VisualElement name="records-logs-page" class="records-subpage">
+                <ui:ScrollView name="records-logs-scroll" class="records-list-scroll">
+                    <ui:VisualElement name="records-logs-list" class="records-list" />
+                </ui:ScrollView>
+            </ui:VisualElement>
+
+            <ui:VisualElement name="records-events-page" class="records-subpage hidden">
+                <ui:ScrollView name="records-events-scroll" class="records-list-scroll">
+                    <ui:VisualElement name="records-events-list" class="records-list" />
+                </ui:ScrollView>
+            </ui:VisualElement>
+
+            <ui:VisualElement name="records-kpi-page" class="records-subpage hidden">
+                <ui:VisualElement class="kpi-grid">
+                    <ui:VisualElement class="kpi-card">
+                        <ui:Label name="kpi-events-count" text="-" class="kpi-value" />
+                        <ui:Label text="이벤트 수" class="kpi-label" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="kpi-card">
+                        <ui:Label name="kpi-dispatch-count" text="-" class="kpi-value" />
+                        <ui:Label text="출동 수" class="kpi-label" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="kpi-card">
+                        <ui:Label name="kpi-avg-response" text="-" class="kpi-value" />
+                        <ui:Label text="평균 응답시간" class="kpi-label" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="kpi-card">
+                        <ui:Label name="kpi-audit-count" text="-" class="kpi-value" />
+                        <ui:Label text="감사로그 수" class="kpi-label" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

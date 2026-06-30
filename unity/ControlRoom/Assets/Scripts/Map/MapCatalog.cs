@@ -27,6 +27,24 @@ namespace URHYNIX.ControlRoom.Map
             return ids;
         }
 
+        // arena_v<N> 슬롯 중 N이 가장 큰(최신 SLAM본) id 반환. 같은 버전이면 발표용 pretty 슬롯을 우선한다.
+        // 아레나 버전은 계속 동적으로 추가되므로 id를 하드코딩하지 않고 폴더 스캔으로 최신을 고른다.
+        public static string LatestArenaSlot(string fallback = null)
+        {
+            int best = -1; bool bestPretty = false; string bestId = fallback;
+            foreach (var id in SlotIds())
+            {
+                var m = System.Text.RegularExpressions.Regex.Match(id, @"^arena_v(\d+)(_pretty)?$");
+                bool pretty = m.Success && !string.IsNullOrEmpty(m.Groups[2].Value);
+                if (m.Success && int.TryParse(m.Groups[1].Value, out int n)
+                    && (n > best || (n == best && pretty && !bestPretty)))
+                {
+                    best = n; bestPretty = pretty; bestId = id;
+                }
+            }
+            return bestId;
+        }
+
         public static bool HasSlot(string id)
             => !string.IsNullOrEmpty(id) && id != LiveSlotId
                && File.Exists(Path.Combine(MapsDir, id + ".png"))

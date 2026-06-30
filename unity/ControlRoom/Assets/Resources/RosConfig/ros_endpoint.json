@@ -1,4 +1,5 @@
 {
-  "endpointIp": "192.168.10.82",
-  "_note": "ros_tcp_endpoint가 뜬 PC IP(보통 Nav2 PC). 비우면 선택 로봇 hostAddress로 폴백. DHCP로 바뀌면 여기만 수정."
+  "endpointIp": "",
+  "endpointRobotId": "tb3_2",
+  "_note": "endpointIp가 비어있으면 endpointRobotId(tb3_1/tb3_2)의 hostAddress에서 IP를 추출. 둘 다 비어있으면 선택된 로봇 → robots[0] 순으로 폰. DHCP로 바뀌면 endpointRobotId만 유지. opencode: 2026-06-26 - endpoint를 젠지(tb3_2)로 지정해 IP 하드코딩 제거. Coded with OpenCode; high-cost model review recommended."
 }

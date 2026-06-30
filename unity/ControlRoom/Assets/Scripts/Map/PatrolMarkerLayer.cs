@@ -1,3 +1,4 @@
+// opencode: 2026-06-29 - 순찰 마커/연결선 색 토스 orange500으로 변환. Coded with OpenCode; high-cost model review recommended.
 // PatrolMarkerLayer.cs — 순찰 웨이포인트 마커(번호 원형) + 순서 연결선.
 // PatrolService.OnPatrolChanged / frame 변경 시 갱신. 선은 generateVisualContent(Painter2D),
 // 번호는 Label 풀로 그린다. 좌표 변환은 MapCoordinateSystem(SSOT) 위임.
@@ -16,8 +17,8 @@ namespace URHYNIX.ControlRoom.Map
         readonly List<Label> labelPool = new List<Label>();
         readonly List<Vector2> px = new List<Vector2>();   // DrawLines가 사용하는 frame 픽셀
 
-        static readonly Color LineColor = new Color(0.95f, 0.45f, 0.20f, 0.95f);
-        static readonly Color DotColor = new Color(0.95f, 0.45f, 0.20f, 1f);
+        static readonly Color LineColor = new Color(1f, 0.584f, 0f, 0.95f); // 토스 orange500 #FF9500
+        static readonly Color DotColor = new Color(1f, 0.584f, 0f, 1f);      // 토스 orange500 #FF9500
 
         public PatrolMarkerLayer(MapViewport viewport)
         {

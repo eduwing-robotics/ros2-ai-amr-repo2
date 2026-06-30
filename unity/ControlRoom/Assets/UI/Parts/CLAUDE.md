@@ -7,9 +7,12 @@
 | 파일 | 영역 |
 |---|---|
 | `TopBar.uxml` | 상단바 (로봇 탭, 시간, 경보, 전원) |
+| `HomePage.uxml` ✅ | 홈 탭 대시보드 (KPI + 로봇 카드 + 최근 활동) |
+| `ResponsePage.uxml` ✅ | 대응 탭 (위험등급 보드 + 출동현황 + 히스토리) |
+| `RecordsPage.uxml` ✅ | 기록 탭 (로그 / 이벤트·출동 / KPI 3서브탭) |
 | `LeftControlPanel.uxml` | 조작/순회/시나리오 버튼 |
 | `MapPanel.uxml` | 2D/3D 맵 + 전환 버튼 |
-| `CameraAndLogPanel.uxml` | 카메라 패널 + 이벤트 로그 |
+| `CameraAndLogPanel.uxml` | 칩라 패널 + 이벤트 로그 |
 | `RightStatusPanel.uxml` | 배터리, 센서, 기능 토글, 장치 정보 |
 
 ## 규칙

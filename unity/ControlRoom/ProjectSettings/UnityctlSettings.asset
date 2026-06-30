@@ -1,5 +1,5 @@
 {
   "Enabled": true,
-  "InstallSourceKind": "local",
-  "InstalledVersion": "0.2.0"
+  "InstallSourceKind": "embedded",
+  "InstalledVersion": "0.3.6"
 }

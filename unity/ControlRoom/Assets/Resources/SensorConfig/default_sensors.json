@@ -38,6 +38,7 @@
       "topicName": "/sensors/laser",
       "warningThreshold": 1.0,
       "iconName": "sensor_badge",
+      "disabled": true,
       "robotId": "tb3_2"
     }
   ]

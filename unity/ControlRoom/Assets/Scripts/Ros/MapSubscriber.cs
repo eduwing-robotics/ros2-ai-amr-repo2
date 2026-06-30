@@ -1,3 +1,4 @@
+// opencode: 2026-06-29 - /map OccupancyGrid 토스 팔레트 맵셀 색 변환. Coded with OpenCode; high-cost model review recommended.
 // MapSubscriber.cs — ROS2 nav_msgs/OccupancyGrid(/map) 구독 → Texture2D 변환 → 정적 이벤트로 전달.
 // 2026-06-16 라이브 맵뷰(경로 B): SLAM cartographer가 발행하는 /map을 ControlRoom MapPanel에 1:1 렌더.
 // 셀값 규약: -1 unknown(회색) / 0 free(흰색) / 100 occupied(검정). 맵 크기 변하면 텍스처 재생성.
@@ -33,21 +34,22 @@ namespace URHYNIX.ControlRoom.Ros
         public static float LatestOriginYaw { get; private set; }
 
         Texture2D mapTexture;
+        ROSConnection ros;
         bool subscribed;
         bool firstMapLogged;
         Color32[] pixels;
 
-        // 셀값 → 색 (Color32). unknown은 반투명 회색으로 배경과 구분.
-        static readonly Color32 ColFree     = new Color32(235, 238, 242, 255); // 빈 공간
-        static readonly Color32 ColOccupied = new Color32(20, 24, 30, 255);    // 벽/장애물
-        static readonly Color32 ColUnknown  = new Color32(60, 66, 76, 120);    // 미관측
+        // 셀값 → 색 (Color32). 토스 TDS 팔레트 이식: free=grey100, occupied=grey900, unknown=grey400α.
+        static readonly Color32 ColFree     = new Color32(242, 244, 246, 255); // 빈 공간 grey100
+        static readonly Color32 ColOccupied = new Color32(32, 38, 50, 255);    // 벽/장애물 grey900
+        static readonly Color32 ColUnknown  = new Color32(176, 184, 193, 120); // 미관측 grey400α
 
         void Start()
         {
             if (string.IsNullOrEmpty(topicName))
                 topicName = TopicRegistry.Map;
 
-            var ros = ROSConnection.GetOrCreateInstance();
+            ros = ROSConnection.GetOrCreateInstance();
             ros.Subscribe<OccupancyGridMsg>(topicName, OnMapReceived);
             subscribed = true;
 
@@ -63,7 +65,7 @@ namespace URHYNIX.ControlRoom.Ros
             // 맵 크기 변화 시(또는 최초) 텍스처/버퍼 재생성.
             if (mapTexture == null || mapTexture.width != w || mapTexture.height != h)
             {
-                if (mapTexture != null) Destroy(mapTexture);
+                if (mapTexture != null) DestroyTexture(mapTexture);
                 mapTexture = new Texture2D(w, h, TextureFormat.RGBA32, false)
                 {
                     filterMode = FilterMode.Point,   // 셀 경계 또렷하게
@@ -111,14 +113,21 @@ namespace URHYNIX.ControlRoom.Ros
             OnMapUpdated?.Invoke(mapTexture, w, h, msg.info.resolution, ox, oy, oyaw);
         }
 
+        static void DestroyTexture(Texture2D texture)
+        {
+            if (texture == null) return;
+            if (Application.isPlaying) Destroy(texture);
+            else DestroyImmediate(texture);
+        }
+
         void OnDestroy()
         {
-            if (subscribed)
+            if (subscribed && ros != null)
             {
-                try { ROSConnection.GetOrCreateInstance().Unsubscribe(topicName); }
+                try { ros.Unsubscribe(topicName); }
                 catch { /* 종료 순서상 ROS 이미 정리됐을 수 있음 */ }
             }
-            if (mapTexture != null) Destroy(mapTexture);
+            if (mapTexture != null) DestroyTexture(mapTexture);
             if (LatestMap == mapTexture) LatestMap = null;
         }
     }

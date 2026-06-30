@@ -1,3 +1,4 @@
+// opencode: 2026-06-29 - 맵 캔버스 배경색 토스 grey900으로 변환. Coded with OpenCode; high-cost model review recommended.
 // MapView.cs — 맵 2D 서브시스템 오케스트레이터(thin). 레이어 스택을 조립·연결만 한다.
 // 책임 분리: Viewport(프레임 비율맞춤) / ImageLayer(텍스처) / HudLayer(스케일·좌표) / [Phase2] Marker / [Phase3] Interaction.
 // MapPanelView가 2D 컨테이너를 넘겨 생성. 무거운 로직은 각 레이어가 보유(파일 비대화 방지).
@@ -30,7 +31,7 @@ namespace URHYNIX.ControlRoom.Map
             container2D.style.flexGrow = 1;
             container2D.style.minHeight = 320;
             // 테마 캔버스 — 비율맞춤 후 남는 여백이 이 색으로 채워져 "의도된 배경"이 됨.
-            container2D.style.backgroundColor = new Color(0.16f, 0.20f, 0.27f, 1f); // slate
+            container2D.style.backgroundColor = new Color(0.125f, 0.149f, 0.196f, 1f); // 토스 grey900 #202632
 
             Viewport = new MapViewport(container2D);
             imageLayer = new MapImageLayer(Viewport);

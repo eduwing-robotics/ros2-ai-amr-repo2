@@ -9,7 +9,8 @@
       "hostAddress": "kim@192.168.10.84",
       "cameraTopic": "/tb3_2/camera/image_raw/compressed",
       "poseTopic": "/tb3_2/pose",
-      "iconName": "turtlebot_badge"
+      "iconName": "turtlebot_badge",
+      "markerColor": "#4DA3FF"
     },
     {
       "robotId": "tb3_1",
@@ -20,7 +21,8 @@
       "hostAddress": "t1@192.168.10.250",
       "cameraTopic": "/tb3_1/camera/color/image_raw/compressed",
       "poseTopic": "/tb3_1/pose",
-      "iconName": "turtlebot_badge"
+      "iconName": "turtlebot_badge",
+      "markerColor": "#34D98C"
     }
   ]
 }

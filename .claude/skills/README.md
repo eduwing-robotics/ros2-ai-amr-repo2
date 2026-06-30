@@ -77,6 +77,7 @@
 | `unity-camera-panel` | Unity 관제 UI에 ROS2 카메라 라이브 RGB 패널을 코드 손 안 대고 추가할 때. 새 카메라 추가 시 AddCameraPanel 한 줄로 확장 | `CameraStreamPanel.cs` 컴포넌트(topic Inspector 입력) + `CameraPanelSetup.cs` Editor script(batch mode) + Unity batch CLI 한 줄. 함정 7건 매트릭스. 2026-06-02 GenjiCameraPanel + T1CameraPanel 자동 추가 통과 |
 | `unity-ui-interaction-audit` | UI Toolkit View 레이어 완료 후 UI Contract Lock 잠그기 전 모든 버튼/토글의 핸들러+이벤트+구독자+시각 피드백 정합성 검증 | Phase A Opus 정적 매트릭스 (25개 요소, 결함 6분류) + Phase B unityctl 동적 한계 5종 우회 표. 함정 7건 (script validate 가짜 PASS / exec 사용자 어셈블리 unreachable / Button.clicked event invoke 불가 등). 2026-06-04 URHYNIX Phase 2.5 검증 통과 |
 | `unity-live-map-twin` | ControlRoom 맵뷰에 라이브 SLAM `/map`을 카메라 없이 그리거나, /tf 로봇 마커·우클릭 SSOT 출동·맵 회전 보정을 추가할 때 | map-frame 비율맞춤(여백 제거) + 좌표 SSOT(`MapCoordinateSystem`) + /tf 합성 마커 + 우클릭 컨텍스트 메뉴(`IMapAction`+SSOT) + `/goal_pose` 발행 + 회전 영속(PlayerPrefs+json). 컴포넌트화 Map/ 레이어. 2026-06-16 젠지 검증(회전 85° CW) |
+| `unity-passive-pose-twin` | 다른 컴퓨터가 로봇을 운영 중일 때 옆에서 "구독만" 해서 로봇 위치를 우리 Unity 맵에 띄울 때(패시브 트윈) | 충돌 희소자원 3개(시리얼·endpoint포트10000·토픽이름)만 회피 → bringup 0 + :10000 빈 브리지 호스트에 우리 endpoint(+필요시 tf→/tb3_X/pose 리퍼블리셔)만 추가. ns tf 프레임 함정 + 비침습 teardown(self-kill 회피). `ros2-noninvasive-pose-tap`의 Unity 브리지 짝. 2026-06-25 실전 검증(Case B 비-ns, 비침습 PASS) |
 | `unity-unityctl-ops` | unityctl로 코드 수정 검증/Play 할 때, check가 stale하거나 IPC "not ready"/스크린샷 검정/에디터 교착일 때 | 안전 절차(play stop→refresh→isCompiling 폴링→check) + 함정표(Play 중 재컴파일 차단, --json 우회, UI Toolkit 스크린샷 검정, 로봇-오프 ROS 스팸 교착). 2026-06-16 반복 학습 |
 | `urhynix-fullstack-bringup` | 디지털트윈 dry-run — 배터리·카메라·맵·LDR·PIR 5트랙을 한 로봇에 동시에 띄워 Unity에 다 표시할 때, 또는 "개별은 되는데 다 같이" 안 될 때 | SLAM 공존 위한 non-namespaced bringup + 배터리 relay 결정, USB 2개(Arduino 2341/OpenCR 0483) usb_port·심링크, 기동 5단계, SensorVerifyConsole 검증, 함정표(usb스왑·edge-trigger·libcamera LD·ros_tcp크래시·wifi churn). 2026-06-16 젠지 5트랙 PASS |
 | `urhynix-yolo-capture-train` | T1 RealSense 브라우저 UI로 맞춤 물체를 Space 촬영, ROI 연사, 마스크 bbox 보정, YOLO 학습, best.pt 탐지 검증, hard-negative 오탐 배경 정제까지 이어갈 때 | 8090 preview polling, datasets/runs 위치, ROI crop→mask→bbox→YOLO txt, rembg/SAM/GrabCut/fallback 규칙, 검수 삭제, `N 오탐 배경 저장`, 학습 후 live detect 검증 |
@@ -108,10 +109,13 @@
 - "배터리·카메라·맵·센서 5트랙을 한 로봇에 동시에 띄워 Unity에 다 표시" -> `urhynix-fullstack-bringup`
 - "unityctl로 코드 검증하는데 컴파일이 stale/스크린샷 검정/에디터 묶임" -> `unity-unityctl-ops`
 - "다른 PC가 라이다/Nav2 돌리는 중인데 위치값만 방해 없이 읽고 싶다" -> `ros2-noninvasive-pose-tap`
+- "다른 컴퓨터가 작업 중인데 옆에서 구독만 해서 로봇 위치를 우리 Unity에 띄우고 싶다" -> `unity-passive-pose-twin`
+- "위치만 대강 빠르게 띄워줘 / 재기동 / 충전소에 로봇 표시 (AMCL 없이)" -> `urhynix-odom-marker-quickstart`
 - "텔레옵으로 로봇 세워가며 실측 순찰 웨이포인트를 만들고 싶다" -> `urhynix-teleop-waypoint-capture`
 - "저장맵에서 안전 순찰 좌표를 자동으로 뽑고 싶다" -> `map-pgm-waypoint-autogen`
 - "DB 살았나/연결됐나 5초에 확인하고 싶다" -> `supabase-db-health-ping`
 - "팀원 파일 없이 운영 중 도메인에서 현재 맵을 직접 떠오고 싶다" -> `live-map-pull-from-domain`
+- "로봇이 맵에 안 뜸·노드가 두 개씩·라이다 안 켜진 듯, bringup 전 도메인 ground truth 잡기" -> `urhynix-ros-domain-diagnose`
 
 ## Writing Rules
 

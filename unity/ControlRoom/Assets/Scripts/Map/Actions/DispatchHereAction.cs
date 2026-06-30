@@ -14,7 +14,7 @@ namespace URHYNIX.ControlRoom.Map.Actions
         {
             ControlRoomEvents.RaiseLogAdded("dispatch", "INFO",
                 $"출동 명령: {ctx.selectedRobotId} → ({ctx.worldX:0.00}, {ctx.worldY:0.00})");
-            ControlRoomEvents.RaiseDispatchRequested(ctx.selectedRobotId, ctx.worldX, ctx.worldY, "manual");
+            ControlRoomEvents.RaiseDispatchRequested(ctx.selectedRobotId, ctx.worldX, ctx.worldY, "manual", simulated: false);
         }
     }
 }

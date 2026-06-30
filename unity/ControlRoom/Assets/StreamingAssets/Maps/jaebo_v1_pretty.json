@@ -1,0 +1,14 @@
+{
+  "map": {
+    "mapId": "jaebo_v1_pretty",
+    "displayName": "가재보 관제 천장뷰",
+    "originX": -0.601,
+    "originY": -2.101,
+    "resolution": 0.05,
+    "widthPx": 52,
+    "heightPx": 52,
+    "displayRotationDeg": 0
+  },
+  "waypoints": [],
+  "protectedTargets": []
+}

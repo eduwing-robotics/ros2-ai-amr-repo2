@@ -32,6 +32,12 @@ namespace URHYNIX.ControlRoom.Map
         // 맵 표시 회전(도, 시계방향+). SLAM 원점과 실제 경기장 정렬 보정용.
         public float RotationDeg { get; private set; }
 
+        // 줌/팬 (Frame transform). rotate와 같은 인프라라 클릭 WorldToLocal이 자동 역산.
+        public float Zoom { get; private set; } = 1f;
+        public float PanX { get; private set; }
+        public float PanY { get; private set; }
+        const float MinZoom = 1f, MaxZoom = 6f;
+
         public MapViewport(VisualElement container)
         {
             this.container = container;
@@ -46,11 +52,54 @@ namespace URHYNIX.ControlRoom.Map
         // 프레임 전체(맵 이미지 + 마커)를 중심 기준으로 회전. 마커도 함께 돌아 위치 정합 유지.
         public void SetRotation(float deg)
         {
-            RotationDeg = deg;
-            Frame.style.rotate = new Rotate(deg);
+            RotationDeg = deg % 360f;   // 360°=0° 정규화 (회전 누적 시 한 바퀴 깔끔 처리)
+            Frame.style.rotate = new Rotate(RotationDeg);
         }
 
         public void AddRotation(float delta) => SetRotation(RotationDeg + delta);
+
+        // 커서 고정 줌: pivot(프레임-로컬 px)이 줌 후에도 같은 화면점에 남도록 pan 보정.
+        // center-origin scale이라 화면점 = F + pan + center + (p-center)*zoom → pan += (p-center)*(old-new).
+        public void SetZoom(float targetZoom, Vector2 pivotFrameLocal)
+        {
+            float clamped = Mathf.Clamp(targetZoom, MinZoom, MaxZoom);
+            if (Mathf.Approximately(clamped, Zoom)) return;
+            float cx = FrameWidth * 0.5f, cy = FrameHeight * 0.5f;
+            PanX += (pivotFrameLocal.x - cx) * (Zoom - clamped);
+            PanY += (pivotFrameLocal.y - cy) * (Zoom - clamped);
+            Zoom = clamped;
+            ClampPan();
+            ApplyTransform();
+        }
+
+        public void Pan(float dx, float dy)
+        {
+            PanX += dx; PanY += dy;
+            ClampPan();
+            ApplyTransform();
+        }
+
+        public void ResetView()
+        {
+            Zoom = 1f; PanX = 0f; PanY = 0f;
+            ApplyTransform();
+        }
+
+        // 줌인 상태에서 맵이 container 밖으로 과도 이탈하지 않게 pan 제한.
+        void ClampPan()
+        {
+            float mx = FrameWidth * (Zoom - 1f) * 0.5f;
+            float my = FrameHeight * (Zoom - 1f) * 0.5f;
+            PanX = Mathf.Clamp(PanX, -mx, mx);
+            PanY = Mathf.Clamp(PanY, -my, my);
+        }
+
+        void ApplyTransform()
+        {
+            Frame.style.scale = new Scale(new Vector2(Zoom, Zoom));
+            Frame.style.translate = new Translate(PanX, PanY);
+            OnFrameChanged?.Invoke();   // 마커 reposition + 스케일바 갱신
+        }
 
         // MapSubscriber.OnMapUpdated에서 호출 — 맵 메타 갱신 후 재배치.
         public void SetMap(int widthCells, int heightCells, float resolution, float originX, float originY)
@@ -61,6 +110,7 @@ namespace URHYNIX.ControlRoom.Map
             OriginX = originX;
             OriginY = originY;
             HasMap = widthCells > 0 && heightCells > 0 && resolution > 0f;
+            ResetView();   // 새 맵이면 줌/팬 초기화
             Relayout();
         }
 

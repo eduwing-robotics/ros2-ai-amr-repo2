@@ -1,3 +1,4 @@
+<!-- opencode: 2026-06-30 - Intake verdict 갱신(Unity 목업→실데이터 교체). Coded with OpenCode; high-cost model review recommended. -->
 # Project Plan
 
 > 기능 전용 플랜: 맵 클릭 웨이포인트 에디터 + 순찰 실행 → `docs/ref/PLAN-map-waypoint-editor.md` (2026-06-23 잠금, check-planning PASS)
@@ -8,12 +9,43 @@
 
 ## Intake Verdict
 
-- verdict: `doc-sync`
-- chosen skill: `task-intake-router`
-- next skill: `doc-sync`, `evidence-review`
-- tech ref: `docs/ref/tech/OPS-HARNESS.md`
+- verdict: `implement`
+- chosen skill: `big-task`
+- next skill: `change-impact-map`, `evidence-review`
+- tech ref: `docs/ref/tech/UNITY.md`
 - sub-agent needed: no
-- reasoning: Claude/Codex 스킬 하네스와 ref 로딩 흐름을 기술별로 분리해 Unity/ROS2/Arduino/DB/카메라/운영 작업마다 필요한 최소 ref만 빠르게 읽게 하는 문서 구조 개선 요청이다.
+- reasoning: Unity ControlRoom의 목업/하드코딩 데이터를 실제 ROS/DB/Config 기반으로 교체하고, 파일 크기를 컴포넌트화하며, unityctl 검증 루프로 닫는 구현 작업. 외부 그래프 도입은 현재 규모에선 overkill로 판정. 상세 대상은 `docs/ref/UNITY-MOCK-TO-REAL-ROADMAP.md`에 인덱싱.
+
+## Impact Map Summary (2026-06-30 — 목업→실데이터 교체)
+
+- 변경 축: `mixed` (UI surface + config schema + DB write contract + simulation fallback)
+- core paths:
+  - `unity/ControlRoom/Assets/Scripts/Simulation/FakeSensorData.cs`
+  - `unity/ControlRoom/Assets/Scripts/Simulation/DemoScenarioService.cs`
+  - `unity/ControlRoom/Assets/Scripts/UI/HomePageView.cs`
+  - `unity/ControlRoom/Assets/Scripts/UI/ProtectedTargetView.cs`
+  - `unity/ControlRoom/Assets/Scripts/UI/WaypointListView.cs`
+  - `unity/ControlRoom/Assets/Scripts/UI/SensorCardListView.cs`
+  - `unity/ControlRoom/Assets/Scripts/UI/RecordsPageView.cs` → `UI/Records/*`
+  - `unity/ControlRoom/Assets/Scripts/Database/SupabaseDbService.cs`
+  - `unity/ControlRoom/Assets/Resources/SensorConfig/default_sensors.json`
+  - `unity/ControlRoom/Assets/Resources/MapConfig/office_base_map.json`
+  - `unity/ControlRoom/Assets/Resources/SituationConfig/default_situations.json`
+- companion docs:
+  - `docs/ref/UNITY-CONTROLROOM-CONVERSION-PLAN.md` §3.5 이후 — 탭/데이터 흐름 갱신
+  - `docs/ref/ARCHITECTURE.md` — 센서/ROS/DB 흐름과 정합
+  - `docs/ref/SCHEMA.md` — `simulated` 컬럼, `protected_assets` 예정 표기
+  - `docs/status/PROJECT-STATUS.md` — Evidence Status
+  - `docs/status/DECISION-LOG.md` — "목업→실데이터 교체" 결정 기록
+- verify matrix:
+  - `unityctl check` / `unityctl script get-errors` — 매 Phase 후 0 errors
+  - EditMode/PlayMode smoke — `RecordsPage` 서브탭, `SensorCardList` 동적 생성, `WaypointList` 동적 생성
+  - Supabase live query — `ResponsePage`, `RecordsPage` end-to-end
+- naming contract 변경: 없음 (기존 `ControlRoomEvents` 메서드명 유지, `simulated` 플래그 추가만)
+- residual risk:
+  - `protected_assets` 테이블 미적용 → config 단계로 제한
+  - `simulated` 플래그 추가 시 `RaiseDispatchRequested` 시그니처 변경 → `Map/Actions/*Dispatch*` 동시 수정
+  - `unityctl script validate` 가짜 PASS 버그 → 반드시 `get-errors`/`check` 병행
 
 ### Tech Ref Routing Update (2026-06-02)
 
