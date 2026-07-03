@@ -1,0 +1,14 @@
+{
+  "map": {
+    "mapId": "arena_shared_pretty",
+    "displayName": "티원 공유 아레나 관제 천장뷰",
+    "originX": -0.241,
+    "originY": -0.236,
+    "resolution": 0.02,
+    "widthPx": 96,
+    "heightPx": 97,
+    "displayRotationDeg": 0
+  },
+  "waypoints": [],
+  "protectedTargets": []
+}

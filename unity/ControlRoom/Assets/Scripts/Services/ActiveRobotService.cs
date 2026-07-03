@@ -1,6 +1,6 @@
 // ActiveRobotService.cs — 활성(선택) 로봇의 역할 능력(capability) 조회 SSOT.
 // 선택 상태 자체는 ControlRoomState.SelectedRobotId가 보유(역할 교환 = 탭 전환). 여기선 capability만 판정.
-// capabilities 미설정이면 하위호환으로 모두 허용. 젠지/티원 둘 다 "patrol" 보유 → 순찰 상호교환.
+// capabilities 미설정이면 하위호환으로 모두 허용. 티원만 "patrol" 보유(조작 가능) — 젠지는 구독 전용(2026-07-01).
 using URHYNIX.ControlRoom.App;
 using URHYNIX.ControlRoom.Data;
 

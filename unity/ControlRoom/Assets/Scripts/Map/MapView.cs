@@ -4,7 +4,6 @@
 // MapPanelView가 2D 컨테이너를 넘겨 생성. 무거운 로직은 각 레이어가 보유(파일 비대화 방지).
 using UnityEngine;
 using UnityEngine.UIElements;
-using URHYNIX.ControlRoom.Data;
 using URHYNIX.ControlRoom.Map.Actions;
 
 namespace URHYNIX.ControlRoom.Map
@@ -24,6 +23,10 @@ namespace URHYNIX.ControlRoom.Map
         readonly MapInteractionController interaction;
         readonly Label emptyHint;
 
+        // 2.5D(Map25DInteractionController)가 같은 메뉴/액션 레지스트리를 재사용 — 2D/2.5D는 동시 표시 안 되므로 공유해도 안전.
+        public MapContextMenuView ContextMenu => contextMenu;
+        public MapActionRegistry Actions { get; }
+
         // root: 컨텍스트 메뉴가 패널 위에 뜨도록 최상위 VisualElement.
         public MapView(VisualElement container2D, VisualElement root)
         {
@@ -40,23 +43,18 @@ namespace URHYNIX.ControlRoom.Map
             Hud = new MapHudLayer(container2D, Viewport);
 
             contextMenu = new MapContextMenuView(root);
-            interaction = new MapInteractionController(Viewport, Hud, contextMenu, new MapActionRegistry());
+            Actions = new MapActionRegistry();
+            interaction = new MapInteractionController(Viewport, Hud, contextMenu, Actions);
 
-            // 회전 보정각 적용: PlayerPrefs(마지막 값) → 없으면 SSOT(office_base_map.json) → 없으면 0.
-            Viewport.SetRotation(PlayerPrefs.GetFloat(RotationPrefKey, LoadJsonRotation()));
+            // 회전 보정각 적용: PlayerPrefs(마지막 값) → 없으면 0(회전 없음).
+            // 예전엔 office_base_map.json(레거시, 맵 슬롯 시스템과 무관)의 displayRotationDeg를 읽었으나,
+            // 실제 활성 슬롯(arena_shared 등)과 연결되지 않는 값이라 드리프트였다 — 안전한 항등 기본값 0으로 교체.
+            Viewport.SetRotation(PlayerPrefs.GetFloat(RotationPrefKey, 0f));
 
             // "수신 대기" 힌트(UXML) — 첫 맵으로 frame이 생기면 숨김.
             emptyHint = container2D.Q<Label>("map-empty-hint");
             if (emptyHint != null) emptyHint.BringToFront();
             Viewport.OnFrameChanged += HideHintOnce;
-        }
-
-        static float LoadJsonRotation()
-        {
-            var ta = Resources.Load<TextAsset>("MapConfig/office_base_map");
-            if (ta == null) return 0f;
-            var cfg = JsonUtility.FromJson<MapConfigData>(ta.text);
-            return cfg?.map != null ? cfg.map.displayRotationDeg : 0f;
         }
 
         void HideHintOnce()

@@ -18,7 +18,7 @@ description: URHYNIX 젠지·티원 라즈베리파이를 한 번에 안전 종�
 1. **IP**: alias/mDNS가 죽어 있으면 SSOT `unity/ControlRoom/Assets/Resources/RobotConfig/default_robots.json`의 `hostAddress` 사용. DHCP drift는 정상(메모리 `project_robot_ip_dynamic`). 못 찾으면 `robot-ip-detect-fallback`.
 2. **sudo 비번**: git에 안 박는다. 로컬 메모리 `~/.claude/projects/-Users-family-jason-URHYNIX/memory/urhynix-robot-sudo-passwords.md`에서 읽는다. 메모리에 없으면 주인님께 1회 물어보고 그 메모리에 저장.
 
-현재 접속(2026-06-24): 젠지 `kim@192.168.10.84` · 티원 `t1@192.168.10.250`. **비번 값은 여기 적지 않는다(git 커밋됨)** — 위 메모리 파일에서 읽고, IP가 바뀌었으면 default_robots.json 우선.
+현재 접속(2026-06-30): 젠지 `kim@192.168.20.7`(WiFi) / 티원 `t1@192.168.20.101`(WiFi). **WiFi SSH 가능(2026-06-30 확인)** — `ssh g1`/`ssh t1` alias로 바로 셧다운 가능. 랜선(10.50/10.51)은 초기 bringup 설정 시만 필요. **비번 값은 여기 적지 않는다(git 커밋됨)** — 위 메모리 파일에서 읽고, IP가 바뀌었으면 default_robots.json 우선.
 
 ## 절차
 

@@ -1,40 +1,26 @@
-<!-- opencode: 2026-06-30 - Phase 3 준비 완료. 고비용 모델 리뷰 체크리스트 추가. Coded with OpenCode; high-cost model review recommended. -->
+<!-- opencode: 2026-07-01 - 2.5D 우클릭 메뉴 + 로봇 마커 추가, 합성이벤트 검증 PASS. -->
 # Session Handoff — 다음 세션 진입 캡슐
 
 > **다음 세션의 AI 에이전트가 첫 5분 안에 컨텍스트를 잡기 위한 1페이지.**
 > 
 > 구조: Last updated 날짜 | Top 액션 | 첫 5분 체크리스트 | 복구 명령 | More info 링크
 
-**Last updated**: 2026-06-30 밤 — **🗺️ 가재보맵 통합 + 컴파일 블로커 해소 + 비침습 구독 역할분리 결정.**
-
-- **컴파일 풀림**: unityctl bridge 6에러(CS0453 1·CS0029 4·CS0246 1, bridge 패키지 자체 버그) 메인 패치 → **0에러 PASS**(`Csc Assembly-CSharp.dll` 재빌드 + `get-errors` 0). 에디터 비포커스 stale은 `set frontmost`+Cmd+R+로그 offset으로 검증.
-- **티원 마커 fix**: root cause = `dual_marker_up.sh`가 티원을 `endpoint=no`로 기동(Unity `RosConnectionManager`는 로봇별 전용 endpoint `.250:10000` 필요). → 티원 `yes` 영구수정, ep.log `RegisterSubscriber(/tb3_1/pose) OK` 확인.
-- **가재보맵 통합**: `jaebo_v1` 2D 슬롯(`pgm_to_map_slot.py`, `arena_v\d+` regex와 격리) + `jaebo_v1.sdf`. 3D sdf 뷰 신설(`Map/SdfWallSpawner.cs` 벽89 box→Cube, `Map/Map3DView.cs` 천장뷰 RenderTexture, `MapPanelView` 2D/3D 탭 실동작). 컴파일 0에러, **런타임 육안 미검증**.
-- **역할분리 결정(중요)**: 로봇 운영(bringup·map_server·AMCL·주행=publish)은 **데스크탑(팀)**, 우리 Unity는 **구독만(passive twin)** — 로봇 도메인 점유 0(팀 사용 보장). Phase 2를 "데스크탑 AMCL + 우리 구독"으로 재정의. ([[unity-passive-pose-twin]]/[[ros2-noninvasive-pose-tap]])
-- **🎯 다음 액션**: ① Unity Play → `jaebo_v1` 슬롯·3D 탭(벽89)·티원 초록마커 육안 + 3D 좌표 정합(ponytail 1차안) 축·부호 조정 ② 데스크탑 운영 연동(우리는 구독만) ③ 가재보 공간서 데스크탑 AMCL → 트윈 추종. 자세히: `docs/status/DECISION-LOG.md` 2026-06-30 최상단.
-
-**이전(2026-06-30 낮)**: Phase 3 준비(FakeSensor ROS-off·DemoScenario SSOT·Supabase 동적화) + 기록탭 컴포넌트 분리 — bridge 6에러로 컴파일 막혔던 것 이번 해소. **이전(2026-06-29)**: 기록 탭(Phase 3) + DB Repository 확장 + 메인 리뷰.
+**Last updated**: 2026-07-03 (**🗺️ arena_shared 맵 재캡처 교체 + AMCL "위치고정+방향탐색" 재확보 패턴 스킬화 + RTAB-Map 3D 정합검증 + Unity 3D 탭 점군 렌더링 후 역할재정의** — 2D SSOT맵을 재캡처본으로 교체(Unity슬롯+SDF+로봇배포 전부 재생성). 옛 dock좌표가 새맵에서 안 먹혀서 AMCL 재확보의 새 표준패턴 도출(사용자 클릭 ground truth + 위치고정/방향탐색 시딩), `urhynix-t1-amcl-saved-map` 스킬에 영구화. RGB-D 매핑+RTAB-Map 3D 재구성으로 2D맵/AMCL 정합 교차검증(시작점 근처 PASS, 방 전체는 loop closure 실패로 드리프트 — 흰벽 위주 방의 근본적 특징부족, 라이다/시각 양쪽 다 겪음). Unity 3D 탭에 실사 점군 렌더링(Pcx 패키지)까지 붙였다가 클릭-좌표찍기 불안정 확인 후 **역할재정의**: 2D/2.5D=좌표입력, 3D=보기전용으로 스코프 정리. 티원 안전 셧다운. 자세히: `docs/status/DECISION-LOG.md` 2026-07-03 최상단 entry). **이전(2026-07-01)**: 🤖 티원 7웨이포인트 순회 인프라 완성 + keepout zone 구현 + `/dev/shm` 시스템정체 규명(재부팅 해결), 웨이포인트1 clean PASS(7웨이포인트 완주는 배터리로 이월 → **새맵 교체로 좌표 자체가 무효화돼 재계산 필요**). **이전(2026-07-01, 더 이전)**: 🗺️ 2.5D 탭 순회지점 미표시 버그 수정.
 
 ---
 
 ## ⚡ Top 1 Action (가장 최신)
 
-**고비용 모델 리뷰: Phase 3 준비 코드 + bridge 컴파일 에러 분기**
+**새 arena_shared 맵 기준으로 7웨이포인트 재계산 → 순회 재검증**
 
-- **배경**: 실제 로봇/ROS 연동은 고비용 모델과 함께 진행하기로 결정. 지금은 인터페이스 분기/설정 기반 동적화만 끝낸 준비 상태.
-- **관련 파일**:
-  - Simulation: `unity/ControlRoom/Assets/Scripts/Simulation/FakeSensorData.cs`, `unity/ControlRoom/Assets/Scripts/Simulation/DemoScenarioService.cs`
-  - UI: `unity/ControlRoom/Assets/Scripts/UI/ScenarioPanelView.cs`
-  - Config: `unity/ControlRoom/Assets/Resources/SituationConfig/default_situations.json`
-  - DB: `unity/ControlRoom/Assets/Scripts/Database/SupabaseDbService.cs`
-  - Events/Actions: `unity/ControlRoom/Assets/Scripts/App/ControlRoomEvents.cs`, `unity/ControlRoom/Assets/Scripts/Map/Actions/DispatchHereAction.cs`, `unity/ControlRoom/Assets/Scripts/Map/Actions/SituationDispatchAction.cs`
-  - App bootstrap: `unity/ControlRoom/Assets/Scripts/App/ControlRoomApp.cs`
-  - UXML: `unity/ControlRoom/Assets/UI/Parts/LeftControlPanel.uxml`
-- **다음 액션**:
-  1. 아래 **고비용 모델 리뷰 체크리스트**를 검토.
-  2. `unityctl bridge` 6 compile error가 본 작업과 무관한지 판단. 필요 시 bridge 패키지 다운그레이드/패치 결정.
-  3. Unity Editor 재기동 후 `unityctl script get-errors` 재확인.
-  4. `unityctl exec`로 `SensorVerifyConsole.SwitchTo("tb3_2")` → `Dump()` 런타임 검증.
+- **배경**: 오늘 맵을 재캡처본으로 통째 교체하면서 좌표계 원점이 바뀌어, 기존 `patrol_multi_waypoint.py`의 `WAYPOINTS`(7개)가 새 맵에서 무효 상태(DOCK만 오늘 재확정, 좌표는 옛맵 기준으로 이월 표시해둠). AMCL/nav2 인프라 자체(keepout, `/dev/shm` 안정성, 벽인접 보정 스크립트)는 전부 살아있고 검증됨 — **좌표만 다시 잡으면 됨**.
+- **할 일(순서대로)**:
+  1. 티원 전원 켜고 bringup+AMCL(**충전독에 물리적으로 있는지 확인 후** x=0.038,y=1.405,yaw=0.293 초기포즈 재시딩, `urhynix-t1-amcl-saved-map`의 "맵 교체 시 초기포즈 재확보 절차" 참고).
+  2. Unity에서 새 맵 위에 7웨이포인트 새로 클릭(또는 `scripts/patrol_safe_clearance.py`로 옛 좌표를 새맵 기준 근사 재배치 후 육안 보정).
+  3. `patrol_multi_waypoint.py`의 `WAYPOINTS` 갱신 → 로봇 재배포 → foreground 실행, 7웨이포인트+복귀주차 전부 `STATUS_SUCCEEDED` 확인.
+  4. PASS면 `urhynix-t1-nav2-patrol-drive` 검증 섹션 갱신 + ssot-trio-update.
+- **관련 파일**: `scripts/{patrol_multi_waypoint.py,patrol_safe_clearance.py}`, `.claude/skills/urhynix-t1-amcl-saved-map/SKILL.md`(새 패턴), `.claude/skills/urhynix-t1-nav2-patrol-drive/SKILL.md`.
+- **병행 이월(여전히 유효)**: 2.5D 우클릭/로봇마커 육안 확인 — `Map25DInteractionController.cs`/`Map25DRobotMarkerLayer.cs`는 합성이벤트로 로직만 검증됨.
 
 ---
 
@@ -79,33 +65,21 @@
 ## 📋 First 5 Min Checklist
 
 ```bash
-# 0. 오늘 변경 요약 확인
-cd /Users/family/jason/URHYNIX
-git status --short
+# 1. Unity 컴파일 확인 (에디터 이미 떠있으면 생략)
+unityctl script get-errors --project /Users/family/jason/URHYNIX/unity/ControlRoom --json
+# → 0 error(s) 확인
 
-# 1. Unity 컴파일 확인 (Editor 재기동 후)
-cd /Users/family/jason/URHYNIX/unity/ControlRoom
-unityctl check
-unityctl script get-errors --project /Users/family/jason/URHYNIX/unity/ControlRoom
+# 2. arena_shared 2.5D 탭 회귀 확인(육안, 성역) — 벽 27개(외곽+칸막이+돌출) 정상 렌더되는지
+# Unity Play → 맵패널 2.5D 탭 → 드래그 회전 + 휠 줌 동작 확인
 
-# 2. 동적 UI 런타임 확인
-unityctl exec --project /Users/family/jason/URHYNIX/unity/ControlRoom \
-  --code 'URHYNIX.ControlRoom.App.SensorVerifyConsole.SwitchTo("tb3_2")'
-unityctl exec --project /Users/family/jason/URHYNIX/unity/ControlRoom \
-  --code 'URHYNIX.ControlRoom.App.SensorVerifyConsole.Dump()'
-#    → `sensor-value-pir`, `sensor-value-sound`, `sensor-value-temp`, `sensor-value-laser` 라벨이 보여야 함
+# 3. 우클릭 설계 착수 전 기존 2D 패턴 읽기
+#    unity/ControlRoom/Assets/Scripts/Map/MapContextMenuView.cs
+#    unity/ControlRoom/Assets/Scripts/Map/MapInteractionController.cs
+#    unity/ControlRoom/Assets/Scripts/Map/Actions/ (DispatchHereAction.cs 등)
 
-# 3. 하드코딩 잔여 정적 확인
-grep -R "sensor-(pir|sound|temp|laser)-value\|wp-[1-5]\"\|target-frame-a\|target-object-a" \
-  /Users/family/jason/URHYNIX/unity/ControlRoom/Assets/Scripts \
-  /Users/family/jason/URHYNIX/unity/ControlRoom/Assets/UI || echo "하드코딩 잔여 0건"
-
-# 4. 시나리오 버튼 동적 생성 확인
-unityctl exec --project /Users/family/jason/URHYNIX/unity/ControlRoom \
-  --code 'URHYNIX.ControlRoom.App.SensorVerifyConsole.Dump()' | grep scenario
+# 4. (선택) 어제 bag→rtabmap PLY 스레드 살아있는지 확인 — 별개 작업, 필요시만
+ssh rtabmap@orb "echo OK && ls -la ~/bags/mapping_20260630_1658/ 2>&1"
 ```
-
-→ **통과 기준**: `Assets/Scripts` 기준 compile error 0 + `SensorVerifyConsole.Dump()`에 `sensor-value-*` 라벨 4개 + grep 잔여 0건 + 시나리오 버튼 4개
 
 ---
 
@@ -118,6 +92,9 @@ unityctl exec --project /Users/family/jason/URHYNIX/unity/ControlRoom \
 | `SensorVerifyConsole.Dump()` 라벨 4개 안 보임 | `tb3_2` 선택 후 센서 탭 활성화 확인; `default_sensors.json`에 `robotId: tb3_2` 센서 4개 있는지 확인 |
 | 동적 UI 미생성 | `RightStatusPanel.uxml`, `LeftControlPanel.uxml`에서 고정 행/버튼 제거 여부 확인 |
 | bridge compile error 6건 | `Packages/com.unityctl.bridge/Editor/Commands/DescribeTypeHandler.cs` 확인. 본 작업과 무관하면 패키지 다운그레이드 또는 고비용 모델 판단 |
+| `unityctl check`/`get-errors`가 옛 결과 그대로(stale) | 백그라운드 컴파일은 신뢰 불가 | `EditorUtility.RequestScriptReload()`로 강제 리로드 → `transport: batch`로 잠깐 폴백됐다 `ipc`로 돌아올 때까지 대기(수십초, 짧은 간격 재시도 금지 — project lock 악화) |
+| 3D 오브젝트가 핑크로 렌더 | URP RenderPipelineAsset이 ProjectSettings에서 끊어진 참조일 수 있음(`grep customRenderPipeline ProjectSettings/QualitySettings.asset`으로 GUID가 실제 asset과 매칭되는지 확인) | `Assets/Settings/ControlRoom_URP.asset`(2026-07-01 생성)로 이미 수정됨 — 재발 시 같은 GUID로 재확인 |
+| Unity kill -TERM 반복 후 씬이 이상함 | 강제종료 반복 시 auto-recovery가 stale 백업을 잘못 복원할 수 있음(2026-07-01 실제 발생, `ControlRoomMain.unity` 컴포넌트 소실) | `git status`로 씬 diff 확인 → 있으면 `git checkout -- <scene>` + `unityctl scene open --project <P> --path <scene> --force`로 디스크에서 재로드 |
 
 ---
 

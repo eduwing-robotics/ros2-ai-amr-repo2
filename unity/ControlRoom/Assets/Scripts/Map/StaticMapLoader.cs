@@ -24,7 +24,8 @@ namespace URHYNIX.ControlRoom.Map
         public static float LatestOriginYaw { get; private set; }
 
         // 최종 fallback. arena_v* 슬롯이 하나도 없을 때만 사용(보통은 MapCatalog가 최신 버전을 동적 선택).
-        [SerializeField] string defaultSlotId = "arena_v5";
+        // arena_shared는 arena_v<N> 정규식과 무관한 고정 id라 LatestArenaSlot이 못 찾음 → defaultSlotId로 직접 지정.
+        [SerializeField] string defaultSlotId = "arena_shared";
 
         void OnEnable() => ControlRoomEvents.OnMapSlotSelected += OnSlotSelected;
         void OnDisable() => ControlRoomEvents.OnMapSlotSelected -= OnSlotSelected;
@@ -32,7 +33,7 @@ namespace URHYNIX.ControlRoom.Map
         void Start()
         {
             // 마지막 선택 우선. 없으면 운영 디폴트. "live"면 자동 모드라 정적 로드 생략.
-            // arena_v5(동료 신규 SLAM 정확맵, 2026-06-26) 운영 복귀 — map5 임시핀 제거, LatestArenaSlot으로 복귀.
+            // arena_shared(공유 SLAM 맵, 2026-07-01) 운영 전환 — arena_v5 레거시 슬롯 삭제.
             string latest = MapCatalog.LatestArenaSlot(defaultSlotId);
             string slot = PlayerPrefs.GetString(ActiveSlotPrefKey, latest);
             // 삭제된 레거시 슬롯이 PlayerPrefs에 잔존하면(map5 등) 최신 슬롯으로 폴백 — 맵이 안 뜨는 상태 방지.

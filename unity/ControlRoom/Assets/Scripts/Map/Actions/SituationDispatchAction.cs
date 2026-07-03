@@ -2,6 +2,7 @@
 // 예: 화재 좌표 우클릭 → 경보 + 선택 로봇 출동. 상황 정의는 SSOT가 주도(코드 무수정 확장).
 using URHYNIX.ControlRoom.App;
 using URHYNIX.ControlRoom.Data;
+using URHYNIX.ControlRoom.Services;
 
 namespace URHYNIX.ControlRoom.Map.Actions
 {
@@ -13,7 +14,9 @@ namespace URHYNIX.ControlRoom.Map.Actions
         public string Id => "situation_" + s.situationId;
         public string DisplayName =>
             string.IsNullOrEmpty(s.icon) ? $"{s.displayName} 출동" : $"{s.icon} {s.displayName} 출동";
-        public bool AppliesTo(MapClickContext ctx) => !string.IsNullOrEmpty(ctx.selectedRobotId);
+        public bool AppliesTo(MapClickContext ctx)
+            => !string.IsNullOrEmpty(ctx.selectedRobotId)
+               && ActiveRobotService.Has(ActiveRobotService.CapPatrol);
 
         public void Execute(MapClickContext ctx)
         {

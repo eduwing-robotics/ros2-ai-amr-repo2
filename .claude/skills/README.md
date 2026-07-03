@@ -81,6 +81,12 @@
 | `unity-unityctl-ops` | unityctl로 코드 수정 검증/Play 할 때, check가 stale하거나 IPC "not ready"/스크린샷 검정/에디터 교착일 때 | 안전 절차(play stop→refresh→isCompiling 폴링→check) + 함정표(Play 중 재컴파일 차단, --json 우회, UI Toolkit 스크린샷 검정, 로봇-오프 ROS 스팸 교착). 2026-06-16 반복 학습 |
 | `urhynix-fullstack-bringup` | 디지털트윈 dry-run — 배터리·카메라·맵·LDR·PIR 5트랙을 한 로봇에 동시에 띄워 Unity에 다 표시할 때, 또는 "개별은 되는데 다 같이" 안 될 때 | SLAM 공존 위한 non-namespaced bringup + 배터리 relay 결정, USB 2개(Arduino 2341/OpenCR 0483) usb_port·심링크, 기동 5단계, SensorVerifyConsole 검증, 함정표(usb스왑·edge-trigger·libcamera LD·ros_tcp크래시·wifi churn). 2026-06-16 젠지 5트랙 PASS |
 | `urhynix-yolo-capture-train` | T1 RealSense 브라우저 UI로 맞춤 물체를 Space 촬영, ROI 연사, 마스크 bbox 보정, YOLO 학습, best.pt 탐지 검증, hard-negative 오탐 배경 정제까지 이어갈 때 | 8090 preview polling, datasets/runs 위치, ROI crop→mask→bbox→YOLO txt, rembg/SAM/GrabCut/fallback 규칙, 검수 삭제, `N 오탐 배경 저장`, 학습 후 live detect 검증 |
+| `urhynix-t1-amcl-saved-map` | 티원(tb3_1)을 저장맵으로 self-host AMCL 위치추정해 Unity에 정확한 마커로 띄울 때 | ns bringup+map_server+amcl 수동 lifecycle, 라이브 /map override pin 함정, 충전독 초기포즈 무-teleop 시딩. 2026-07-01 arena_shared PASS |
+| `urhynix-t1-nav2-patrol-drive` | AMCL까지 뜬 티원에 nav2 순회 풀스택을 얹어 "방향보고→1초정지→이동→도착시360도회전" 시퀀스로 순회지점까지, 또는 N웨이포인트+충전독 복귀주차까지 실주행시킬 때 | tf 네임스페이스 리매핑 함정 수정 launch, 수동 lifecycle 8노드, amcl_pose QoS/재시딩 안전규칙, `/dev/shm` 시스템정체(재부팅해결), 벽인접 웨이포인트 플래닝실패(patrol_safe_clearance.py). 2026-07-01 단일타겟 3.5cm PASS |
+| `urhynix-t1-nav2-keepout-filter` | 티원 nav2 costmap에 보호대상 주변 원형 진입금지구역(Keepout Zone)을 등록할 때 | 마스크(pgm+yaml) 생성, costmap filters 플러그인 배선, 마스크 map_server+filter_info_server 수동 lifecycle. 2026-07-01 로그 검증 PASS |
+| `t1-rgbd-mapping-session` | 티원 D435로 새 공간을 주행 매핑해서 bag(rosbag2 mcap)을 뜰 때 | bringup+D435+bag녹화+WASD teleop 표준 절차, TwistStamped, `ros2 bag record`는 SIGTERM으로만 멈출 수 있음. 2026-06-30 검증, 2026-07-03 SIGINT 함정 추가 |
+| `rtabmap-bag-to-ply` | 뜬 bag을 OrbStack VM의 RTAB-Map으로 재처리해 컬러 3D 점군 PLY를 만들 때 | Docker-on-Mac 안 되고 네이티브 VM만 동작, mcap 손상복구, tf 함정, map↔odom SE2 변환으로 2D맵과 정합검증. 2026-06-30 PASS, 2026-07-03 SIGINT/loop closure 실패 함정 추가 |
+| `unity-pcx-pointcloud-view` | RTAB-Map PLY를 Unity "3D" 탭에 실제로 렌더링할 때 | jp.keijiro.pcx 패키지(git 서브폴더 경로 태그함정), 정점 직접변환으로 map-frame 정렬, 점 크기 튜닝, 카메라 레이어 격리, "3D는 보기전용" 스코프 결정. 2026-07-03 구현 PASS |
 
 ## Selection Rule Of Thumb
 
@@ -116,6 +122,12 @@
 - "DB 살았나/연결됐나 5초에 확인하고 싶다" -> `supabase-db-health-ping`
 - "팀원 파일 없이 운영 중 도메인에서 현재 맵을 직접 떠오고 싶다" -> `live-map-pull-from-domain`
 - "로봇이 맵에 안 뜸·노드가 두 개씩·라이다 안 켜진 듯, bringup 전 도메인 ground truth 잡기" -> `urhynix-ros-domain-diagnose`
+- "티원 저장맵 AMCL로 Unity에 정확히 위치 띄우고 싶다" -> `urhynix-t1-amcl-saved-map`
+- "티원 순회지점까지 실주행(회전-정지-이동-도착회전)" -> `urhynix-t1-nav2-patrol-drive`
+- "보호대상 근처 진입금지구역 설정" -> `urhynix-t1-nav2-keepout-filter`
+- "티원 D435로 새 공간 매핑 bag 뜨고 싶다" -> `t1-rgbd-mapping-session`
+- "뜬 bag을 3D 점군 PLY로 만들고 싶다" -> `rtabmap-bag-to-ply`
+- "PLY를 Unity 3D 탭에 실제로 렌더링" -> `unity-pcx-pointcloud-view`
 
 ## Writing Rules
 

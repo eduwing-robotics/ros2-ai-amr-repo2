@@ -1,13 +1,13 @@
 ---
 name: urhynix-ros-domain-diagnose
-description: 로봇이 Unity 맵에 안 뜨거나 /map·/tf가 엉키거나 노드가 두 개씩 보이거나 "라이다 안 켜진 것 같다"일 때, ROS_DOMAIN_ID 210의 진짜 상태(ground truth)를 찾아 충돌원·고장원을 root-cause하는 진단 플레이북. 단일/듀얼 bringup 착수 전에 도메인을 깨끗이 만드는 선행 단계. ros2 node list 유령노드, 비-ns 멀티로봇 글로벌 토픽 충돌, OpenCR 크래시 시그니처를 감별한다.
+description: 로봇이 Unity 맵에 안 뜨거나 /map·/tf가 엉키거나 노드가 두 개씩 보이거나 "라이다 안 켜진 것 같다"일 때, ROS_DOMAIN_ID(젠지=1·티원=2)의 진짜 상태(ground truth)를 찾아 충돌원·고장원을 root-cause하는 진단 플레이북. 단일/듀얼 bringup 착수 전에 도메인을 깨끗이 만드는 선행 단계. ros2 node list 유령노드, 비-ns 멀티로봇 글로벌 토픽 충돌, OpenCR 크래시 시그니처를 감별한다.
 ---
 
 # URHYNIX ROS 도메인 Ground-Truth 진단
 
 ## 목적
 
-`urhynix-dual-fullstack-unity`(클린 셋업의 *처방*)와 짝을 이루는 *진단* 스킬. 이미 엉킨 도메인 210에서 "왜 로봇이 안 뜨나"를 추측이 아니라 ground truth로 잡는다. bringup 착수 전에 도메인을 1대만 남기고 정리한다.
+`urhynix-dual-fullstack-unity`(클린 셋업의 *처방*)와 짝을 이루는 *진단* 스킬. 각 로봇 독립 도메인(젠지=1, 티원=2)에서 "왜 로봇이 안 뜨나"를 추측이 아니라 ground truth로 잡는다. bringup 착수 전에 도메인을 1대만 남기고 정리한다.
 
 ## 발동 트리거
 
@@ -27,7 +27,7 @@ description: 로봇이 Unity 맵에 안 뜨거나 /map·/tf가 엉키거나 노�
 # 대상 로봇에서(예: 티원)
 ssh t1@<ip> 'pgrep -af "turtlebot3_node|lidar_node|coin_d4|cartograph|rviz|default_server_endpoint|basic_nav|go_to_goal" | grep -v pgrep'
 # daemon 새로고침 후 노드 목록(라이브만 남음)
-ssh t1@<ip> 'bash -lc "source /opt/ros/jazzy/setup.bash; source \$HOME/turtlebot3_ws/install/setup.bash; export ROS_DOMAIN_ID=210 RMW_IMPLEMENTATION=rmw_fastrtps_cpp; ros2 daemon stop>/dev/null 2>&1; ros2 daemon start>/dev/null 2>&1; sleep 4; ros2 node list | sort"'
+ssh t1@<ip> 'bash -lc "source /opt/ros/jazzy/setup.bash; source \$HOME/turtlebot3_ws/install/setup.bash; export ROS_DOMAIN_ID=2 RMW_IMPLEMENTATION=rmw_fastrtps_cpp; ros2 daemon stop>/dev/null 2>&1; ros2 daemon start>/dev/null 2>&1; sleep 4; ros2 node list | sort"'
 ```
 - `pgrep` 비었는데 `node list`에 노드가 있다 → **그 노드는 타 호스트에 있다**.
 
@@ -41,7 +41,7 @@ ssh kim@<genji_ip> 'pgrep -af "turtlebot3_ros|coin_d4|cartograph|rviz" | grep -v
 # 실발행 확인(유령 아님 증명)
 ros2 topic hz /scan --window 10   # average rate 나오면 누군가 실발행 중
 ```
-- 젠지 = `kim@192.168.10.84`(hostname `kim-desktop`, coin_d4). 티원 = `t1@192.168.10.250`. IP는 DHCP drift 정상(메모리 `project_robot_ip_dynamic`) → ARP+ssh로 매번 재확인.
+- 젠지 = `kim@192.168.20.7`(WiFi)/`kim@192.168.10.50`(랜선), hostname `kim-desktop`, MAC `2c:cf:67`, ROS_DOMAIN_ID=**1**. 티원 = `t1@192.168.20.101`(WiFi)/`t1@192.168.10.51`(랜선), hostname `rb`, MAC `d8:3a:dd`, ROS_DOMAIN_ID=**2**. ⚠️ AP isolation으로 WiFi SSH 불가, 랜선직결 필요. IP는 DHCP drift 정상(메모리 `project_robot_ip_dynamic`) → ARP+ssh로 매번 재확인.
 - `rviz2`·`basic_navigator`·`go_to_goal`는 보통 **GUI PC**(.82/.50 등)에 있고 ssh가 막힐 수 있음 → 주인님이 그 창에서 직접 종료.
 
 ### Step 3 — 도메인 정리 (1대만 남기기)

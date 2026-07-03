@@ -36,7 +36,7 @@ references:
 
 ### ★ 핵심 설계: endpoint 1개로 양쪽 중계 (크로스 디스커버리)
 
-두 로봇이 같은 `ROS_DOMAIN_ID=210` + `ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET`이면 **서로의 토픽을 다 본다**. Unity는 `default_robots.json` `robots[0]`(=젠지 .87) endpoint 하나에 붙고, 젠지 endpoint가 티원 `/tb3_1/*`까지 중계한다. → **티원에도 ros_tcp_endpoint를 띄우지만 Unity는 젠지 것만 쓴다**(티원 endpoint는 예비/대칭용).
+⚠️ **도메인 분리(2026-06-30 변경)**: 젠지=ROS_DOMAIN_ID=**1**, 티원=**2**로 분리됨. 같은 도메인 크로스 디스커버리 불가 → **멀티 endpoint(RosConnectionManager)** 방식 필요. Unity는 젠지 endpoint(domain 1)·티원 endpoint(domain 2) 각각 별도 포트로 연결. 각 로봇이 독립 도메인에서 자기 토픽만 발행.
 검증: 젠지에서 `ros2 topic list | grep tb3_1` 가 티원 토픽을 보이면 크로스 디스커버리 OK.
 
 ## USB 디바이스 (로봇마다 다름 — 배터리 죽음의 주범)
@@ -64,17 +64,17 @@ references:
 
 ## 기동 순서 (스크립트 방식 — 재부팅 시 /tmp 소실 대비 매번 재작성)
 
-전제: 두 로봇 부팅 + codelab 망 + `ROS_DOMAIN_ID=210`. 노트북 LAN IP를 `ROS_STATIC_PEERS`로.
+전제: 두 로봇 부팅 + codelab 망 + 젠지 `ROS_DOMAIN_ID=1` / 티원 `ROS_DOMAIN_ID=2`. 노트북 LAN IP를 `ROS_STATIC_PEERS`로. **AP isolation으로 WiFi SSH 불가 — 랜선직결로 스크립트 전송.**
 
 ```bash
 LAPTOP_IP=$(ifconfig | grep "inet 192.168.10" | awk '{print $2}' | head -1)
-# 1) 젠지 코어 (bringup usb_port=ttyACM1 + ros_tcp)
-scp scripts/_genji_core_up.sh kim@192.168.10.87:/tmp/ && ssh kim@192.168.10.87 "bash /tmp/_genji_core_up.sh $LAPTOP_IP"
+# 1) 젠지 코어 (bringup usb_port=ttyACM1 + ros_tcp, domain=1)
+scp scripts/_genji_core_up.sh kim@192.168.10.50:/tmp/ && ssh kim@192.168.10.50 "bash /tmp/_genji_core_up.sh $LAPTOP_IP"
 # (verify: turtlebot3_node alive + /scan ranges 실데이터 + /battery_state voltage)
 # 2) 젠지 나머지 (cartographer + Pi캠 + 배터리relay + arduino)
-scp scripts/_genji_rest_up.sh kim@192.168.10.87:/tmp/ && ssh kim@192.168.10.87 "bash /tmp/_genji_rest_up.sh"
-# 3) 티원 풀 (ns tb3_1 bringup + ros_tcp + RealSense) — tmux 없으니 setsid
-scp scripts/_t1_up.sh t1@192.168.10.250:/tmp/ && ssh t1@192.168.10.250 "bash /tmp/_t1_up.sh $LAPTOP_IP"
+scp scripts/_genji_rest_up.sh kim@192.168.10.50:/tmp/ && ssh kim@192.168.10.50 "bash /tmp/_genji_rest_up.sh"
+# 3) 티원 풀 (ns tb3_1 bringup + ros_tcp + RealSense, domain=2) — tmux 없으니 setsid
+scp scripts/_t1_up.sh t1@192.168.10.51:/tmp/ && ssh t1@192.168.10.51 "bash /tmp/_t1_up.sh $LAPTOP_IP"
 ```
 
 스크립트 3종은 `scripts/_genji_core_up.sh`, `_genji_rest_up.sh`, `_t1_up.sh`. (헤더 주석에 역할/함정 명시)
@@ -83,8 +83,8 @@ scp scripts/_t1_up.sh t1@192.168.10.250:/tmp/ && ssh t1@192.168.10.250 "bash /tm
 
 ```bash
 # 로봇(젠지): 크로스 디스커버리 + 8 토픽 pub=1
-ssh kim@192.168.10.87 'source /opt/ros/jazzy/setup.bash; source ~/turtlebot3_ws/install/setup.bash
-  export ROS_DOMAIN_ID=210 RMW_IMPLEMENTATION=rmw_fastrtps_cpp ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
+ssh kim@192.168.10.50 'source /opt/ros/jazzy/setup.bash; source ~/turtlebot3_ws/install/setup.bash
+  export ROS_DOMAIN_ID=1 RMW_IMPLEMENTATION=rmw_fastrtps_cpp ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
   ros2 daemon stop; ros2 daemon start; sleep 3
   for t in /map /tb3_2/camera/image_raw/compressed /tb3_2/battery_state /sensors/ldr /sensors/pir \
            /tb3_1/scan /tb3_1/camera/color/image_raw/compressed /tb3_1/battery_state; do

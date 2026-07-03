@@ -1,6 +1,7 @@
 // DispatchHereAction.cs — "이 위치로 출동": 선택 로봇을 클릭 좌표로 보내는 수동 출동.
 using URHYNIX.ControlRoom.App;
 using URHYNIX.ControlRoom.Data;
+using URHYNIX.ControlRoom.Services;
 
 namespace URHYNIX.ControlRoom.Map.Actions
 {
@@ -8,7 +9,9 @@ namespace URHYNIX.ControlRoom.Map.Actions
     {
         public string Id => "dispatch_here";
         public string DisplayName => "📍 이 위치로 출동";
-        public bool AppliesTo(MapClickContext ctx) => !string.IsNullOrEmpty(ctx.selectedRobotId);
+        public bool AppliesTo(MapClickContext ctx)
+            => !string.IsNullOrEmpty(ctx.selectedRobotId)
+               && ActiveRobotService.Has(ActiveRobotService.CapPatrol);
 
         public void Execute(MapClickContext ctx)
         {

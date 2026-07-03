@@ -12,6 +12,7 @@
 | `com.unity.ugui` | 2.0.0 | UI 기본 |
 | `com.unity.modules.uielements` | 1.0.0 | UI Toolkit |
 | `com.unity.ai.navigation` | 2.0.9 | NavMesh |
+| `jp.keijiro.pcx` | commit `ffc3447`(master) | PLY 점군 임포터+렌더러(RTAB-Map 3D 탭용, Mesh 컨테이너 모드). ⚠️ 태그(v0.1.5)는 구 `Assets/Pcx` 레이아웃이라 `Packages/jp.keijiro.pcx` 경로엔 커밋해시로만 고정 가능 |
 
 ## 추가 예정 (Phase별)
 

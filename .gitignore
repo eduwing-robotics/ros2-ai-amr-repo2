@@ -132,6 +132,11 @@ docs/evidence/**/*.webp
 docs/evidence/**/*.bmp
 docs/evidence/**/*.h264
 
+# 3D 점군/bag 원본도 대용량 바이너리라 repo에 불필요 (로컬만 유지, 재현 절차는 스킬 문서 참고)
+docs/evidence/**/*.ply
+docs/evidence/**/*.mcap
+docs/evidence/**/*.bag
+
 # OpenCode 정찰 스크래치(휘발성, 커밋 금지)
 docs/status/SCOUT.md
 SCOUT.md

@@ -3,6 +3,148 @@
 
 > **📌 최신 5건은 DECISION-CURRENT.md 참조. 이 파일은 전체 역사 기록입니다.**
 
+## 2026-07-03
+
+### 🗺️ arena_shared 맵 재캡처 교체 + AMCL 재확보 패턴 스킬화 + RTAB-Map 3D 정합검증 + Unity 3D 탭 점군 렌더링(후 역할재정의로 클릭기능 제거)
+
+- **결정**: 2D SSOT 맵(arena_shared)을 재캡처본으로 전량 교체하고, 이 참에 RTAB-Map RGB-D 3D 재구성으로 2D맵/AMCL 위치/벽 정합성까지 교차검증. 검증 과정에서 Unity 3D 탭에 실제 점군 렌더링을 붙였다가, 클릭-좌표찍기는 점군 특성상 불안정함을 확인하고 역할을 재정의(2D/2.5D=좌표입력, 3D=보기전용)해 스코프를 좁혔다.
+- **절차/발견** (시간순):
+  1. **맵 교체**: `docs/evidence/maps/arena_shared/`를 새 캡처본으로 덮어씀(품질검증 PASS: occ 9.8%/free 90.2%/unk 0%, 1.92×1.94m) → `pgm_to_map_slot.py`로 Unity 슬롯 재생성 → `pgm_to_sdf_walls.py`로 SDF 가벽 재생성(38개) → 로봇측 `~/maps/arena_shared/`에도 재배포. `StaticMapLoader.defaultSlotId="arena_shared"` 그대로라 코드 변경 불필요.
+  2. **AMCL 재확보 — 새 패턴 도출**: 옛 충전독 좌표(0.05,0.028,0)로 시딩했더니 마커가 실제 위치와 다름(맵 원점이 재캡처마다 달라짐이 원인). 순수 글로벌 로컬라이제이션(회전만)은 좁고 대칭적인 방이라 반복해도 다른 엉뚱한 위치로 수렴 — **해결 패턴**: 사용자가 Unity에 로봇의 실제 물리 위치를 웨이포인트로 클릭(ground truth) → `/initialpose`에 위치는 타이트(var 0.01)·방향은 느슨(var 8.0)하게 시딩 → 짧은 제자리회전으로 방향만 수렴(yaw 분산 9.85→0.088) → 육안 확인. 확정 dock: x=0.038,y=1.405,yaw=0.293rad. `urhynix-t1-amcl-saved-map` 스킬에 "맵 교체 시 초기포즈 재확보 절차"로 영구화, `patrol_multi_waypoint.py`의 DOCK 상수 갱신(7웨이포인트는 옛맵 기준이라 재계산 전까지 미사용 이월).
+  3. **RGB-D 매핑 세션**: D435+bag 녹화(사용자 WASD 직접 주행, `/tb3_1/amcl_pose`도 같이 기록해 정합검증용 ground truth 확보) → `ros2 bag record`가 **SIGINT로 안 죽고 SIGTERM으로만 종료됨**(신규 함정, `rtabmap-bag-to-ply`/`t1-rgbd-mapping-session` 스킬에 반영).
+  4. **RTAB-Map 처리+정합검증**: OrbStack VM에서 재처리(458K pts PLY) → amcl_pose+odom 동시 샘플로 map↔odom SE2 변환(θ=0.187rad, tx=0.025, ty=1.407) 도출 → 점군을 map 프레임으로 투영해 2D맵과 오버레이 비교: **시작점 근처(위/왼쪽 벽) 정합 확인(PASS)**, 방 전체는 RTAB-Map 자체 loop closure 5건 전부 "Not enough inliers"로 실패해 드리프트(흰 벽 위주라 시각 특징 부족 — AMCL이 좁은 방에서 헷갈렸던 것과 같은 근본원인). **결론: 2D맵/AMCL 좌표계 자체는 정확함이 입증**, 3D 재구성 전체 커버리지만 이 방 특성상 제한적.
+  4-1. 점군 정리: CloudCompare 열람 시도 중 PLY의 비표준 `camera` element를 오해석해 파싱 실패 → element 제거한 clean PLY로 우회. 드리프트 제거는 CloudCompare GUI 대신 **직접 파이썬으로**: 실측 방 bbox(map frame, margin 0.2m)로 좌표 크롭(457K→186K pts)이 3D voxel 연결요소 분석보다 훨씬 깨끗하게 분리됨(연결요소 방식은 성긴 "다리" 포인트로 드리프트가 방과 계속 이어져있어 최대 63%밖에 못 걸러냄) → SOR 필터로 추가 정리(170K pts 최종).
+  5. **Unity 3D 탭 점군 렌더링 구현**: `jp.keijiro.pcx` 패키지 신규 도입(git URL, **태그 v0.1.5는 구 `Assets/Pcx` 레이아웃이라 `Packages/jp.keijiro.pcx` 경로엔 안 맞음 — 최신 커밋 해시로 고정**, 신규 함정). PLY를 `Assets/Resources/PointClouds/`에 배치 → Mesh 컨테이너 자동임포트. 정점을 로드 시점에 map<->odom 변환식으로 직접 재계산해 2D/2.5D와 같은 좌표계로 정렬(Unity Transform 회전 합성 대신 정점 자체를 변환 — 핸디니스/부호 혼동 회피). `_PointSize`(기본 5cm)가 밀도 대비 커서 매끈한 덩어리로 보이던 문제를 0.008로 축소해 해결. 2.5D와 같은 Offset을 쓰다 보니 카메라가 서로의 콘텐츠를 다 렌더링하는 버그 발생 → Unity 레이어(9번) + `cullingMask`로 분리.
+  6. **클릭기능 제거 + 역할재정의**: 화면에 찍힌 점 중 최근접점을 찾는 피킹 컨트롤러까지 만들었으나 성긴 점군 특성상 클릭 판정이 실사용에서 불안정 확인 → **역할 재정의**: 2D=좌표입력 기준(정확), 2.5D=시각맥락+정확한 클릭(바닥평면 레이캐스트라 안정적), 3D(점군)=**보기 전용**(자유 궤도 카메라+웨이포인트 마커 참고표시만, 클릭 없음). Opus에 구현플랜 위임 → 3파일(피킹 컨트롤러 삭제, View의 죽은 프로퍼티 제거, 배선 제거)만 정리, 나머지(자유카메라·마커·2D/2.5D)는 전부 유지.
+  7. 티원 안전 셧다운 확인.
+- **핵심 학습**: (a) 맵을 재캡처하면 좌표계 원점이 매번 달라짐 — 옛 dock좌표 재사용 금지, 위치고정+방향탐색 패턴이 표준. (b) 이 방(흰 벽 위주, 작고 대칭적)은 라이다 AMCL과 RGB-D 시각 SLAM 양쪽 다 특징부족으로 애먹인다 — 같은 근본원인이 두 모달리티에서 반복 관찰됨. (c) 성긴 점군에 "클릭으로 정확한 좌표 찍기"는 전문 툴도 안 하는 이유가 있다 — 뷰어 역할에 맞는 스코프로 좁히는 게 맞다.
+- **부수 산출물**: `docs/evidence/3d_maps/mapping_20260703_1107_*`(bag/ply/오버레이), `scripts/extract_transform.py`/`crop_to_room.py`/`sor_filter.py`(VM), `unity/.../Map3DPointCloudView.cs`+`Billboard.cs`(신규), `Map25DPatrolMarkerLayer.cs`(layer/billboardCam 파라미터화로 2.5D/3D 공용), `Packages/manifest.json`(jp.keijiro.pcx 추가).
+- **다음 진입**: 7웨이포인트는 새 맵 기준으로 미확정(재계산 필요). 3D 탭은 보기전용으로 안정화됨 — 추가 요청 없으면 현상태 유지.
+
+## 2026-07-01
+
+### 🤖 티원 N웨이포인트 순회 인프라 + keepout zone + `/dev/shm` 시스템정체 규명 — 완주는 배터리로 이월
+
+- **결정/증상**: 충전 후 재개, 7웨이포인트 순회+충전독 복귀주차 요청. 진행 중 AMCL/nav2가 산발적으로 완전히 멈추는 현상이 반복 발생(3회) — keepout filter를 의심했으나 제거 후에도 재현돼 반증, 최종적으로 `/dev/shm` FastRTPS 잔여물 누적(하루 수십 회 `pkill` 강제종료 누적)이 원인으로 규명.
+- **원인/조치** (시간순):
+  1. bringup+AMCL(충전독 0.05,0.028 재시딩)+nav2 8노드+endpoint 정상 기동. 사용자 요청으로 보호대상(1.14,-0.97) 진입금지구역 추가 — nav2 Costmap Filter(KeepoutFilter) 신규 구현: `make_keepout_mask.py`(원형 마스크 생성)+`_keepout_filter_up.sh`(마스크 map_server+costmap_filter_info_server)+`patch_nav_params_ns.py`에 filters 블록 패치. 로그로 local/global costmap 양쪽 필터 수신 확인 PASS.
+  2. `patrol_multi_waypoint.py`(7웨이포인트 순회+충전독 복귀주차, 신규) 첫 실행 → 웨이포인트1에서 AMCL이 완전히 멈춤(`amcl_pose`/TF가 동일값만 재방송, `NavigateToPose`가 허위 SUCCEEDED 보고 후 실제론 목표 못 미침). keepout 추가 직후라 의심.
+  3. AMCL 재시딩만으로 재시도 → 다시 멈춤(이번엔 `status=NONE` 120초 타임아웃). keepout 완전 제거 + nav2 재기동 후 재시도 → **역시 멈춤**(Spin조차 무응답) — keepout **반증**됨.
+  4. 리소스 점검: `/dev/shm` 파일 152개(비정상 누적), 새 `ros2` CLI가 `rcl_init 실패`로 죽는 현상까지 확인 → **로봇 전체 재부팅**(`sudo reboot`) 결정.
+  5. 재부팅 후 `/dev/shm` 152→1개로 clean 확인. 단일타겟 재현 테스트 **clean PASS**(4단계 전부 `STATUS_SUCCEEDED`, 타임아웃 없음)로 시스템 안정성 재확인.
+  6. 7웨이포인트 재시도 → 웨이포인트2에서 `status=6 ABORTED` + 로그 `worldToMap failed`/`Failed to create plan with tolerance 0.5` — 벽에서 0.14m밖에 안 떨어진 좌표라 costmap inflation(0.5m)에 걸려 플래닝 자체가 불가능한 것으로 규명(맵 경계 밖이라는 최초 진단은 오진, 정정함).
+  7. 신규 `patrol_safe_clearance.py`(거리변환 기반, 벽 최소클리어런스+웨이포인트간 최소간격 동시 만족하는 가장 가까운 안전지점 재배치) 작성 → Unity 저장 순찰경로(`arena_shared.json`) 7점 전부 0.25m 클리어런스로 보정(평균 이동 ~0.1m, 시각 확인 PASS) → `patrol_multi_waypoint.py`의 `WAYPOINTS`도 동기화.
+  8. `wait_pose()` 자체 버그 발견+수정: 도착 시 로봇이 이미 허용오차 안이면 AMCL이 새 pose를 안 낼 수 있는데, 매 레그 후 `self.cur=None` 강제 리셋 탓에 정상 도착도 "무응답 실패"로 오판하던 문제 — 최근값 유지로 수정.
+  9. 최종 재시도: 웨이포인트1 **clean PASS**. 이어지는 시퀀스 중 로봇이 벽 0.04m 앞에 정지한 상태에서 사용자가 "배터리부족" 선언 → 안전 확인(cmd_vel 무응답) 후 셧다운. **7웨이포인트 전체 완주는 미완료, 다음 세션 최우선 이월**.
+- **핵심 학습 4건**:
+  1. 증상 발생 "직후"에 방금 바꾼 게 원인이라고 성급히 단정하지 말 것(keepout 오진) — 원인 격리 테스트(필터 제거 후 재현)로 반증하는 과정이 결정적이었음.
+  2. `pkill` 기반 반복 강제종료가 `/dev/shm`에 FastRTPS 잔여물을 누적시켜 시스템 전체(AMCL·CLI 포함)를 산발적으로 멈추게 할 수 있음 — 하루 안에 재기동을 많이 하는 세션에선 `ls /dev/shm | wc -l`을 상태 점검 항목에 넣을 것.
+  3. `worldToMap failed` 에러는 목표 자체가 맵 밖이 아니라 **tolerance 탐색이 맵 경계를 넘어가며 나는 부수 효과**일 수 있음 — 실제 원인은 벽 인접(inflation 침범)인 경우가 많으므로 벽까지 실제 거리부터 계산해서 진단할 것.
+  4. `ssh "... & disown; sleep N; 상태확인"`처럼 백그라운드 기동+대기+확인을 한 호출에 합치면 종종 멈춤/타임아웃 — launch와 확인을 별도 ssh 호출 2개로 분리하면 안정적(이 세션에서 반복 재현·검증).
+- **부수 산출물**: `scripts/{make_keepout_mask.py,_keepout_filter_up.sh,patrol_multi_waypoint.py,patrol_safe_clearance.py}`(신규), `scripts/patch_nav_params_ns.py`(keepout 패치 추가), `.claude/skills/urhynix-t1-nav2-keepout-filter/`(신규 스킬), `.claude/skills/urhynix-t1-nav2-patrol-drive/SKILL.md`(함정#8~11 추가), Unity `patrols/arena_shared.json`(좌표 보정, 원본은 `/tmp/arena_shared_orig_backup.json`).
+- **다음 진입**: 충전 후 (1) bringup+AMCL 충전독 재시딩 (2) `patrol_multi_waypoint.py` 재실행 — 이번엔 keepout/`/dev/shm`/좌표 3대 함정이 다 해소된 상태라 완주 가능성 높음 (3) 완주 확인되면 [[urhynix-t1-nav2-patrol-drive]] 검증 섹션에 최종 PASS 기록.
+
+### 🗺️ 2.5D 순회지점(웨이포인트) 미표시 버그 수정 — `Map25DPatrolMarkerLayer` 신설
+
+- **증상**: 2.5D 탭에서 우클릭 "➕ 순회지점 추가"를 실행하면 로그와 `PatrolService` 데이터는 정상 갱신되는데 화면엔 아무 마커도 안 보임(2D 탭으로 전환하면 정상 표시 — 데이터 유실은 아님).
+- **원인**: 2.5D 뷰(`Map25DView`)엔 로봇 위치 마커 레이어(`Map25DRobotMarkerLayer`)만 이식돼 있고, 2D 전용 `PatrolMarkerLayer`(웨이포인트 점+연결선, `viewport.Frame`에 부착돼 2D 컨테이너 전용)에 대응하는 2.5D 레이어가 아예 없었음. 이전 "2.5D 우클릭 메뉴+로봇마커" 작업(아래 entry)의 스코프가 액션 실행 파이프라인+로봇마커까지였고 웨이포인트 시각화는 빠져 있었음.
+- **해결**: 신규 `Map25DPatrolMarkerLayer.cs` — `Map25DRobotMarkerLayer`와 동일 패턴(`ControlRoomEvents.OnPatrolChanged` 구독, `Map25DView.Offset` 좌표계)으로 `PatrolService.Points`를 구(Sphere) 마커 풀 + `LineRenderer` 연결선으로 렌더. `Map25DView.Build()`/`OnDestroy()`에 `robotMarkers`와 나란히 배선.
+- **결과**: 육안 확인 PASS("잘표시됨").
+- **부수 산출물**: `Map/Map25DPatrolMarkerLayer.cs`(신규), `Map/Map25DView.cs`(배선).
+- **다음 진입**: (기존 이월 그대로) 충전 후 AMCL 발산 원인 규명 + `patrol_return_dock.py` 재시도가 최우선.
+
+### ⚠️ 충전독 복귀 시도 중 AMCL 발산 발견(scan 메시지 큐 오버플로) — 배터리로 재중단, 미해결 이월
+
+- **배경**: 순회지점1 PASS 직후 사용자가 "왔던 길을 그대로 역순으로 충전독 복귀"를 요청. `ComputePathToPose`(현재→충전독)로 경로 1회 계산 후 `FollowPath`로 그 경로를 고정 추종하는 `scripts/patrol_return_dock.py` 신규 작성.
+- **증상**: 스크립트 실행 시 좌표 sanity-check(±5m)가 발동해 즉시 중단(`x=11468.0, y=3241.8`) — **로봇은 움직이지 않음**(FollowPath goal 자체가 전송 안 됨, 안전가드 정상 작동 확인).
+- **원인 규명**: `ros2 topic echo /tb3_1/amcl_pose --once`(ros2 CLI, QoS 자동매칭)로도 동일 garbage 값 재현 → **클라이언트 QoS 문제가 아니라 AMCL 자체가 발산**한 것으로 확정. `amcl.log` tail에 `Message Filter dropping message: frame 'tb3_1/base_scan' ... discarding message because the queue is full`가 수십 회 연속 반복(약 2.6초 간격) — AMCL의 스캔 처리 파이프라인이 백로그로 막혀 particle filter 업데이트가 계속 실패했고, 그 결과 위치추정이 발산한 것으로 보임(근본원인 미규명 — 순회 실주행 완료 후 유휴 상태에서 왜 큐가 막혔는지는 다음 세션 조사 필요).
+- **결과**: 배터리 부족으로 조사 중단, 티원 셧다운(ping DOWN 확인). `patrol_return_dock.py`는 로직상 정상 작성됐으나 **AMCL 발산 문제 해결 전까지 실행 보류**.
+- **핵심 학습**: 지난 세션의 amcl_pose garbage 값을 전부 QoS mismatch로 확정했던 게 **성급했을 수 있음** — 이번에 동일 QoS 수정판에서도 CLI 레벨(QoS 무관)에서 재현됐으므로, AMCL 자체의 scan 큐 처리 문제가 최소 하나의 별도 원인으로 존재. `urhynix-t1-nav2-patrol-drive` 스킬의 함정#3(QoS mismatch)은 "필요조건이지 충분조건은 아니었다"로 정정 필요.
+- **부수 산출물**: `scripts/patrol_return_dock.py`(신규, 미검증) — `ComputePathToPose`+`FollowPath` 패턴은 재사용 가능.
+- **다음 진입**: (1) 충전 후 재기동 시 `amcl_pose` sanity 즉시 확인, (2) garbage 재현되면 `amcl.log`의 큐 오버플로 원인 조사(scan 발행 hz vs amcl 처리 hz 비교, `scan_frame_fix.py`의 restamp가 큐를 밀어내는지 등), (3) 정상 확인되면 `patrol_return_dock.py` 실행 재시도.
+
+### ✅ 티원 순회지점1 실주행 PASS(오차 3.5cm) + 스킬화 — 충전 후 재개, amcl_pose QoS 수정 검증됨
+
+- **결정/증상**: 배터리 충전 후 재개. 티원 재부팅→재접속(WiFi IP 재확인 필요, 이더넷 직결 IP는 게이트웨이 라우팅으로 오탐 가능성 있어 실제 기기 아님 판명) → bringup+AMCL(충전독 초기포즈 재시딩)+nav2 8노드 재기동 → `patrol_test_seq.py` 실행 중 첫 시도는 ssh 세션 중단(SIGHUP)으로 로봇이 이동 중 정지, Unity 마커도 미표시(ROS-TCP endpoint 미기동 상태였음) → 원인 규명 후 정상 재시도하여 **순회지점1(x=0.121,y=-1.211) 실주행 완전 PASS**.
+- **원인/조치**:
+  1. **로봇 IP 오판 함정**: `192.168.10.51`(직결용 저장 IP) ping은 응답했으나 로컬 인터페이스가 그 대역에 없어 게이트웨이 경유 응답(신뢰 불가) — 실제 접속은 `192.168.20.101`(WiFi)로 성공. ARP OUI + known_hosts ed25519 host key 매칭으로 `192.168.20.7`이 티원이 아니라 젠지(genji)임을 확인(교차 오인식 방지).
+  2. **ROS-TCP endpoint 별도 기동 누락**: nav2/AMCL 브링업만으로는 Unity가 로봇을 못 봄 — `_pose_ep_up.sh tb3_1 yes 2`로 `robot_pose_publisher.py`+`ros_tcp_endpoint`를 별도 기동해야 `/tb3_1/pose`가 뜨고 Unity `RosConnection`이 연결됨(Editor.log로 `Connection refused`→성공 전환 확인).
+  3. **AMCL 재시딩 안전 확인**: 로봇이 사람 손으로 충전독에 물리적으로 옮겨진 것을 사용자에게 직접 확인한 뒤에만 `/tb3_1/initialpose`를 충전독 좌표로 재시딩(맹목적 재시딩은 실제 위치와 어긋나 위험 — 이번 세션에서 확립한 안전 규칙).
+  4. **첫 실행 중단**은 스크립트 프로세스가 SIGHUP으로 죽어도 nav2(controller_server 등)는 별도 장기 프로세스라 독립적으로 goal을 계속 수행할 수 있음을 확인(클라이언트 kill ≠ 즉각 정지 보장) — 정지 확인은 `cmd_vel` topic echo/odom으로.
+  5. **재시도 결과**: `patrol_test_seq.py` foreground 실행, 4단계(방향 Spin→1초정지→NavigateToPose→도착 360도 Spin) 전부 `STATUS_SUCCEEDED(4)`. 목표(0.121,-1.211) vs 실제 도착(0.136,-1.243) = **오차 3.5cm**. `/tb3_1/amcl_pose` QoS(TRANSIENT_LOCAL) 수정판이 이번엔 garbage 값 없이 정상 동작 확인(지난 세션 미해결 이슈 해소).
+- **핵심 학습**:
+  - 이전 세션에서 "미확정"으로 남겼던 amcl_pose QoS durability mismatch 가설이 이번 실측으로 **확정**됨(수정 후 재현 없음).
+  - ARP ping 응답만으로 기기 신원을 신뢰하면 안 됨 — 로컬 인터페이스가 해당 서브넷에 없는데 ping이 성공하면 게이트웨이 우회 응답이라 다른 기기일 수 있음(`robot-ip-detect-fallback`의 OUI+host key 매칭이 최종 신뢰 근거).
+  - nav2 브링업 성공 ≠ Unity 가시성 — endpoint(`_pose_ep_up.sh`)는 항상 별도 확인 필요.
+- **부수 산출물**: 신규 스킬 `.claude/skills/urhynix-t1-nav2-patrol-drive/SKILL.md`(순회 실주행 절차+함정 7건), `urhynix-t1-amcl-saved-map` 스킬의 "남은 일" 라인 갱신(순회 PASS 반영).
+- **다음 진입**: 순회 정확도(3.5cm)가 만족스러우므로 RTAB-Map 재맵핑은 보류 유지. 2.5D 우클릭/로봇마커 육안 확인(이전 세션 이월)이 다음 병행 과제.
+
+### 🚦 티원 순회(FollowWaypoints) nav2 스택 첫 실기동 + tf 네임스페이스 함정 발견 — 실주행 테스트는 배터리로 중단
+
+- **배경**: 이전 entry에서 순회 nav2 패키지(bt_navigator/waypoint_follower/controller/planner 등)는 apt 설치만 되고 미기동 상태였음. 사용자 요청("2D/2.5D 정합성 채우기 + 순회 정확도")에 대해 "맵 재정합보다 지금 맵으로 순회 실주행 먼저 테스트"로 방향 합의(AskUserQuestion) 후 진행.
+- **절차**:
+  1. 티원 접속·상태 확인: bringup(모터+라이다)·map_server+amcl(arena_shared)은 이미 떠 있었으나 순회 풀스택(controller/planner/bt_navigator 등)은 미기동.
+  2. `scripts/patch_nav_params_ns.py` 신규 — `turtlebot3_navigation2/param/burger.yaml`을 tb3_1 네임스페이스 프레임(`tb3_1/base_footprint`, `tb3_1/odom`)·스캔 토픽(`/tb3_1/scan_fixed`)에 맞게 패치, `velocity_smoother`에 `enable_stamped_cmd_vel: true` 추가(TwistStamped 파이프라인 일관성 — burger.yaml 기본값엔 `controller_server`/`behavior_server`/`collision_monitor`엔 이미 있었으나 `velocity_smoother`엔 누락돼 있었음).
+  3. **핵심 함정 발견**: `nav2_bringup/navigation_launch.py`를 `namespace:=tb3_1`으로 그대로 쓰면 내장 `remappings=[('/tf','tf'),('/tf_static','tf_static')]`가 `PushRosNamespace`와 결합돼 `/tb3_1/tf`로 격리됨. 그런데 이 프로젝트의 bringup/amcl은 공유(비-ns) `/tf`에 발행(map 프레임이 여러 로봇 사이 공유돼야 하므로 의도된 설계) → controller_server/planner_server 내부 costmap이 "Invalid frame ID ... frame does not exist"로 **영구** 활성화 실패(외부 `tf2_echo` 클라이언트는 같은 프레임을 정상 조회 — 즉 실제로 tf는 존재, 이 노드들만 다른 `/tf` 토픽을 보고 있었던 것). `scripts/nav_ns_launch.py` 신규(표준 launch 대신 Node() 직접 나열, `remappings=[]`)로 해결 — 재기동 후 8개 lifecycle 노드(controller/smoother/planner/behavior/velocity_smoother/collision_monitor/bt_navigator/waypoint_follower) 전부 `configure`→`activate` 성공(`nav2_lifecycle_manager`는 여전히 ABI 깨짐이라 수동 전환, [[urhynix-t1-nav2-lifecycle-abi]] 패턴 그대로).
+  4. **하드웨어 장애 발생+복구**: 검증 도중 `turtlebot3_ros`(OpenCR 시리얼 드라이버)가 `DynamixelSDKWrapper: Failed to read` 반복 후 `*** stack smashing detected ***`로 크래시(가동 약 49분 후) → odom tf 소실 → AMCL 사실상 정지. `scripts/_robot_bringup_ns.sh tb3_1 /dev/ttyACM0 2`로 bringup 재기동해 복구, odom이 (0,0)으로 리셋됐으므로 `/tb3_1/initialpose`를 충전독 좌표(x=0.05, y=0.028, yaw=0.0)로 재시딩 → AMCL 재수렴 확인(amcl_pose ≈ 0.053, -0.008).
+  5. Unity에서 사용자가 arena_shared 순찰경로를 재작성(`~/Library/Application Support/DefaultCompany/turtlebot/patrols/arena_shared.json`, robotId=tb3_1, 순회지점1=x=0.121,y=-1.211) — 이걸 실목표로 `scripts/patrol_test_seq.py` 작성(회전→1초정지→NavigateToPose→도착시360도회전→정지, 사용자 명시 스펙).
+  6. **미해결 이상 발견**: 스크립트 첫 실행에서 `/tb3_1/amcl_pose` 구독 첫 콜백이 터무니없는 값(x=-2931.146, y=14806.630)을 수신 → 회전각 -112°로 오계산 → Spin 액션 즉시 ABORTED(status=6, 약 0.4초만에 종료). `ros2 topic info --verbose`로 확인한 결과 `/tb3_1/amcl_pose` 퍼블리셔 QoS가 **Durability: TRANSIENT_LOCAL**인데 스크립트의 구독자는 기본(VOLATILE) — durability mismatch로 오염/오정렬 데이터 수신 가능성이 유력 용의선(미확정). 로봇이 실제로 회전했는지(그리고 몇 도나) 육안 확인 전에 사용자가 배터리 부족으로 세션 중단 — **로봇 물리적 이상 여부 미확인**.
+  7. 사용자 지시로 티원 셧다운(`urhynix-robot-shutdown` 스킬 절차, sudo 123) → ping DOWN 검증 완료.
+- **결과**: nav2 순회 풀스택 첫 활성화 PASS(configure/activate 전부 성공, `/tb3_1/navigate_to_pose`·`/tb3_1/follow_waypoints` 액션서버 확인). 실주행 결과는 **미검증**(amcl_pose 이상값으로 중단, 로봇 이상 유무도 미확인).
+- **핵심 학습**: (1) 네임스페이스 nav2 launch에서 `/tf`/`/tf_static` 리매핑은 map 프레임 공유가 필요한 멀티로봇 구조에선 반드시 제거해야 함(`remappings=[]`) — 이걸 안 하면 costmap이 영원히 "frame does not exist"로 실패하며, 증상만 보면 QoS/도메인 문제로 오인하기 쉬움(실제로는 완전히 다른 토픽을 보고 있었을 뿐). (2) OpenCR 시리얼(`turtlebot3_ros`)이 장시간 가동 중 크래시(stack smashing)할 수 있음 — bringup 재기동은 odom을 리셋시키므로 nav2/AMCL 세션 중 이 크래시가 나면 **초기포즈 재시딩이 필수**. (3) `/tb3_1/amcl_pose` 퍼블리셔가 TRANSIENT_LOCAL QoS — 구독자가 기본 VOLATILE이면 durability mismatch 위험(FastRTPS가 조용히 오염된 데이터를 넘길 수 있음, DDS 스펙상 원래는 incompatible로 연결 자체가 안 돼야 함) → `patrol_test_seq.py`엔 TRANSIENT_LOCAL 구독 QoS + 좌표 sanity-check(±5m 초과 시 중단) 추가해뒀으나 **재실행 전 실증 검증 안 됨**.
+- **부수 산출물**: `scripts/{patch_nav_params_ns.py,nav_ns_launch.py,_restart_nav_ns.sh,patrol_test_seq.py}`(신규, repo에 커밋 전).
+- **다음 진입(최우선)**: (1) 티원 충전 완료 후 재기동. (2) `patrol_test_seq.py` 재실행 전 amcl_pose 이상값 원인 확정(QoS 수정판으로 우선 재시도, 여전히 이상하면 `/tb3_1/pose`(robot_pose_publisher, 일반 QoS)로 대체 검토). (3) 육안으로 티원 외관/바퀴/OpenCR 케이블 이상 유무 확인(직전 세션에서 회전 액션이 실제로 로봇을 움직였는지 미확인 채 종료됐음). (4) 순회지점1 실주행 성공 확인 후에야 "지금 맵 정확도로 충분한가" 판단 가능 — RTAB-Map 재맵핑 여부는 그 이후 결정.
+
+### 🔐 듀얼로봇 조작권한 데이터 분리 + 티원 AMCL(arena_shared) 도메인2 재확정 + 순회 nav2 스택 설치
+
+- **결정**: "젠지=구독만, 티원=조작가능"을 코드 분기가 아니라 `default_robots.json`의 `capabilities` 배열(데이터)로 구현 — 나중에 역할이 뒤바뀌거나 양쪽 다 조작/구독으로 바뀌어도 JSON 한 줄만 바꾸면 됨(하드코딩 없음, 주인님 명시 요구사항).
+- **절차**:
+  1. `Resources/RobotConfig/default_robots.json`: 젠지 `capabilities`에서 `"patrol"` 제거(`["sensor","slam"]`만 남김), 티원은 `["patrol","vision"]` 유지.
+  2. 갭 발견: `RunPatrolAction`/`MapPanelView`는 `ActiveRobotService.Has(CapPatrol)` 게이트가 있었지만 `DispatchHereAction`/`SituationDispatchAction`(우클릭 "이 위치로 출동"/상황 출동)은 게이트가 아예 없어 구독전용 로봇에도 goal_pose가 나갈 수 있었음 → 같은 게이트 추가. (OpenCode가 아래 entry에서 "출처불명 미커밋 변경"으로 플래그한 게 바로 이 수정 — 이 Claude 세션 작업으로 확인.)
+  3. 티원 AMCL 재기동: `_robot_bringup_ns.sh`/`_robot_amcl_ns.sh`/`_pose_ep_up.sh` 3개 스크립트에 **domain 인자 파라미터화**(기존 210 하드코딩) 추가. 세션 중 210↔2 두 번 왕복 끝에 `/proc/<pid>/environ` 실측으로 **티원은 도메인 2가 진짜**임을 확정(`Ros/CLAUDE.md`의 "210 통일"은 이후 재분리로 stale해진 문서). 상세: `.claude/skills/urhynix-t1-amcl-saved-map/SKILL.md` 갱신.
+  4. 로봇 홈 디렉토리의 `robot_pose_publisher.py`/`scan_frame_fix.py`가 0바이트로 비어있는 걸 발견(이전 세션 중 truncate 추정) → 로컬 `scripts/`에서 재scp로 복구.
+  5. `arena_shared` 맵으로 map_server+amcl 기동 → 충전독 좌표(순회지점1) 확정: **x=0.05, y=0.028, yaw=0.0**(rad) → `/tb3_1/initialpose` 직접 시드로 즉시 정확 수렴(글로벌+회전 불필요, 무-teleop 경로).
+  6. **핵심 함정 발견**: Unity 2D 맵뷰 화면회전(PlayerPrefs `urhynix.map.displayRotationDeg`, 버튼으로 사용자가 임의 조정·영속)이 0°가 아닌 상태에서 "화면에서 보이는 방향"만으로 yaw를 역산하면 실제 AMCL 물리 yaw가 화면회전만큼 틀어짐 — 화면은 우연히 맞아 보여도 Nav2 순회는 실제로 엉뚱한 방향으로 출발함. 맵뷰 회전을 0°로 리셋한 뒤 재확정. `Map25DRobotMarkerLayer.cs`(2.5D)는 이 화면회전을 안 타는 순수 ROS-frame 렌더(`cos(yaw),sin(yaw)` 직접 배치)라 2D(회전0°)/2.5D 교차검증으로 물리 yaw가 진짜 맞음을 확인.
+  7. IP drift 발견·수정: `default_robots.json`의 티원 hostAddress가 `192.168.10.250`(stale)로 박혀있었음 → 실측 `192.168.20.101`(WiFi)로 동기화.
+  8. `MapView.cs`의 `LoadJsonRotation()`이 PlayerPrefs 없을 때 활성 맵 슬롯과 무관한 레거시 `office_base_map.json`을 읽던 드리프트 발견(회전값 하드코딩은 아니지만 잘못된 리소스 참조) → 메서드 삭제, 안전한 항등 기본값 0°로 교체.
+  9. 순회(웨이포인트 주행) 목표를 위해 티원에 `nav2-bt-navigator`/`nav2-waypoint-follower`/`nav2-navigation2`/`nav2-bringup`/`turtlebot3-navigation2` apt 설치(기존엔 amcl/map_server만 있었음, 주행 풀스택 부재였음).
+- **결과**: AMCL 자기위치추정 + Unity 2D 마커 위치·방향 표시 PASS(육안 확인). 순회 nav2 스택 설치 PASS(패키지 확인). 순회 실주행은 미검증.
+- **부수 산출물**: `default_robots.json`, `Map/Actions/{DispatchHereAction,SituationDispatchAction}.cs`, `Services/ActiveRobotService.cs`(주석), `Map/MapView.cs`, `scripts/{_robot_bringup_ns.sh,_robot_amcl_ns.sh,_pose_ep_up.sh}`, `.claude/skills/urhynix-t1-amcl-saved-map/SKILL.md`.
+- **다음 진입**: Unity "순찰편집"으로 순회지점 등록 → "순찰시작"으로 실제 FollowWaypoints 주행 검증. 젠지 쪽도 구독전용 파이프라인(`urhynix-odom-marker-quickstart`) 재확인.
+
+### 🖱️ 2.5D 탭 우클릭 컨텍스트 메뉴 + 로봇 실시간 위치 마커(3D) 추가
+
+- **결정**: 2.5D 맵 탭에 2D와 동등한 우클릭 컨텍스트 메뉴(출동/웨이포인트/순찰 등)를 붙인다. 액션 로직(`IMapAction`)이 `MapClickContext.worldX/worldY/selectedRobotId`만 쓰는 순수 POCO라 2D 전용 코드가 없음을 확인 → 좌표만 정확히 계산하면 기존 액션·메뉴 UI·레지스트리를 한 줄도 안 고치고 재사용 가능. 사용자 확인 후 "로봇이 안 보이는 채로 출동 보내는" UX 공백을 막기 위해 로봇 실시간 위치 마커(3D)도 같은 스코프에 포함.
+- **설계 근거(오푸스 Plan 에이전트 2회 검증)**: Map25DView가 벽/바닥을 `Offset(10000,0,10000)+(originX+..,originY+..)`로 배치하므로, 카메라 레이를 `Plane(Vector3.up, Vector3.zero)`(world Y=0)와 교차시킨 뒤 Offset을 빼면 2D의 worldX/worldY와 동일 원점·단위의 map-frame 좌표가 나온다. 로봇 마커 헤딩(코)은 Quaternion/Euler 없이 `(cos(yaw), 0, sin(yaw))` 벡터 오프셋으로 직접 배치 — 오푸스가 ROS yaw=0→+X(동)/yaw=90°→+Z(북) 대응, Unity handedness 무관함을 수학적으로 재검산.
+- **절차**:
+  1. `Map3DOrbitController.OnDown`에 `e.button != 0` 가드 추가 — 좌클릭만 궤도 드래그 시작, 우클릭은 소비 안 하고 전파.
+  2. `Map25DView`: `Cam`/`Offset`을 public으로 노출.
+  3. `MapView`: `ContextMenu`/`Actions`를 public으로 노출해 2.5D와 공유(2D/2.5D 동시 표시 안 되므로 scrim/menu VisualElement·situations JSON 중복 생성 회피).
+  4. 신규 `Map25DInteractionController.cs` — 우클릭 시 `ViewportPointToRay`+평면 레이캐스트로 world 좌표 계산 → 2D와 같은 `MapContextMenuView.Open()` 호출. 좌클릭은 메뉴 닫기.
+  5. 신규 `Map25DRobotMarkerLayer.cs` — 2D `MapMarkerLayer`와 동일한 `RobotPoseFeed.OnRobotPose`/`RobotPoseSubscriber.OnPoseUpdated` 이벤트 구독, 3D 원판(Cylinder)+헤딩 코(Cube)로 렌더. `Map25DView.Build()`에서 1회 생성, `OnDestroy`에서 구독 해제.
+  6. `MapPanelView.EnsureMap25D()`에 `Map25DInteractionController` 배선 1줄 추가.
+- **검증**: 컴파일 0에러(신규 타입 2개 AppDomain 실로드 확인, stale-check 함정 재발 → `RequestScriptReload()`로 우회). UI Toolkit이라 unityctl click 불가 → 임시 Editor 진단 스크립트(`_Map25DRightClickVerify.cs`, 검증 후 삭제)로 합성 `PointerDownEvent`(IMGUI `Event` 경유 — `PointerEventBase<T>.position/button`는 protected set이라 직접 대입 불가, CS0272로 1차 발견)를 발사해 실측: 컨테이너 정중앙 우클릭 → 계산된 좌표 `(0.64, -0.74)`가 현재 슬롯(arena_shared) 기하학적 중심 손계산값 `(0.636, -0.749)`과 일치(orbit 카메라가 `LookAt(center)`라 중앙 레이=center라는 독립 검증 가능한 기대값). 메뉴 10개 액션과 함께 열림, 좌클릭으로 정상 닫힘. UI Toolkit 레이아웃(Yoga)이 탭 전환 직후 같은 프레임엔 갱신 안 돼 `worldBound`가 0으로 나오는 함정 발견 → 검증을 2단계(exec invoke 분리 호출)로 나눠 우회.
+- **핵심 학습**: `unityctl` 응답의 `target.isRunning` 필드는 Editor 실행 여부가 아니라 **Player 빌드 실행 여부**로 추정됨(Editor가 멀쩡히 IPC 응답하는데도 계속 `false`) — Editor 살아있는지는 `ping`/`exec` 성공 여부로 판단할 것, `isRunning`으로 폴링 루프 짜지 말 것. 로봇 OFF 상태에서 Unity가 Play 모드로 재진입해 ROSConnection이 죽은 IP(192.168.10.84/.250)로 재연결 폭주하는 현상이 재현됨(원인 미확정 — 프로젝트 코드에 InitializeOnLoad/EnterPlaymode 자동트리거 없음 확인함, 다음에 또 보이면 EditorPrefs/세션 상태 쪽 조사 필요).
+- **부수 산출물**: `Assets/Scripts/Map/Map25DInteractionController.cs`, `Assets/Scripts/Map/Map25DRobotMarkerLayer.cs` (신규), `Map3DOrbitController.cs`/`Map25DView.cs`/`MapView.cs`/`MapPanelView.cs` (수정).
+- **다음 진입**: 육안 확인(실제 마우스로 Unity Game뷰에서 우클릭 → 메뉴 위치/액션 실행/로봇 마커 표시)은 사람이 직접 확인 필요(합성 이벤트로 파이프라인 로직은 검증됐지만 실제 렌더 결과는 미확인). 로봇 ON 세션에서 마커가 2D와 같은 위치에 뜨는지 대조 확인. 커밋은 아직 안 함.
+- **참고(이번 세션에서 발견, 손 안 댐)**: `Map/Actions/DispatchHereAction.cs`/`SituationDispatchAction.cs`에 `ActiveRobotService.CapPatrol` 게이팅을 추가한 미커밋 변경이 이미 있었음(이번 세션 작업 아님 — 아마 OpenCode 협업 스레드, [[opencode-claude-collab-setup]]). 그대로 둠, 다음 세션에서 출처 확인 필요.
+
+### 🎨 arena_shared SSOT 맵 전환 + 맵패널 2.5D 탭(자유궤도) 신설 + URP 파이프라인 결함 root-cause 수정
+
+- **결정**: 새 SLAM 맵 `arena_shared`(1.9×1.9m, 95×95px@0.02m)를 Unity ControlRoom 2D SSOT 맵으로 지정, 레거시 `arena_v5` 슬롯 폐기. 이어서 맵 패널에 2D/3D 사이 "2.5D"(자유 궤도 회전) 탭 신설 — 3D는 RTAB-Map 점군으로 후속 도입 예정이라 지금은 손 안 댐.
+- **절차**:
+  1. arena_shared.pgm/yaml 품질검증(폐루프 벽, ASCII+픽셀통계) → Unity 슬롯 등록 → 레거시 `arena_v5` 슬롯 4쌍 삭제 → `StaticMapLoader.cs` `defaultSlotId`를 `"arena_shared"`로 교체(`arena_v<N>` regex 밖이라 `LatestArenaSlot` 자동탐지 불가, 명시 지정 필요).
+  2. `Map3DView.cs`→`Map25DView.cs` 리네임(진짜 3D는 별도 클래스로 올 예정이라 이름 충돌 방지), 카메라를 orthographic 천장뷰 1개 → perspective 자유궤도 1개로 교체. 신규 `Map3DOrbitController.cs`(드래그 yaw+pitch, pitch 15~80도 클램프, 휠 zoom 반경 0.3~2.5배, `LookAt(center)`로 항상 프레이밍).
+  3. `MapPanelView.cs`/`MapPanel.uxml`에 `btn-map-25d`/`map-25d-container` 신설. 기존 "3D" 탭은 카메라 로직 제거하고 "점군(RTAB-Map) 연동 예정" placeholder로 격하.
+  4. 텍스처 렌더 중 **핑크 렌더링 발견** → root cause: `ProjectSettings/GraphicsSettings.asset`+`QualitySettings.asset`이 실존하지 않는 URP RenderPipelineAsset GUID 참조(끊어진 참조 — 이 프로젝트가 3D를 렌더한 게 이번이 처음이라 여태 안 들켰던 기존 결함). `Assets/Settings/ControlRoom_URP.asset`+`ControlRoom_Renderer.asset` 신규 생성해 배선. **스크립트 API(`QualitySettings.renderPipeline=`, `AssetDatabase.SaveAssets`/`ForceReserializeAssets`)로는 디스크 반영 안 됨** → Unity 완전 종료 상태에서 ProjectSettings 파일 GUID 직접 치환 후 재기동으로 영속 검증.
+  5. 핑크 해결 후 바닥이 흰색으로 노출과다 렌더되는 2차 버그 → 바닥/벽 머티리얼 Lit→Unlit 교체(스키매틱 뷰라 사실적 셰이딩 불필요, 조명/노출 영향 원천 차단).
+  6. UI Toolkit이라 `unityctl screenshot`/`ui click`이 전부 안 먹혀서(검정 스크린샷·버튼 0건 검색 확인) `RenderTexture.ReadPixels` 직접 덤프로 육안 검증 우회 확립.
+- **부수 사고 + 핵심 학습**: 반복된 Unity 강제종료(`kill -TERM`)/재기동 중 메인 씬(`ControlRoomMain.unity`)이 예전 커밋 상태로 잘못 되돌아가 `CameraStreamSubscriber_Genji` 등 실컴포넌트 소실 → `git checkout` 즉시 원복 + `unityctl scene open --force`로 디스크에서 재로드해 클린 확인. **학습**: Unity kill 반복 시 씬 auto-recovery가 stale 백업을 잘못 복원할 수 있음 — kill 후 반드시 `git status`로 씬 diff 확인.
+- **arena_shared 가벽(.sdf) 자동생성**: 기존 `jaebo_v1.sdf`가 Gazebo가 아니라 맵 이미지 위 수동 트레이싱(`world name="map1_photoshop_walls"`)으로 만들어진 걸 발견 → 신규 `scripts/pgm_to_sdf_walls.py`(점유격자를 그리디 최대사각형 커버링으로 분해, 순수 Python+표준라이브러리)로 자동화 → arena_shared에서 벽 27개 추출, 텍스처 덤프로 렌더 확인(외곽+칸막이+돌출벽 원본 구조와 일치).
+- **부수 산출물**: `Map/Map25DView.cs`, `Map/Map3DOrbitController.cs`, `Assets/Settings/ControlRoom_{URP,Renderer}.asset`, `StreamingAssets/Maps/arena_shared.{png,json,sdf}`(+pretty), `scripts/pgm_to_sdf_walls.py`.
+- **결과**: 전체 PASS — 컴파일 0에러, 텍스처 덤프 육안검증 완료(핑크/화이트 블로우아웃 해소, 벽 정상 렌더). 커밋 전.
+- **다음 진입**: 2.5D 탭에 **2D 맵처럼 우클릭 컨텍스트 메뉴** 붙이기(`MapContextMenuView.cs`+`Map/Actions/`(DispatchHereAction 등) 패턴을 Map25DView/Map3DOrbitController로 확장) — 아직 설계 전.
+
 ## 2026-06-30
 
 ### 🗺️ 가재보맵 통합(2D슬롯+3D sdf) + 티원 마커 fix + unityctl bridge 6에러 패치 + 비침습 구독 역할분리

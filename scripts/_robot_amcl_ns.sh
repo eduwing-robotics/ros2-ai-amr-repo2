@@ -6,21 +6,22 @@
 #   • frame: global=map, odom=<id>/odom, base=<id>/base_footprint, scan=/<id>/scan.
 #   • 각 로봇은 자기 호스트에서 실행(크로스호스트는 시계 skew로 scan 폐기).
 #   • set_initial_pose: 충전소 좌표를 알면 IX/IY/IYAW(rad) 인자로 박아 무-teleop 자동 시작.
-# 사용: bash _robot_amcl_ns.sh <id: tb3_1|tb3_2> [map_yaml] [ix] [iy] [iyaw_rad]
-#   예) 티원: bash _robot_amcl_ns.sh tb3_1
-#       젠지: bash _robot_amcl_ns.sh tb3_2 ~/maps/arena_v5/arena_v5.yaml
-#       자동: bash _robot_amcl_ns.sh tb3_1 ~/maps/arena_v5/arena_v5.yaml 0.9 -0.94 -2.46
-# 주의: set -u 금지(setup.bash가 미정의 변수 참조).
+# 사용: bash _robot_amcl_ns.sh <id: tb3_1|tb3_2> [map_yaml] [ix] [iy] [iyaw_rad] [domain]
+#   예) 티원(도메인2): bash _robot_amcl_ns.sh tb3_1 ~/maps/arena_shared/arena_shared.yaml "" "" "" 2
+#       젠지: bash _robot_amcl_ns.sh tb3_2 ~/maps/arena_shared/arena_shared.yaml
+#       자동초기포즈: bash _robot_amcl_ns.sh tb3_1 ~/maps/arena_shared/arena_shared.yaml 0.9 -0.94 -2.46 2
+# 주의: set -u 금지(setup.bash가 미정의 변수 참조). 도메인은 로봇별로 분리 운영 중 — bringup 때 쓴 값과 반드시 일치시킬 것.
 set +u
 NS="$1"
-if [ -z "$NS" ]; then echo "usage: _robot_amcl_ns.sh <tb3_1|tb3_2> [map_yaml] [ix iy iyaw_rad]"; exit 1; fi
-MAP="${2:-$HOME/maps/arena_v5/arena_v5.yaml}"
+if [ -z "$NS" ]; then echo "usage: _robot_amcl_ns.sh <tb3_1|tb3_2> [map_yaml] [ix iy iyaw_rad] [domain]"; exit 1; fi
+MAP="${2:-$HOME/maps/arena_shared/arena_shared.yaml}"
 IX="$3"; IY="$4"; IYAW="$5"
+DOM="${6:-210}"
 LOG="/tmp/${NS}_amcl"; mkdir -p "$LOG"
-SRC='source /opt/ros/jazzy/setup.bash; export ROS_DOMAIN_ID=210 RMW_IMPLEMENTATION=rmw_fastrtps_cpp ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET'
+SRC="source /opt/ros/jazzy/setup.bash; export ROS_DOMAIN_ID=$DOM RMW_IMPLEMENTATION=rmw_fastrtps_cpp ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET"
 eval "$SRC"
 
-if [ ! -f "$MAP" ]; then echo "맵 없음: $MAP (arena_v5 scp 했는지 확인)"; exit 1; fi
+if [ ! -f "$MAP" ]; then echo "맵 없음: $MAP (scp 했는지 확인)"; exit 1; fi
 
 # 초기포즈 인자가 다 있으면 set_initial_pose 활성
 SIP="false"; IP_PARAMS=""

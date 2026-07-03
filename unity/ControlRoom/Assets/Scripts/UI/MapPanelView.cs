@@ -1,6 +1,6 @@
 // MapPanelView.cs — 중앙 맵 패널의 툴바/토글 담당. 2D 콘텐츠는 Map/MapView 서브시스템에 위임.
 // 2026-06-16: 직접 텍스처 렌더를 걷어내고 MapView(Viewport/Image/Hud/[Phase2]Marker/[Phase3]Interaction)로 분리.
-// 3D는 Phase 6 안내. 책임분리로 이 파일은 토글만 유지(비대화 방지).
+// 2.5D는 Map25DView(sdf 벽+궤도 카메라)에 위임. 3D는 RTAB-Map 점군 예정 안내만(placeholder). 이 파일은 토글만 유지(비대화 방지).
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -13,21 +13,27 @@ namespace URHYNIX.ControlRoom.UI
     public class MapPanelView
     {
         readonly Button btn2D;
+        readonly Button btn25D;
         readonly Button btn3D;
         readonly VisualElement container2D;
+        readonly VisualElement container25D;
         readonly VisualElement container3D;
-        readonly MapView mapView;   // 2D 맵 서브시스템
+        readonly MapView mapView;   // 2D 맵 서브시스템 — 2.5D가 ContextMenu/Actions를 이걸로 공유
         Label angleLabel;           // 회전 각도 표시
-        Map3DView map3D;            // 3D sdf 뷰 (첫 3D 진입 시 lazy 생성)
+        Map25DView map25D;          // 2.5D sdf 궤도뷰 (첫 진입 시 lazy 생성)
+        Map3DPointCloudView map3D;  // 3D RTAB-Map 점군 궤도뷰 (첫 진입 시 lazy 생성)
 
         public MapPanelView(VisualElement root)
         {
-            btn2D       = root.Q<Button>("btn-map-2d");
-            btn3D       = root.Q<Button>("btn-map-3d");
-            container2D = root.Q<VisualElement>("map-2d-container");
-            container3D = root.Q<VisualElement>("map-3d-container");
+            btn2D        = root.Q<Button>("btn-map-2d");
+            btn25D       = root.Q<Button>("btn-map-25d");
+            btn3D        = root.Q<Button>("btn-map-3d");
+            container2D  = root.Q<VisualElement>("map-2d-container");
+            container25D = root.Q<VisualElement>("map-25d-container");
+            container3D  = root.Q<VisualElement>("map-3d-container");
 
             if (btn2D != null) btn2D.clicked += () => SetMode("2d");
+            if (btn25D != null) btn25D.clicked += () => SetMode("25d");
             if (btn3D != null) btn3D.clicked += () => SetMode("3d");
 
             if (container2D != null) mapView = new MapView(container2D, root);
@@ -120,38 +126,68 @@ namespace URHYNIX.ControlRoom.UI
         void SetMode(string mode)
         {
             ControlRoomState.Instance.SetMapViewMode(mode);
+            if (mode == "25d") EnsureMap25D();
             if (mode == "3d") EnsureMap3D();
+            map25D?.SetActive(mode == "25d");
             map3D?.SetActive(mode == "3d");
-            ControlRoomEvents.RaiseLogAdded("map", "INFO",
-                mode == "3d" ? "3D 맵 모드 (sdf 벽)" : "2D 맵 모드");
+            ControlRoomEvents.RaiseLogAdded("map", "INFO", ModeLabel(mode));
         }
 
-        // 첫 3D 진입 시 Map3DView를 만들고 RenderTexture를 container3D 배경으로 건다.
+        static string ModeLabel(string mode) => mode switch
+        {
+            "25d" => "2.5D 맵 모드 (드래그로 회전)",
+            "3d"  => "3D 맵 — RTAB-Map 점군 (드래그로 회전)",
+            _     => "2D 맵 모드",
+        };
+
+        // 첫 2.5D 진입 시 Map25DView를 만들고 RenderTexture를 container25D 배경으로 건다 + 드래그 궤도 회전 연결.
         // 현재 로드된 슬롯(StaticMapLoader)의 .sdf로 벽을 세운다 — jaebo_v1이면 89벽, sdf 없는 슬롯이면 바닥만.
+        void EnsureMap25D()
+        {
+            if (map25D != null || container25D == null) return;
+            var go = new GameObject("Map25DView");
+            map25D = go.AddComponent<Map25DView>();
+            string slot = string.IsNullOrEmpty(StaticMapLoader.LatestSlotId) ? "jaebo_v1" : StaticMapLoader.LatestSlotId;
+            map25D.Build(slot, StaticMapLoader.LatestOriginX, StaticMapLoader.LatestOriginY,
+                         StaticMapLoader.LatestWidth, StaticMapLoader.LatestHeight,
+                         StaticMapLoader.LatestResolution > 0f ? StaticMapLoader.LatestResolution : 0.05f);
+            if (map25D.Texture != null)
+            {
+                container25D.style.backgroundImage = Background.FromRenderTexture(map25D.Texture);
+                var overlay = container25D.Q<Label>("map-25d-overlay");
+                if (overlay != null) overlay.style.display = DisplayStyle.None;
+                map25D.AttachOrbitControl(container25D);
+                if (mapView != null)
+                    new Map25DInteractionController(container25D, map25D.Cam, mapView.ContextMenu, mapView.Actions);
+            }
+        }
+
+        // 첫 3D 진입 시 Map3DPointCloudView를 만들고 RenderTexture를 container3D 배경으로 건다 + 드래그 궤도 회전 연결.
         void EnsureMap3D()
         {
             if (map3D != null || container3D == null) return;
-            var go = new GameObject("Map3DView");
-            map3D = go.AddComponent<Map3DView>();
-            string slot = string.IsNullOrEmpty(StaticMapLoader.LatestSlotId) ? "jaebo_v1" : StaticMapLoader.LatestSlotId;
-            map3D.Build(slot, StaticMapLoader.LatestOriginX, StaticMapLoader.LatestOriginY,
-                        StaticMapLoader.LatestWidth, StaticMapLoader.LatestHeight,
-                        StaticMapLoader.LatestResolution > 0f ? StaticMapLoader.LatestResolution : 0.05f);
-            if (map3D.Texture != null)
+            var go = new GameObject("Map3DPointCloudView");
+            map3D = go.AddComponent<Map3DPointCloudView>();
+            bool ok = map3D.Build("PointClouds/arena_shared_room");
+            if (ok && map3D.Texture != null)
             {
                 container3D.style.backgroundImage = Background.FromRenderTexture(map3D.Texture);
                 var overlay = container3D.Q<Label>("map-3d-overlay");
                 if (overlay != null) overlay.style.display = DisplayStyle.None;
+                map3D.AttachOrbitControl(container3D);
+                // 2026-07-03: 3D는 보기 전용으로 스코프 축소 — 점군이 성겨서 클릭 좌표 판정이 불안정했음.
+                // 좌표 입력은 2D/2.5D에서. 우클릭은 별도 리스너가 없어 자연스럽게 무반응.
             }
         }
 
         void SyncUI(string mode)
         {
-            bool is3D = mode == "3d";
-            btn2D?.EnableInClassList("active", !is3D);
-            btn3D?.EnableInClassList("active",  is3D);
-            container2D?.EnableInClassList("hidden",  is3D);
-            container3D?.EnableInClassList("hidden", !is3D);
+            btn2D?.EnableInClassList("active", mode == "2d");
+            btn25D?.EnableInClassList("active", mode == "25d");
+            btn3D?.EnableInClassList("active", mode == "3d");
+            container2D?.EnableInClassList("hidden", mode != "2d");
+            container25D?.EnableInClassList("hidden", mode != "25d");
+            container3D?.EnableInClassList("hidden", mode != "3d");
         }
     }
 }

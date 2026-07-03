@@ -3,7 +3,7 @@
 
 > 상세 로그: `docs/daily/` · 주간 회고: `docs/weekly/`(SKILL-HARVEST 포함) · 구버전: `docs/archive/`
 
-Last updated: 2026-06-30 밤 — **🗺️ 가재보맵 통합 + 컴파일 블로커 해소 + 비침습 구독 결정.** unityctl bridge 6에러(CS0453 1·CS0029 4·CS0246 1, bridge 패키지 자체 버그) 메인 패치 → 컴파일 **0에러 PASS**. 티원 마커 root cause(`dual_marker_up.sh`가 티원 `endpoint=no`) fix → Unity `/tb3_1/pose` 구독 확인. 가재보맵 `jaebo_v1` 2D 슬롯(arena regex와 격리) + 3D sdf 뷰 신설(`SdfWallSpawner`+`Map3DView`, 벽89→Cube 천장뷰, 2D/3D 탭, 컴파일 0에러, **런타임 육안 대기**). **역할분리 결정**: 로봇 운영(bringup/AMCL/주행=publish)은 데스크탑(팀), 우리 Unity는 구독만(passive twin) — 로봇 점유 0(팀 사용 보장). **다음**: Unity Play로 3D탭·가재보슬롯·티원 초록마커 육안 + 데스크탑 운영 연동. 이전: Phase 3 준비(FakeSensor/DemoScenario/Supabase 동적화)·bridge 6에러 미해결.
+Last updated: 2026-07-03 — 🗺️ arena_shared 맵 재캡처 교체+AMCL "위치고정+방향탐색" 재확보 패턴 스킬화+RTAB-Map 3D 정합검증(시작점 근처 PASS, 방 전체는 loop closure 실패로 드리프트)+Unity 3D 탭 점군 렌더링 구현(Pcx 패키지) 후 클릭기능 불안정 확인해 역할재정의(2D/2.5D=좌표입력, 3D=보기전용)로 스코프 정리. 티원 안전 셧다운. 이전: 🤖 티원 7웨이포인트 순회 인프라 구축, keepout zone 구현+검증 PASS, `/dev/shm` 시스템정체 규명(재부팅해결), 웨이포인트1 clean PASS(7웨이포인트 완주는 새맵 기준 재계산 필요로 이월). 이전: 🗺️ 2.5D 탭 순회지점 미표시 버그 수정.
 
 ## 2026-06-02 Addendum
 

@@ -42,7 +42,7 @@ references:
 
 ## 기동 순서 (스크립트 파일 방식 — 따옴표 지옥·재부팅 /tmp 소실 대비)
 
-전제: `scripts/tb3.sh` 로드, `ROS_DOMAIN_ID=210`, codelab 망. **재부팅 시 `/tmp/*.sh` 날아감 → 매번 재작성.**
+전제: `scripts/tb3.sh` 로드, `ROS_DOMAIN_ID=1`(젠지), codelab 망. **재부팅 시 `/tmp/*.sh` 날아감 → 매번 재작성.**
 
 1. **bringup + ros_tcp**: `tb3-up` (urhynix_robot_up.sh, non-namespaced). turtlebot3_node가 죽으면(노드목록에 없음) → bringup을 `usb_port:=/dev/ttyACM<OpenCR>`로 재기동.
 2. **SLAM**: apt판 cartographer (ws 오버레이의 `cartographer.launch.py`가 깨진 심볼릭이면 `/opt/ros/jazzy`만 source). `slam-nav2-arena-survey` 참고.
@@ -50,7 +50,7 @@ references:
 4. **arduino**: `/dev/tb3_arduino`→Arduino ACM 심링크(sudo) + `python3 ~/arduino_bridge.py` (URHYNIX_ROBOT_ID=tb3_2). `urhynix-sensor-bringup` 참고.
 5. **배터리 relay**: `/battery_state`→`/tb3_2/battery_state` 파이썬 relay (BatteryState 구독→재발행).
 
-각 노드는 tmux 세션(bringup/ros_tcp/slam/camera/arduino/batrelay)으로. 모든 export에 `ROS_DOMAIN_ID=210 RMW_IMPLEMENTATION=rmw_fastrtps_cpp ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET`.
+각 노드는 tmux 세션(bringup/ros_tcp/slam/camera/arduino/batrelay)으로. 모든 export에 `ROS_DOMAIN_ID=1 RMW_IMPLEMENTATION=rmw_fastrtps_cpp ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET`.
 
 배터리 relay 노드(검증된 최소형):
 ```python

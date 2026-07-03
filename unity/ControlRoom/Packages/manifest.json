@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "com.unity.robotics.ros-tcp-connector": "https://github.com/Unity-Technologies/ROS-TCP-Connector.git?path=/com.unity.robotics.ros-tcp-connector#v0.7.0",
+    "jp.keijiro.pcx": "https://github.com/keijiro/Pcx.git?path=/Packages/jp.keijiro.pcx#ffc344756b9320584a02a738c8b9d328090e1bc3",
     "com.unity.ai.navigation": "2.0.9",
     "com.unity.collab-proxy": "2.10.2",
     "com.unity.ide.rider": "3.0.38",
