@@ -1,3 +1,25 @@
+"""nav2_goal_v3.py — grid 좌표로 로봇을 Nav2로 보내는 주행 스크립트 (v3).
+
+■ 뭘 하나
+  grid(0~200) 좌표를 주면 map 좌표로 바꿔 Nav2에게 "여기로 가"라고 시킨다.
+  여러 점을 순서대로(순찰), 반복(--loop / --laps)도 된다.
+  장애물 회피/경로계획은 Nav2가 알아서 한다.
+
+■ 똑똑한 점
+  - 낀(스턱) 걸 감지하면 뒤로 빠졌다 옆으로 비껴 다시 시도(트인 쪽부터, 막히면 반대쪽)
+  - 그래도 안 되면 그 점은 건너뛰고 다음으로 (순찰이 안 죽음)
+  - 갈 수 없는 목표(벽 속 등)는 미리 걸러 건너뜀
+  - 로봇이 자기 위치를 모르면(localize 안 됨) 안전하게 멈춤
+
+■ 전제
+  Nav2 실행 + AMCL localize 완료(RViz "2D Pose Estimate")가 되어 있어야 함.
+  좌표계(map 원점/크기)는 코드에 하드코딩. 맵이 다르면 v4(--map) 사용.
+
+■ 사용법
+  python3 nav2_goal_v3.py 100 100                # grid(100,100)로 이동
+  python3 nav2_goal_v3.py 50 50 150 150 --loop   # 두 점 순찰 반복
+  python3 nav2_goal_v3.py --help                 # 모든 옵션 보기
+"""
 import sys
 import time
 import math

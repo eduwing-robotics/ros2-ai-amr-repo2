@@ -1,3 +1,19 @@
+"""nav2_goal_v4.py — grid 좌표 Nav2 주행 스크립트 (v4, 맵 파일 연동).
+
+■ v3와 뭐가 다른가
+  좌표계(map 원점/크기)를 코드에 박지 않고 map.yaml에서 읽는다.
+  → 맵이 바뀌어도 코드 수정 없이 --map 경로만 바꾸면 됨.
+  나머지 기능(스턱 탈출 / 도달가능 사전확인 / localize 가드 등)은 v3와 동일.
+
+■ 전제
+  Nav2 실행 + AMCL localize 완료가 되어 있어야 함.
+
+■ 사용법
+  python3 nav2_goal_v4.py --map ~/urhynix/waypoint/map5.yaml 100 100
+  python3 nav2_goal_v4.py --map map5.yaml 50 50 150 150 --loop  # 순찰 반복
+  python3 nav2_goal_v4.py --help                                # 모든 옵션
+  (--map 생략 시 기본 좌표계로 폴백 + 경고)
+"""
 import sys
 import time
 import math
