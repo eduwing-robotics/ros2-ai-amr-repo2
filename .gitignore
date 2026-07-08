@@ -143,3 +143,8 @@ SCOUT.md
 
 # Gallery Room 에셋팩(302MB) — MuseumDecor가 참조하는 최소 의존셋만 git add -f로 추적 (2026-07-08)
 unity/ControlRoom/Assets/Gallery Room/*
+
+# 대형 캡처 산출물은 git 밖(로컬/scp) — GitHub 100MB 하드리밋 (2026-07-08 push 거부 재발 방지)
+docs/evidence/**/*.mcap
+docs/evidence/**/rot360*.ply
+docs/evidence/**/cowork.ply
