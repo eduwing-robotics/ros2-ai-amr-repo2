@@ -11,7 +11,8 @@ namespace URHYNIX.ControlRoom.Map.Actions
         public string DisplayName => "📍 이 위치로 출동";
         public bool AppliesTo(MapClickContext ctx)
             => !string.IsNullOrEmpty(ctx.selectedRobotId)
-               && ActiveRobotService.Has(ActiveRobotService.CapPatrol);
+               && ActiveRobotService.Has(ActiveRobotService.CapPatrol)
+               && RobotConnectivityMonitor.IsOnline(ctx.selectedRobotId); // 오프라인 로봇에 가짜 성공 출동 방지
 
         public void Execute(MapClickContext ctx)
         {

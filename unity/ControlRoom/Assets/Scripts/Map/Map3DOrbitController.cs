@@ -15,9 +15,14 @@ namespace URHYNIX.ControlRoom.Map
         readonly Camera cam;
         readonly Vector3 center;
         readonly float minRadius, maxRadius, minPitch, maxPitch;
+        readonly float startYaw, startPitch, startRadius;
         float radius, yaw, pitch;
         Vector2 lastPos;
         bool dragging;
+
+        public float Yaw => yaw;
+        public float Pitch => pitch;
+        public System.Action OnViewChanged; // 드래그 종료/줌 시 발화 — 영속 저장 훅(옵션)
 
         // minPitch/maxPitch/minRadiusScale/maxRadiusScale 생략 시 2.5D 스키매틱 뷰 기본 클램프값 유지.
         // 3D 점군처럼 완전 자유 회전이 필요하면 넓은 범위(예: -89~89, 0.1~6)를 명시.
@@ -28,7 +33,24 @@ namespace URHYNIX.ControlRoom.Map
             this.cam = cam; this.center = center; this.radius = radius;
             this.minPitch = minPitch; this.maxPitch = maxPitch;
             minRadius = radius * minRadiusScale; maxRadius = radius * maxRadiusScale;
+            this.startYaw = startYaw; this.startPitch = startPitch; startRadius = radius;
             yaw = startYaw; pitch = startPitch;
+            Apply();
+        }
+
+        // 시연 중 실수 드래그 복구용 — 생성 시점의 yaw/pitch/radius로 복귀.
+        public void ResetView()
+        {
+            yaw = startYaw; pitch = startPitch; radius = startRadius;
+            Apply();
+            OnViewChanged?.Invoke();
+        }
+
+        // 저장된 시점 복원용(영속 로드) — 기본각(ResetView 목적지)은 건드리지 않는다.
+        public void SetView(float yawDeg, float pitchDeg)
+        {
+            yaw = yawDeg;
+            pitch = Mathf.Clamp(pitchDeg, minPitch, maxPitch);
             Apply();
         }
 
@@ -45,6 +67,7 @@ namespace URHYNIX.ControlRoom.Map
         {
             radius = Mathf.Clamp(radius * (1f + e.delta.y * ZoomSensitivity), minRadius, maxRadius);
             Apply();
+            OnViewChanged?.Invoke();
             e.StopPropagation();
         }
 
@@ -70,10 +93,12 @@ namespace URHYNIX.ControlRoom.Map
         {
             dragging = false;
             (e.currentTarget as VisualElement)?.ReleasePointer(e.pointerId);
+            OnViewChanged?.Invoke();
         }
 
         void Apply()
         {
+            if (cam == null) return; // 슬롯 재빌드로 카메라가 파괴된 옛 컨트롤러의 잔존 UI 콜백 no-op 가드
             float yawRad = yaw * Mathf.Deg2Rad, pitchRad = pitch * Mathf.Deg2Rad;
             var offset = new Vector3(
                 radius * Mathf.Cos(pitchRad) * Mathf.Sin(yawRad),

@@ -3,7 +3,55 @@
 
 > **📌 최신 5건은 DECISION-CURRENT.md 참조. 이 파일은 전체 역사 기록입니다.**
 
+## 2026-07-08
+
+### 🏛️ 2.5D 박물관 장식 시스템 구축 + dogfood 감사 → P1~7 수정 PASS (컴파일 검증, 육안 대기)
+
+- **결정/증상**: Gallery Room 팩(302MB) 임포트 → 전부 마젠타. 원인 = **URP 17 ↔ 팩 Built-in Standard 셰이더 미스매치** → 에디터 `StandardUpgrader` 스크립트로 16/16 변환(재사용: `Assets/Editor/GalleryRoomUrpUpgrade.cs`, SpeedTree는 GUID 스왑).
+- **장식 시스템(전부 데이터 주도)**: `StreamingAssets/Maps/<slot>.decor.json` + `MuseumDecorSpawner` — 검정 그리드 바닥, 갤러리 벽 스킨, 벽 직선화 병합(34→10, 표시 전용·로봇 pgm 불변), 액자+벽당 트랙레일 조명+스팟, 충전독 연한 로봇색 패치, 차폐벽(wall_13 자리, 평소 열림→화재 출동 시 하강→10초 자동 개방, `FireShutter`), 니케상/스핑크스(사용자 STL→Blender 데시메이트→1m 정규화 OBJ, `scale`=실높이m), 로봇 마커 = ROBOTIS 공식 TB3 burger 실모델.
+- **dogfood 감사**(ChatterBox 스킬 이식 실행): 정찰 1 + 페르소나 워커 4(Opus) + 메인 검증 → 시연 Blocker(데모 화재 버튼 미결선)·운영 Blocker(2.5D 슬롯 stale) 확정, 워커의 "ROS 콜백 백그라운드 스레드 P0"는 `ROSConnection.Update()` 메인스레드 디스패치로 **반증**.
+- **P1~7 수정(phase-loop, 자기리뷰 메인 직접)**: ①데모 화재 버튼→모의 출동 발화(SSOT `demoDispatch/demoX/demoY`) ②셔터 개폐 barrier 로그 ③오프라인 로봇 출동 게이트(수동 숨김·상황 출동은 경고 유지) ④2.5D 시점 리셋 버튼+yaw/pitch 영속 ⑤URP per-object 라이트 4→8 ⑥슬롯 전환 시 2.5D 재빌드+`rt_` 규약 리소스 정리(잔존 UI 콜백은 cam null 가드) ⑦위생(에디터 전용 로그 등). 컴파일 PASS(DLL mtime > 마지막 소스 편집으로 stale 배제).
+- **핵심 학습 3건**: ⑴ unityctl stale check — 사용자가 Play 중이면 재컴파일 안 됨, `exec 'UnityEditor.AssetDatabase.Refresh()'`가 키스트로크보다 확정적 ⑵ 오프셋 씬(반사프로브 無)에서 고metallic 재질은 검게 렌더 — 저metallic 사용 ⑶ 맵 지형지물 특정은 기하 추론 금지, `[MapClick]` 우클릭 로그+확인질문 필수(차폐벽 2회 오특정).
+- **부수 산출물**: `.claude/skills/urhynix-dogfood-audit/SKILL.md`(신규), `Assets/Resources/MuseumDecor/`(OBJ 3종+Wall.mat+prefab 4), `arena_shared.decor.json`, 메모리 2건(unity-urp-material-upgrade, feedback-map-feature-identify-confirm).
+- **다음 진입**: 로봇 트랙 Top 액션(완전 충전 후 4점 순찰 #3~#4 완주)은 그대로 유지. Unity 트랙은 Play → 2.5D 육안 체크리스트: 장식 전경 / 데모 "화재" 버튼 → 셔터 하강·10초 개방 / 시점 리셋 버튼 / 슬롯 전환 반영 / 액자·조각상 스케일(decor.json 노브 조정).
+
 ## 2026-07-03
+
+### 🔋 재시도 — 축소마진 4점 순찰 웨이포인트 1~2 클린 통과, #3 도중 배터리 방전으로 tf 정지 → 셧다운
+
+- **결정/증상**: 직전 entry(같은 날짜, 아래)의 OpenCR 크래시 이후 재부팅+전체 스택 재기동해 축소마진(`PolygonStop=0.18m` 등)으로 4점 순찰 재검증. 웨이포인트#1→#2는 **충돌·정지 없이 클린 통과**(안전마진 축소가 실제로 효과 있음을 첫 확인) — 그러나 #3 진행 중 `map→tb3_1/odom` tf가 갱신을 멈추고(`Transform data too old`, 80초+ 고정) `collision_monitor`도 라이다 소스를 매칭 못해 정지, 배터리 완전 방전이 원인으로 확인됨(주인님 육안 확인).
+- **원인**: 배터리 저전압 → OpenCR/모터보드 동작 불안정 → odom/tf 발행 정지. **직전 entry의 `turtlebot3_ros` stack-smashing 크래시도 사실 이 저전압이 근본원인이었을 가능성** — 시리얼 패킷 파싱 실패(`no status packet`)가 전압 강하로 인한 통신 불안정과 정합됨. 재부팅 직후엔 일시적으로 정상 동작했으나(전압이 순간적으로 회복) 몇 분 뒤 재차 저하.
+- **결과**: 안전마진 축소 자체는 웨이포인트 1~2 클린 통과로 **부분 검증 성공**(방 크기에 맞게 조정한 값이 정지/충돌 없이 작동). #3~#4는 배터리로 인해 여전히 미검증. 티원 안전 셧다운.
+- **핵심 학습**: AMCL garbage-pose/turtlebot3_ros 크래시 등 이번 세션의 하드웨어 이상현상들이 **개별 버그가 아니라 배터리 저전압이라는 단일 근본원인의 여러 증상**이었을 가능성이 높음 — 다음 세션은 완전 충전 후 시작해야 이번 안전마진 수정이 실제로 유효한지 깨끗하게 재검증 가능.
+- **다음 진입**: **완전 충전 후** 재시작. OpenCR 물리연결 점검은 여전히 유효하지만 우선순위는 충전이 먼저 — 저전압 상태에서의 재현 시도는 진단에 노이즈만 더함.
+
+### 🔩 안전마진 방크기 부적합 발견+재조정 + OpenCR 하드웨어 통신 크래시 발견 → 안전 셧다운
+
+- **증상**: 직전 entry(같은 날짜, 아래)의 "드라마틱 강화" 안전파라미터를 재검증하러 티원 재부팅→AMCL 재시딩→nav2 재기동 후 4점 순찰 재트리거 — 첫 시도는 출발점에서 60초+ 전혀 안 움직이다 실패, 두 번째 시도(마진 축소 후)는 AMCL이 garbage 좌표(x=-75593, y=28279)로 발산하며 "웨이포인트#1 성공"이 1.1초 만에 (비정상적으로 빠르게) 찍힘.
+- **원인 1 — 안전마진이 방 크기에 안 맞음**: `PolygonStop.radius=0.30m`(직전 entry에서 "드라마틱하게" 강화한 값)가 충전독 출발점(벽에서 0.28~0.30m)과 거의 같아, 출발하자마자 로봇이 **벽 자체를 장애물로 오인해 하드스톱**. nav2 로그 `"Robot to stop due to PolygonStop polygon"`로 확정. `patrol_safe_clearance.py`가 웨이포인트-벽 최소간격을 0.25m로만 보장하는데 안전마진(0.30~0.45m)이 그보다 커서, 정상 경로 자체가 상시 트리거 대상이 됨. → `PolygonStop` 0.30→0.18m, `PolygonSlow` 0.45→0.22m, `PolygonLimit` 0.4→0.20m로 축소(로봇 물리반경 ~0.105m 대비 여유는 유지하되 0.25m 벽간격은 안 침범하도록). 속도값(`max_vel_x=0.08` 등)은 유지 — 문제는 마진이지 속도가 아니었음.
+- **부수 발견 — `PolygonLimit`이 스톡 TB3 yaml부터 죽은 설정**: `collision_monitor`의 활성 폴리곤은 `polygons` 리스트(`['PolygonStop','PolygonSlow','FootprintApproach']`)로 별도 관리되는데, **스톡 `turtlebot3_navigation2/param/burger.yaml` 자체가 `PolygonLimit`을 정의만 하고 이 리스트엔 안 넣어놔서**, 직전 entry에서 강화한 `PolygonLimit` 값들이 그동안 한 번도 실제로 로드된 적이 없었음(당시 `ros2 param get`으로 `PolygonStop.radius`만 확인하고 `polygons` 리스트는 안 봐서 놓침). `patch_nav_params_ns.py`에 `polygons.append("PolygonLimit")` 추가로 처음 실제 활성화.
+- **원인 2 — AMCL garbage pose의 근본원인 확정 (지난 세션 미해결 이슈 해소)**: 마진 축소 후 재시도 중 `/tb3_1/odom` 발행자가 0명으로 확인됨 → 로그 추적 결과 `turtlebot3_ros`(OpenCR 시리얼 브릿지)가 `"Failed to read[[TxRxResult] There is no status packet!]"` 반복 후 `"*** stack smashing detected ***: terminated"`로 SIGABRT 크래시(exit code -6). odom을 잃은 AMCL의 파티클필터가 발산해 garbage 좌표를 냄 — **지난 세션에 관측했던 x=79428 같은 garbage pose 이상현상과 동일 클래스**, AMCL 자체 버그가 아니라 OpenCR 시리얼 통신 장애의 하류 증상이었음. `battery_state` 토픽도 같은 노드 소스라 크래시 후 토픽 자체가 사라짐(재확인 불가).
+- **안전 확인**: 브릿지 kill + 즉시 정지 시도, `turtlebot3_ros` 크래시로 모터 제어 경로 자체가 끊겨 로봇은 물리적으로 이동 불가 상태였음(우연히 안전) — 실제 폭주 위험은 없었음.
+- **결과**: 배터리 부족(마지막 확인 44.4%, 크래시 이후 라이브 재확인 불가) + 하드웨어 통신 장애 겹쳐 세션 종료, 티원 안전 셧다운(ping+SSH 이중 확인).
+- **핵심 학습 2건**: ① 안전마진은 "크게 키우면 안전하다"가 아니라 **방 크기·웨이포인트 벽간격 하한(0.25m)과 비례해서 잡아야 함** — 너무 작으면 충돌, 너무 크면 정상 경로를 막음(0.1m/0.3m 둘 다 실패, 0.18m가 이 방의 실제 유효 범위). ② `ros2 param get`으로 개별값만 확인하지 말고 **`polygons` 활성 리스트도 항상 같이 확인** — 개별 폴리곤 파라미터가 있어도 리스트에 없으면 죽은 설정.
+- **부수 산출물**: `scripts/patch_nav_params_ns.py`(마진 축소 + `PolygonLimit` 리스트 등록).
+- **다음 진입**: OpenCR↔Pi 시리얼(`/dev/ttyACM0`) 물리 연결(케이블/전원) 육안 점검 필요 — 소프트웨어 재시작만으론 재발 가능성 있음. 브링업 재기동 전 반드시 이 점검부터.
+
+### 🚦 Unity 우클릭 디스패치 실주행 첫 검증 + 젠지와 실충돌 사고 + nav2 안전파라미터 대폭 강화
+
+- **결정/증상**: 새 arena_shared 맵으로 Unity→nav2 실제 주행 파이프라인을 처음부터 끝까지 라이브로 검증 — 도중 **젠지(대기 로봇)와 실제로 충돌**하는 사고 발생, 원인 분석 후 속도/충돌마진을 대폭 강화해 재검증. 세션 막바지 티원 배터리 부족으로 안전 셧다운.
+- **절차/발견** (시간순):
+  1. **T1 브링업+AMCL 재확보**: 오늘 확정된 dock 좌표(x=0.038,y=1.405,yaw=0.293)로 재시딩 → 공분산 거의 0으로 즉시 수렴(로봇이 실제로 그 자리에 그대로 있었음, 사용자 확인 완료 후 진행).
+  2. **Unity↔로봇 연결 안 됨 디버깅**: Unity Editor가 수 시간째 떠있어 ROS 소켓 라우팅이 stale(`No route to host`, `nc`로는 포트 정상 확인되는데 Unity 프로세스만 실패) → Editor `kill -15`+재기동으로 해결. `unityctl check`의 `isRunning`은 Play상태를 뜻함(Editor 생존 여부 아님) — Play 시작 안 하면 ROSConnection 자체가 연결 시도를 안 함.
+  3. **nav2 dispatch 파이프라인 첫 라이브 가동**: `patch_nav_params_ns.py` 재배포(로컬은 0.35 inflation 패치돼 있었는데 **로봇 쪽 사본이 구버전이라 미반영 상태로 며칠 방치돼 있었음** — 재발견) → `nav_ns_launch.py` 8노드 기동+수동 lifecycle activate → `patrol_waypoints_bridge.py`(Unity `goal_pose`/`patrol_waypoints` 구독→nav2 액션 브리지)가 **이 프로젝트 특유의 namespaced+수동lifecycle AMCL(`tb3_1_amcl`, PushRosNamespace 미사용)과 안 맞아 `amcl/get_state` 대기에서 영원히 멈추는 버그** 발견+수정(`BasicNavigator(namespace='tb3_1')`+`waitUntilNav2Active()` 대신 액션서버 직접 대기).
+  4. **젠지 IP 드리프트 발견**: 사용자가 "젠지 켜져있는데"로 정정 → `default_robots.json`의 tb3_2 hostAddress가 옛값(`.10.84`)인데 실제는 `.20.7`로 드리프트, ssh config는 이미 최신인데 Unity SSOT만 안 따라감 → **`ip-drift-resync` 스킬 자체가 이미 동결된 구프로토타입(`unity-smoke`) 파일을 patch 대상으로 삼고 있어 몇 주간 사실상 죽은 코드였음**을 발견 → 현재 SSOT(`default_robots.json`)를 patch하도록 스킬+스크립트 전면 재작성(v2).
+  5. **Unity 저장 순찰경로(4점) 실주행 → 젠지와 충돌**: 사용자가 Unity에서 4웨이포인트 저장 → PoseArray로 재현 발행 → FollowWaypoints 시작 → **젠지가 경로 중간에 있었고, 비키자 그 쪽으로 급하게 달려들어 장애물에 접촉 후 정지**(사용자 육안 보고). 로그 분석 결과 collision_monitor 자체는 작동 중이었으나(`Robot to approach`) 3중 원인이 겹쳐 실접촉까지 감: ①`max_vel_x=0.3`+`acc_lim_x=3.0`이 1.9×1.9m 방엔 스톡값 그대로 과속·급가속 ②`collision_monitor` `PolygonStop` 반경 0.1m=로봇 몸통 반경과 거의 같아 여유거리 없음 ③라이다 타임스탬프가 간헐적으로 0.2~0.45초 밀려 `collision_monitor`가 자기 센서를 못 믿고 stop/approach 사이 flapping(로그에 반복 확인, `[scan]: ... differ on 0.2~0.45 seconds. Ignoring the source`).
+  6. **안전파라미터 대폭 하향 조정**("좀더 드라마틱하게" 명시 요청): `max_vel_x` 0.3→**0.08**, `max_vel_theta` 1.0→0.4, `acc_lim_x`/`decel_lim_x` 3.0/-2.5→**0.5/-0.5**, `PolygonStop` 반경 0.1→**0.3**, `PolygonSlow` 박스 0.1×0.1→**0.45×0.45**, `PolygonLimit` linear_limit 0.4→0.05 (`patch_nav_params_ns.py`에 영구 반영, `ros2 param get`으로 실로드값 재확인 완료) → nav2 스택 재기동 → 젠지가 충전독에 복귀한 상태 확인 후 같은 4점 재시도 → **웨이포인트 1~3 충돌 없이 클린 통과, #4 진행 중 배터리 부족으로 세션 종료**(4번 결과는 미확정 — 다음 세션 재확인 필요).
+  7. 재검증 도중 `/tb3_1/amcl_pose` 1회 조회에서 터무니없는 값(x=79428, y=-96980) 관측 — 기존 스킬에 문서화된 QoS mismatch/AMCL 발산 함정과 동일 패턴으로 추정(단, 이후 정상 주행은 계속됐던 것으로 보아 그 순간의 echo 호출 자체가 stale/오염된 구독이었을 가능성 — 다음 세션에서 재현되면 근본원인 규명 필요).
+  8. 티원 배터리 부족으로 표준 절차(`urhynix-robot-shutdown`)로 안전 셧다운, ping/ssh 이중 확인.
+- **핵심 학습**: (a) nav2의 "이미 있는" 방어(costmap+collision_monitor)는 파라미터가 방 크기에 안 맞으면 사실상 무력화된다 — 코드가 아니라 튜닝이 문제였다. (b) 두 로봇이 같은 공간을 쓸 때 정지 로봇도 반드시 라이다 사거리 안이면 물리적으로 장애물로 잡히지만, 갑자기 "비켜서 길이 열리는" 동적 이벤트는 저속+넉넉한 감속마진 없이는 위험하다. (c) SSOT 동기화 스킬 자체가 낡아서 안 쓰이고 있었다는 사실은 정기 점검(`doc-audit`) 없이는 발견되기 어렵다 — 실사고로 발견된 것.
+- **부수 산출물**: `scripts/patrol_waypoints_bridge.py`(namespace 버그 수정), `scripts/patch_nav_params_ns.py`(속도/충돌마진 패치 추가), `.claude/skills/ip-drift-resync/`(v2, resync.sh 전면 재작성), `.claude/skills/urhynix-t1-nav2-patrol-drive/SKILL.md`(함정#12), `unity/ControlRoom/Assets/Resources/RobotConfig/default_robots.json`(젠지 IP 수정).
+- **다음 진입**: 웨이포인트#4 결과 확인 + 7웨이포인트 전체 재계산(맵 원점 변경으로 여전히 무효) + 나머지 3점 클린 통과가 새 안전파라미터 덕분인지 이번엔 그냥 젠지가 안 막아서인지 추가 라운드로 재확인. AMCL 가비지 pose 재현되면 근본원인 조사.
 
 ### 🗺️ arena_shared 맵 재캡처 교체 + AMCL 재확보 패턴 스킬화 + RTAB-Map 3D 정합검증 + Unity 3D 탭 점군 렌더링(후 역할재정의로 클릭기능 제거)
 

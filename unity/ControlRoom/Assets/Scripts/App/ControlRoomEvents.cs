@@ -45,8 +45,8 @@ namespace URHYNIX.ControlRoom.App
 
         // 좌표 출동 요청 (robotId, worldX, worldY, reason, simulated). 맵 우클릭 액션 → Robot/Ros가 소비.
         // simulated=true: 자동/모의 출동 예약 필드. simulated=false: 운영자가 실제로 누른 출동.
-        // ⚠️ 현재 true 발화처 0개 — 두 호출자(DispatchHere/SituationDispatchAction) 모두 운영자 클릭이라 false.
-        //    데모 시나리오 버튼은 경보·로그만 내고 출동은 안 함. 향후 자동출동 도입 시 그 producer가 true를 채운다(scaffolding).
+        // simulated=true 발화처: DemoScenarioService(데모 버튼 모의 출동, SSOT demoDispatch=true 상황).
+        //    운영자 클릭 두 곳(DispatchHere/SituationDispatchAction)은 false.
         public static event Action<string, float, float, string, bool> OnDispatchRequested;
         public static void RaiseDispatchRequested(string robotId, float x, float y, string reason, bool simulated = false) =>
             OnDispatchRequested?.Invoke(robotId, x, y, reason, simulated);

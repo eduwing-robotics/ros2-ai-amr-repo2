@@ -22,6 +22,10 @@ namespace URHYNIX.ControlRoom.Map.Actions
         {
             ControlRoomEvents.RaiseAlert(s.severity,
                 $"{s.displayName} 발생 — ({ctx.worldX:0.00}, {ctx.worldY:0.00}) 출동");
+            // 오프라인이어도 상황 출동은 유지(차폐벽 등 구독자 반응·데모 가치) — 단 로봇 미이동을 명시.
+            if (!RobotConnectivityMonitor.IsOnline(ctx.selectedRobotId))
+                ControlRoomEvents.RaiseLogAdded("dispatch", "WARN",
+                    $"{ctx.selectedRobotId} 오프라인 — 모의 출동(로봇 미이동)");
             ControlRoomEvents.RaiseLogAdded("dispatch", "WARN",
                 $"{s.displayName} 출동: {ctx.selectedRobotId} → ({ctx.worldX:0.00}, {ctx.worldY:0.00})");
             ControlRoomEvents.RaiseDispatchRequested(ctx.selectedRobotId, ctx.worldX, ctx.worldY, s.situationId, simulated: false);

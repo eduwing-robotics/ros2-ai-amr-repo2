@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
-# ip-drift-resync — DHCP robot IP 변경 시 Unity Scene/Script/known_hosts 일괄 동기화
+# ip-drift-resync — DHCP robot IP 변경 시 default_robots.json(SSOT) + known_hosts 동기화.
 # Usage:
-#   bash resync.sh             # tb3-ip 자동 발견
-#   bash resync.sh 192.168.0.42  # explicit
+#   bash resync.sh <tb3_1|tb3_2>                  # tb3-ip 자동 발견
+#   bash resync.sh <tb3_1|tb3_2> 192.168.20.7      # explicit
 #
-# Unity Editor 자동 save back 함정 회피 — Editor 종료 → patch → (옵션) 재시작.
+# 2026-07-03: unity-smoke(SampleScene.unity/RosSmokeDashboard.cs) 타겟은 폐기된 프로토타입이라
+# 실제로 아무것도 안 고쳐지고 있었음(젠지 IP 드리프트 실사고로 발견) — 현재 SSOT인
+# default_robots.json으로 교체. JSON은 TextAsset이라 Unity가 자동 save-back 안 함(Scene/Script와
+# 다름) — Editor kill/재시작 스텝 불필요, Play 중이면 재시작만 하면 반영(Resources.Load 캐시).
 
 set -u
 
-# repo root (이 파일 기준 3단계 상위)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
-SCENE="$REPO_ROOT/unity-smoke/Assets/Scenes/SampleScene.unity"
-SCRIPT="$REPO_ROOT/unity-smoke/Assets/Scripts/RosSmokeDashboard.cs"
+ROBOTS_JSON="$REPO_ROOT/unity/ControlRoom/Assets/Resources/RobotConfig/default_robots.json"
 TB3SH="$REPO_ROOT/scripts/tb3.sh"
 
-# OS-portable sed in-place
 sed_inplace() {
   if [[ "$(uname -s)" == "Darwin" ]]; then
     sed -i '' "$@"
@@ -25,14 +25,17 @@ sed_inplace() {
   fi
 }
 
-# 1) 새 IP 결정
-if [[ $# -ge 1 ]]; then
-  NEW_IP="$1"
+ROBOT_ID="${1:-}"
+if [[ -z "$ROBOT_ID" ]]; then
+  echo "usage: resync.sh <tb3_1|tb3_2> [new_ip]" >&2; exit 1
+fi
+
+if [[ $# -ge 2 ]]; then
+  NEW_IP="$2"
   echo "→ explicit IP: $NEW_IP"
 else
-  # tb3-ip 호출 (helper 필요)
   if [[ ! -f "$TB3SH" ]]; then
-    echo "❌ missing $TB3SH" >&2; exit 1
+    echo "❌ missing $TB3SH (자동 발견 불가 — IP를 직접 넘기거나 robot-ip-detect-fallback 스킬 먼저 실행)" >&2; exit 1
   fi
   # shellcheck disable=SC1090
   source "$TB3SH"
@@ -40,62 +43,42 @@ else
   echo "→ auto-discovered IP: $NEW_IP"
 fi
 
-# IP 형식 검증
 if [[ ! "$NEW_IP" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
   echo "❌ invalid IP: $NEW_IP" >&2; exit 1
 fi
 
-# 2) 현재 Scene/Script에서 옛 IP 추출
-[[ -f "$SCENE" ]] || { echo "❌ missing $SCENE" >&2; exit 1; }
-[[ -f "$SCRIPT" ]] || { echo "❌ missing $SCRIPT" >&2; exit 1; }
+[[ -f "$ROBOTS_JSON" ]] || { echo "❌ missing $ROBOTS_JSON" >&2; exit 1; }
 
-OLD_SCENE_IP=$(grep -oE 'rosIP: [0-9.]+' "$SCENE" | awk '{print $2}' | head -1)
-OLD_SCRIPT_IP=$(grep -oE 'rosIP = "[0-9.]+"' "$SCRIPT" | grep -oE '[0-9.]+' | head -1)
+# 해당 robotId 블록의 hostAddress 라인만 추출 (user@ip 형식)
+OLD_LINE=$(awk -v id="\"$ROBOT_ID\"" '
+  $0 ~ id { found=1 }
+  found && /"hostAddress"/ { print; exit }
+' "$ROBOTS_JSON")
+OLD_IP=$(echo "$OLD_LINE" | grep -oE '@[0-9.]+' | tr -d '@')
+USER_PART=$(echo "$OLD_LINE" | grep -oE '"[a-zA-Z0-9_]+@' | tr -d '"@')
 
-echo "  Scene  old IP: $OLD_SCENE_IP"
-echo "  Script old IP: $OLD_SCRIPT_IP"
+if [[ -z "$OLD_IP" || -z "$USER_PART" ]]; then
+  echo "❌ $ROBOT_ID hostAddress 파싱 실패 — default_robots.json 형식 확인" >&2; exit 1
+fi
 
-if [[ "$OLD_SCENE_IP" == "$NEW_IP" && "$OLD_SCRIPT_IP" == "$NEW_IP" ]]; then
+echo "  $ROBOT_ID old: $USER_PART@$OLD_IP"
+
+if [[ "$OLD_IP" == "$NEW_IP" ]]; then
   echo "✅ already in sync ($NEW_IP) — nothing to patch"
   exit 0
 fi
 
-# 3) Unity Editor 종료 (자동 save back 함정 회피)
-if pgrep -f "Unity.app/Contents/MacOS/Unity" >/dev/null 2>&1; then
-  echo "→ killing Unity Editor (자동 save back 함정 회피)..."
-  pkill -f "Unity.app/Contents/MacOS/Unity"
-  sleep 3
-  if pgrep -f "Unity.app/Contents/MacOS/Unity" >/dev/null 2>&1; then
-    echo "⚠️ Unity still running — manual kill required" >&2; exit 2
-  fi
-  echo "  Unity killed ✅"
-else
-  echo "  Unity not running — skipping"
+sed_inplace "s/\"$USER_PART@$OLD_IP\"/\"$USER_PART@$NEW_IP\"/" "$ROBOTS_JSON"
+echo "→ default_robots.json patched: $USER_PART@$OLD_IP → $USER_PART@$NEW_IP"
+
+if grep -q "^$OLD_IP " "$HOME/.ssh/known_hosts" 2>/dev/null; then
+  ssh-keygen -R "$OLD_IP" >/dev/null 2>&1
+  echo "→ known_hosts purged: $OLD_IP"
 fi
 
-# 4) sed 일괄 patch
-if [[ -n "$OLD_SCENE_IP" && "$OLD_SCENE_IP" != "$NEW_IP" ]]; then
-  sed_inplace "s/rosIP: $OLD_SCENE_IP/rosIP: $NEW_IP/" "$SCENE"
-  echo "→ Scene patched: $OLD_SCENE_IP → $NEW_IP"
-fi
-if [[ -n "$OLD_SCRIPT_IP" && "$OLD_SCRIPT_IP" != "$NEW_IP" ]]; then
-  sed_inplace "s|rosIP = \"$OLD_SCRIPT_IP\"|rosIP = \"$NEW_IP\"|" "$SCRIPT"
-  echo "→ Script patched: $OLD_SCRIPT_IP → $NEW_IP"
-fi
-
-# 5) known_hosts 정리 (옛 IP만, 새 IP는 그대로 두고 다음 ssh accept-new로 추가)
-for old in "$OLD_SCENE_IP" "$OLD_SCRIPT_IP"; do
-  [[ -z "$old" || "$old" == "$NEW_IP" ]] && continue
-  if grep -q "^$old " "$HOME/.ssh/known_hosts" 2>/dev/null; then
-    ssh-keygen -R "$old" >/dev/null 2>&1
-    echo "→ known_hosts purged: $old"
-  fi
-done
-
-# 6) 검증 출력
 echo ""
 echo "=== 검증 ==="
-grep -nE "rosIP" "$SCENE" "$SCRIPT" | head -4
+grep -A8 "\"$ROBOT_ID\"" "$ROBOTS_JSON" | grep hostAddress
 echo ""
-echo "✅ ip-drift-resync 완료 — 새 IP: $NEW_IP"
-echo "   다음 단계: tb3-unity (Unity 재시작) → 30s 후 ros_tcp_endpoint 로그에서 새 IP 연결 확인"
+echo "✅ ip-drift-resync 완료 — $ROBOT_ID 새 IP: $NEW_IP"
+echo "   Unity가 Play 중이면 재시작 필요(Resources.Load 캐시) — play stop → play start"

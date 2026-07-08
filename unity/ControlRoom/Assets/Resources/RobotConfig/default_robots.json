@@ -6,7 +6,7 @@
       "role": "sensor",
       "capabilities": ["sensor", "slam"],
       "model": "TurtleBot3 Burger",
-      "hostAddress": "kim@192.168.10.84",
+      "hostAddress": "kim@192.168.20.7",
       "cameraTopic": "/tb3_2/camera/image_raw/compressed",
       "poseTopic": "/tb3_2/pose",
       "iconName": "turtlebot_badge",

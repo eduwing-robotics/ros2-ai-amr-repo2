@@ -79,9 +79,13 @@ def main():
     le.add_node(listener)
     threading.Thread(target=le.spin, daemon=True).start()
 
-    nav = BasicNavigator()
-    log.info('Nav2 활성 대기...')
-    nav.waitUntilNav2Active()
+    # namespace= 필수: 미지정 시 /navigate_to_pose(비ns)를 찾아 이 프로젝트의 /<robot>/navigate_to_pose와
+    # 어긋난다. waitUntilNav2Active()도 안 씀 — 기본 localizer='amcl'이 <robot>/amcl/get_state를 찾는데
+    # 이 프로젝트의 AMCL은 노드명 <robot>_amcl(언더스코어, PushRosNamespace 미사용 — tf 리매핑 충돌 회피,
+    # urhynix-t1-nav2-lifecycle-abi 참고)이라 매칭 불가 → 액션서버 자체 대기로 대체.
+    nav = BasicNavigator(namespace=a.robot)
+    log.info('Nav2 액션서버(navigate_to_pose) 대기...')
+    nav.nav_to_pose_client.wait_for_server()
     log.info('Nav2 활성 확인 — 명령 처리 시작')
 
     try:

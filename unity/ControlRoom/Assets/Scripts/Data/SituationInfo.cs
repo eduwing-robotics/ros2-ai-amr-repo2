@@ -12,6 +12,8 @@ namespace URHYNIX.ControlRoom.Data
         public string sensorTrigger; // 연관 센서 id (SensorInfo.sensorId), 옵션
         public int severity;         // 0~3 (경보 등급)
         public string icon;          // 메뉴 아이콘 텍스트/이모지, 옵션
+        public bool demoDispatch;    // 데모 버튼이 모의 출동(RaiseDispatchRequested)까지 발화할지
+        public float demoX, demoY;   // 모의 출동 좌표(map frame m) — demoDispatch=true일 때만 사용
     }
 
     [Serializable]

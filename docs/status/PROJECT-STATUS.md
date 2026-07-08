@@ -3,7 +3,7 @@
 
 > 상세 로그: `docs/daily/` · 주간 회고: `docs/weekly/`(SKILL-HARVEST 포함) · 구버전: `docs/archive/`
 
-Last updated: 2026-07-03 — 🗺️ arena_shared 맵 재캡처 교체+AMCL "위치고정+방향탐색" 재확보 패턴 스킬화+RTAB-Map 3D 정합검증(시작점 근처 PASS, 방 전체는 loop closure 실패로 드리프트)+Unity 3D 탭 점군 렌더링 구현(Pcx 패키지) 후 클릭기능 불안정 확인해 역할재정의(2D/2.5D=좌표입력, 3D=보기전용)로 스코프 정리. 티원 안전 셧다운. 이전: 🤖 티원 7웨이포인트 순회 인프라 구축, keepout zone 구현+검증 PASS, `/dev/shm` 시스템정체 규명(재부팅해결), 웨이포인트1 clean PASS(7웨이포인트 완주는 새맵 기준 재계산 필요로 이월). 이전: 🗺️ 2.5D 탭 순회지점 미표시 버그 수정.
+Last updated: 2026-07-08 — 🏛️ Unity 2.5D를 박물관 디오라마로 전환: Gallery Room URP 변환(마젠타 해결)+decor.json 장식 시스템(그리드 바닥·벽 직선화·액자/레일조명·니케상/스핑크스·TB3 실모델 마커·충전독 패치·차폐벽 FireShutter=화재 출동 시 하강/10초 자동개방) + dogfood 감사로 Blocker 2건(데모 화재버튼 미결선·슬롯 stale) 발굴 → P1~7 수정 컴파일 PASS, **육안 검증 대기**. 로봇 트랙 Top 액션(완전 충전 후 순찰 #3~#4 완주)은 그대로. 이전: 🔋 축소마진 4점 순찰 웨이포인트 1~2 클린 통과 도중 배터리 완전 방전 — 여러 하드웨어 이상이 저전압 단일원인 수렴, 다음 로봇 세션은 완전 충전 후 시작. 이전: 🔩 PolygonStop 과대 반경 축소(0.18m 등)+PolygonLimit 활성 리스트 누락 수정.
 
 ## 2026-06-02 Addendum
 

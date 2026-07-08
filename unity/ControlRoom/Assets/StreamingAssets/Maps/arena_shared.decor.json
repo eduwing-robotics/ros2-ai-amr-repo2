@@ -1,0 +1,13 @@
+{
+  "wallHeight": 0,
+  "floorGridMeters": 0.25,
+  "straightenWalls": true,
+  "hideWalls": ["wall_13"],
+  "shutter": { "x": 1.349, "y": 1.534, "len": 0.26, "thick": 0.05, "height": 0.32, "yaw": 90, "autoOpenSeconds": 10 },
+  "dock": { "x": 0.038, "y": 1.405, "r": 0.11, "robotId": "tb3_1" },
+  "canvas": { "minWallLen": 0.5, "everyMeters": 0.55, "y": 0.15, "scale": 0.08, "light": true, "lightScale": 1.0, "lightY": 0, "lightPitchDeg": 70, "spotIntensity": 2.5 },
+  "props": [
+    { "prefab": "WingedVictory", "x": 0.35, "y": 0.75, "yaw": 0, "scale": 0.4 },
+    { "prefab": "Sphinx", "x": 1.25, "y": 0.6, "yaw": 90, "scale": 0.3 }
+  ]
+}

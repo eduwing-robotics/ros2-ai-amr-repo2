@@ -87,6 +87,15 @@ version: 2
 - `scripts/patrol_test_seq.py` — 회전→1초정지→이동→도착시360도회전 시퀀스, `TARGET_X/TARGET_Y` 상단에서 좌표 지정, QoS 수정+안전가드 반영됨
 - `scripts/patrol_multi_waypoint.py` — N웨이포인트 순회 + 충전독 복귀주차. `WAYPOINTS` 리스트 + `DOCK_X/Y/YAW` 상단에서 지정, `wait_pose()` 버그 수정 반영(함정#10)
 - `scripts/patrol_safe_clearance.py` — 웨이포인트가 벽 안전여유 안쪽이면 거리변환으로 가장 가까운 안전지점으로 보정(함정#11). `python3 patrol_safe_clearance.py <patrol.json> <out.json> [clearance_m=0.25] [sep_m=0.2]`
+- `scripts/patrol_waypoints_bridge.py` — **Unity 우클릭 디스패치(`goal_pose`)/저장 순찰경로(`patrol_waypoints`)를 실시간 구독해 nav2 액션으로 넘기는 상시 브리지**(patrol_test_seq/multi_waypoint는 좌표 하드코딩 후 1회 실행이라 다름 — 이건 Unity에서 언제 클릭해도 즉시 반응). `--robot tb3_1` 인자. 함정#12 반드시 먼저 읽을 것.
+
+## 함정#12 — `patrol_waypoints_bridge.py`가 이 프로젝트(namespaced+수동lifecycle) 전용 패치 필요 (2026-07-03)
+
+| 증상 | 원인 | 해결 |
+|---|---|---|
+| 브리지 로그가 `amcl/get_state service not available, waiting...`에서 영원히 멈춤(nav2 8노드는 전부 `active`인데도) | `BasicNavigator()`를 인자 없이 생성하면 액션/서비스 이름이 전부 **비namespaced**(`navigate_to_pose`, `amcl/get_state`)로 잡힘. 이 프로젝트 AMCL은 `PushRosNamespace` 대신 노드명 자체를 `tb3_1_amcl`(언더스코어)로 지어서 `/tf` 리매핑 충돌을 피했으므로([[urhynix-t1-nav2-lifecycle-abi]]) `waitUntilNav2Active()`의 기본 `localizer='amcl'` 탐색이 `/tb3_1_amcl/get_state`와 절대 안 맞음. `urhynix-nav2-waypoint-patrol`(젠지, 비-ns 표준 nav2_bringup)에서 같은 스크립트가 문제없이 돌던 건 그쪽은 애초에 비namespaced라서 우연히 맞았던 것 | `BasicNavigator(namespace='tb3_1')`로 액션/토픽 네임스페이스는 맞추고, `waitUntilNav2Active()` 호출 자체를 빼고 `nav.nav_to_pose_client.wait_for_server()`로 대체(어차피 8노드 lifecycle은 이 스킬 절차에서 이미 수동으로 `active` 확인 끝난 상태이므로 중복 체크 불필요) |
+| `inflation_radius`가 코드는 0.35인데 로봇에서 여전히 0.5로 뜸 | `patch_nav_params_ns.py`는 **로봇에 배포된 사본**을 실행해야 반영됨 — 로컬 repo에서 패치해도 로봇 쪽 `~/patch_nav_params_ns.py`가 구버전이면 구값(0.5) 그대로 `nav2_tb3_1_params.yaml`을 씀. 실측: 로컬에서 0.35 패치를 커밋한 세션과 실제 로봇 브링업 세션이 며칠 떨어지면서 재-scp를 안 해 미반영 상태로 며칠 방치됨 | **브링업 때마다** `scp scripts/patch_nav_params_ns.py t1:~/ && ssh t1 "python3 ~/patch_nav_params_ns.py"`로 최신본 재배포 후 재생성 — "이미 있으면 재생성 불필요"(위 절차 1번)는 **로컬 스크립트가 그 이후 안 바뀌었을 때만** 성립. 값이 코드와 다르면 무조건 재scp+재생성 |
+| 젠지(tb3_2) IP가 `default_robots.json`엔 옛값(`.84`)인데 `ssh` alias는 최신(`.7`)이라 "Unity 연결 안 됨"이 IP 드리프트인지 다른 문제인지 헷갈림 | ssh config는 `robot-ip-detect-fallback`/수동 갱신으로 최신인데 Unity SSOT(`default_robots.json`)는 별도 파일이라 자동 동기화 안 됨 | [[ip-drift-resync]] v2(2026-07-03, `default_robots.json` 타겟으로 교체됨)로 한 줄 동기화 |
 
 ## 검증 (2026-07-01)
 

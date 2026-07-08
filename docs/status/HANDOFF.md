@@ -5,22 +5,25 @@
 > 
 > 구조: Last updated 날짜 | Top 액션 | 첫 5분 체크리스트 | 복구 명령 | More info 링크
 
-**Last updated**: 2026-07-03 (**🗺️ arena_shared 맵 재캡처 교체 + AMCL "위치고정+방향탐색" 재확보 패턴 스킬화 + RTAB-Map 3D 정합검증 + Unity 3D 탭 점군 렌더링 후 역할재정의** — 2D SSOT맵을 재캡처본으로 교체(Unity슬롯+SDF+로봇배포 전부 재생성). 옛 dock좌표가 새맵에서 안 먹혀서 AMCL 재확보의 새 표준패턴 도출(사용자 클릭 ground truth + 위치고정/방향탐색 시딩), `urhynix-t1-amcl-saved-map` 스킬에 영구화. RGB-D 매핑+RTAB-Map 3D 재구성으로 2D맵/AMCL 정합 교차검증(시작점 근처 PASS, 방 전체는 loop closure 실패로 드리프트 — 흰벽 위주 방의 근본적 특징부족, 라이다/시각 양쪽 다 겪음). Unity 3D 탭에 실사 점군 렌더링(Pcx 패키지)까지 붙였다가 클릭-좌표찍기 불안정 확인 후 **역할재정의**: 2D/2.5D=좌표입력, 3D=보기전용으로 스코프 정리. 티원 안전 셧다운. 자세히: `docs/status/DECISION-LOG.md` 2026-07-03 최상단 entry). **이전(2026-07-01)**: 🤖 티원 7웨이포인트 순회 인프라 완성 + keepout zone 구현 + `/dev/shm` 시스템정체 규명(재부팅 해결), 웨이포인트1 clean PASS(7웨이포인트 완주는 배터리로 이월 → **새맵 교체로 좌표 자체가 무효화돼 재계산 필요**). **이전(2026-07-01, 더 이전)**: 🗺️ 2.5D 탭 순회지점 미표시 버그 수정.
+**Last updated**: 2026-07-08 (**🏛️ 2.5D 박물관 디오라마 완성 + dogfood 감사 P1~7 수정 — 컴파일 PASS, 육안 검증만 남음** — Gallery Room 팩 마젠타는 URP 변환으로 해결(`GalleryRoomUrpUpgrade.cs` 재사용 가능), 장식은 전부 `StreamingAssets/Maps/arena_shared.decor.json` 데이터 주도: 검정 그리드 바닥·벽 직선화(표시 전용, 로봇 pgm 불변)·액자+벽당 트랙레일 조명·니케상/스핑크스(scale=실높이m)·충전독 연한 티원색 패치·**차폐벽(wall_13, 평소 열림→화재 출동 시 하강→10초 자동 개방)**·TB3 burger 실모델 마커. dogfood 감사(신규 스킬 `urhynix-dogfood-audit`)로 잡은 Blocker 2건 수정 완료: 데모 "화재" 버튼이 이제 모의 출동까지 발화(셔터+로봇 연쇄), 맵 슬롯 전환 시 2.5D 재빌드. +오프라인 출동 게이트, 시점 리셋 버튼+각도 영속, barrier 로그. **다음 Unity 세션 첫 행동**: Play → 2.5D 탭 → 육안 체크리스트(장식 전경/데모 화재 버튼→셔터 하강/시점 리셋/슬롯 전환/스케일은 decor.json 노브). ⚠️ unityctl 컴파일은 사용자 Play 중이면 stale — `play stop` 후 `exec 'UnityEditor.AssetDatabase.Refresh()'` 표준. 자세히: `docs/status/DECISION-LOG.md` 2026-07-08 최상단). **이전(2026-07-03)**: 🔋 축소마진 4점 순찰 웨이포인트 1~2 클린 통과 도중 **배터리 완전 방전**으로 tf 정지 — OpenCR 크래시·AMCL garbage-pose 등이 저전압 단일원인으로 수렴. **로봇 트랙 Top 액션 유지: 완전 충전 후 순찰 #3~#4 완주**(재개 시 AMCL 충전독 재시딩부터). **이전(2026-07-03, 같은날 더 이전)**: 🔩 PolygonStop 과대 반경 0.18/0.22/0.20m 축소 + PolygonLimit 활성 리스트 누락 수정 / 🚦 첫 라이브 실주행 중 젠지 실충돌 → 속도·정지마진 하향. **이전(2026-07-01)**: 🗺️ arena_shared 재캡처 교체 + AMCL 재확보 패턴 스킬화.
 
 ---
 
 ## ⚡ Top 1 Action (가장 최신)
 
-**새 arena_shared 맵 기준으로 7웨이포인트 재계산 → 순회 재검증**
+**완전 충전 후 재개 → 웨이포인트#3~#4 완주 확인 → 장애물 테스트**
 
-- **배경**: 오늘 맵을 재캡처본으로 통째 교체하면서 좌표계 원점이 바뀌어, 기존 `patrol_multi_waypoint.py`의 `WAYPOINTS`(7개)가 새 맵에서 무효 상태(DOCK만 오늘 재확정, 좌표는 옛맵 기준으로 이월 표시해둠). AMCL/nav2 인프라 자체(keepout, `/dev/shm` 안정성, 벽인접 보정 스크립트)는 전부 살아있고 검증됨 — **좌표만 다시 잡으면 됨**.
+- **배경**: 안전마진 축소(0.18/0.22/0.20m) 자체는 웨이포인트 1~2 클린 통과로 **부분 검증 성공**. 그런데 같은 세션 안에서 겪은 `turtlebot3_ros` SIGABRT 크래시(odom 소실→AMCL garbage-pose)와 #3 도중 tf 정지가 둘 다 **배터리 완전방전과 시점이 겹침** — 별개 버그가 아니라 저전압 하나가 근본원인이었을 가능성이 높음(시리얼 패킷 파싱 실패는 전압강하 시 흔한 증상). 지난 세션 미해결이던 AMCL garbage-pose(x=79428) 이상현상도 같은 계열로 재해석됨.
 - **할 일(순서대로)**:
-  1. 티원 전원 켜고 bringup+AMCL(**충전독에 물리적으로 있는지 확인 후** x=0.038,y=1.405,yaw=0.293 초기포즈 재시딩, `urhynix-t1-amcl-saved-map`의 "맵 교체 시 초기포즈 재확보 절차" 참고).
-  2. Unity에서 새 맵 위에 7웨이포인트 새로 클릭(또는 `scripts/patrol_safe_clearance.py`로 옛 좌표를 새맵 기준 근사 재배치 후 육안 보정).
-  3. `patrol_multi_waypoint.py`의 `WAYPOINTS` 갱신 → 로봇 재배포 → foreground 실행, 7웨이포인트+복귀주차 전부 `STATUS_SUCCEEDED` 확인.
-  4. PASS면 `urhynix-t1-nav2-patrol-drive` 검증 섹션 갱신 + ssot-trio-update.
-- **관련 파일**: `scripts/{patrol_multi_waypoint.py,patrol_safe_clearance.py}`, `.claude/skills/urhynix-t1-amcl-saved-map/SKILL.md`(새 패턴), `.claude/skills/urhynix-t1-nav2-patrol-drive/SKILL.md`.
-- **병행 이월(여전히 유효)**: 2.5D 우클릭/로봇마커 육안 확인 — `Map25DInteractionController.cs`/`Map25DRobotMarkerLayer.cs`는 합성이벤트로 로직만 검증됨.
+  1. **완전 충전 후 시작** — 저전압 상태에서의 재시도는 진단에 노이즈만 더함(우선순위 최상단).
+  2. bringup 후 `/tb3_1/odom` 발행자 수 확인 + `/tmp/nsbu_tb3_1.log`에서 `stack smashing`/`no status packet` **재발 여부 확인** — 완전충전 후에도 재발하면 그때 비로소 OpenCR 물리연결(케이블/보드) 점검으로 넘어갈 것(저전압 가설이 틀렸다는 뜻이므로).
+  3. AMCL 재시딩(`x=0.038,y=1.405,yaw=0.293` — arena_shared 기준) → `/tb3_1/amcl_pose` sane 확인.
+  4. nav2 8노드 재기동 + `ros2 param get /tb3_1/collision_monitor PolygonStop.radius`로 **0.18m** 로드 확인(0.30 아님), `polygons`에 `PolygonLimit` 포함 확인.
+  5. 4점 순찰 재트리거 → 이번엔 **#3~#4까지 완주** 확인(1~2는 이미 클린 통과 확인됨).
+  6. 완주 PASS면 **일부러 장애물(사람/젠지)을 경로에 놓고** 재주행 — 안전마진이 실제 장애물에도 통하는지 의도적 테스트(아직 미검증).
+  7. 그 다음 7웨이포인트 전체 재계산(`patrol_multi_waypoint.py`) → 완주 검증 → ssot-trio-update.
+- **관련 파일**: `scripts/{patch_nav_params_ns.py,patrol_waypoints_bridge.py,patrol_multi_waypoint.py,patrol_safe_clearance.py}`, `.claude/skills/urhynix-t1-nav2-patrol-drive/SKILL.md`(함정#12).
+- **병행 이월(여전히 유효)**: 2.5D 우클릭/로봇마커 육안 확인. 젠지 pose 마커 표시(subscribe-only 가능 확인했으나 AMCL 초기포즈 미시딩이라 아직 `/tb3_2/pose` 없음).
 
 ---
 

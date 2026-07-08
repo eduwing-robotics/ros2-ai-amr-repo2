@@ -67,6 +67,15 @@ namespace URHYNIX.ControlRoom.Simulation
 
             ControlRoomEvents.RaiseLogAdded("scenario", "WARN", $"{s.displayName} 시나리오 발화 ({s.sensorTrigger}) 모의");
             ControlRoomEvents.RaiseAlert(s.severity, $"{s.displayName} 감지 — {s.sensorTrigger}");
+
+            // SSOT의 demoDispatch=true면 모의 출동까지 발화 — 차폐벽(FireShutter) 등 출동 구독자가 데모 버튼으로도 반응.
+            if (s.demoDispatch)
+            {
+                string robotId = ControlRoomState.Instance?.SelectedRobotId;
+                ControlRoomEvents.RaiseLogAdded("dispatch", "WARN",
+                    $"{s.displayName} 모의 출동: {robotId} → ({s.demoX:0.00}, {s.demoY:0.00})");
+                ControlRoomEvents.RaiseDispatchRequested(robotId, s.demoX, s.demoY, s.situationId, simulated: true);
+            }
         }
     }
 }

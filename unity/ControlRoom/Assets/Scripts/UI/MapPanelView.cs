@@ -77,8 +77,9 @@ namespace URHYNIX.ControlRoom.UI
             dd.RegisterValueChangedCallback(evt =>
             {
                 string slot = (evt.newValue == MapCatalog.LiveLabel) ? MapCatalog.LiveSlotId : evt.newValue;
-                ControlRoomEvents.RaiseMapSlotSelected(slot);
+                ControlRoomEvents.RaiseMapSlotSelected(slot);   // 동기 발화 — 리턴 시 StaticMapLoader.Latest* 갱신 완료
                 ControlRoomEvents.RaiseLogAdded("map", "INFO", $"맵 슬롯 전환: {evt.newValue}");
+                RebuildMap25D();                                // built 1회 빌드의 슬롯 stale 해소
             });
         }
 
@@ -140,6 +141,20 @@ namespace URHYNIX.ControlRoom.UI
             _     => "2D 맵 모드",
         };
 
+        // 맵 슬롯 전환 시 기존 2.5D를 파괴(런타임 머티리얼/RT 정리 포함)하고, 현재 2.5D 모드면 새 슬롯으로 즉시 재빌드.
+        void RebuildMap25D()
+        {
+            if (map25D == null) return;
+            UnityEngine.Object.Destroy(map25D.gameObject);
+            map25D = null;
+            if (container25D != null) container25D.style.backgroundImage = null;
+            if (ControlRoomState.Instance.MapViewMode == "25d")
+            {
+                EnsureMap25D();
+                map25D?.SetActive(true);
+            }
+        }
+
         // 첫 2.5D 진입 시 Map25DView를 만들고 RenderTexture를 container25D 배경으로 건다 + 드래그 궤도 회전 연결.
         // 현재 로드된 슬롯(StaticMapLoader)의 .sdf로 벽을 세운다 — jaebo_v1이면 89벽, sdf 없는 슬롯이면 바닥만.
         void EnsureMap25D()
@@ -159,6 +174,18 @@ namespace URHYNIX.ControlRoom.UI
                 map25D.AttachOrbitControl(container25D);
                 if (mapView != null)
                     new Map25DInteractionController(container25D, map25D.Cam, mapView.ContextMenu, mapView.Actions);
+
+                // 시점 리셋 오버레이 버튼 — 시연 중 실수 드래그 복구. PointerDown 전파를 끊어 궤도 드래그 오발동 방지.
+                // 슬롯 재빌드로 EnsureMap25D가 다시 불려도 1개 유지(name 가드) — 클릭 시점의 map25D 필드를 읽어 재빌드에도 유효.
+                if (container25D.Q<Button>("btn-25d-reset") == null)
+                {
+                    var resetBtn = new Button(() => map25D?.ResetCamera()) { text = "시점 리셋", name = "btn-25d-reset" };
+                    resetBtn.style.position = Position.Absolute;
+                    resetBtn.style.top = 8;
+                    resetBtn.style.right = 8;
+                    resetBtn.RegisterCallback<PointerDownEvent>(e => e.StopPropagation());
+                    container25D.Add(resetBtn);
+                }
             }
         }
 

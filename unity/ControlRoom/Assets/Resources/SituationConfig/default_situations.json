@@ -1,6 +1,6 @@
 {
   "situations": [
-    { "situationId": "fire",     "displayName": "화재",   "sensorTrigger": "fire",  "severity": 3, "icon": "🔥" },
+    { "situationId": "fire",     "displayName": "화재",   "sensorTrigger": "fire",  "severity": 3, "icon": "🔥", "demoDispatch": true, "demoX": 1.30, "demoY": 1.25 },
     { "situationId": "intruder", "displayName": "침입",   "sensorTrigger": "pir",   "severity": 2, "icon": "🚨" },
     { "situationId": "noise",    "displayName": "소음",   "sensorTrigger": "sound", "severity": 1, "icon": "🔊" },
     { "situationId": "theft",    "displayName": "도난",   "sensorTrigger": "",      "severity": 2, "icon": "🕵" }

@@ -106,7 +106,7 @@ namespace URHYNIX.ControlRoom.Map
         static Material MakeMat(Color c)
         {
             var sh = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
-            return new Material(sh) { color = c };
+            return new Material(sh) { color = c, name = "rt_patrol" }; // rt_ = Map25DView 파괴 시 정리 대상
         }
     }
 }

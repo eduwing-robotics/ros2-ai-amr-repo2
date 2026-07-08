@@ -45,6 +45,9 @@ namespace URHYNIX.ControlRoom.Map
             if (e.button == 0) { menu.Close(); return; }   // 좌클릭 → 닫기 (2D와 동일 UX)
             if (e.button != 1) return;                       // 우클릭만 메뉴
             if (!ToWorld(e.position, out float wx, out float wy)) return;
+#if UNITY_EDITOR
+            Debug.Log($"[MapClick] map=({wx:F3},{wy:F3})"); // decor.json 좌표 교정용 — 에디터 전용(빌드 로그 오염 방지)
+#endif
 
             var ctx = new MapClickContext
             {

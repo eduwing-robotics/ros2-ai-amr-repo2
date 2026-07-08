@@ -128,6 +128,7 @@
 - "티원 D435로 새 공간 매핑 bag 뜨고 싶다" -> `t1-rgbd-mapping-session`
 - "뜬 bag을 3D 점군 PLY로 만들고 싶다" -> `rtabmap-bag-to-ply`
 - "PLY를 Unity 3D 탭에 실제로 렌더링" -> `unity-pcx-pointcloud-view`
+- "또 개선할 점 찾아줘 / 시연 전 점검 / 도그푸딩 감사" -> `urhynix-dogfood-audit`
 
 ## Writing Rules
 
