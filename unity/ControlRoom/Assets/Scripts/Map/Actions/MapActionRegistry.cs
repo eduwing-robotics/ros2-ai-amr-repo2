@@ -21,6 +21,7 @@ namespace URHYNIX.ControlRoom.Map.Actions
             actions.Add(new PrepareDriveAction());   // 주행준비(readyd 트리거) — 순찰 시작 앞
             actions.Add(new ReseedAction());         // 충전독 재시딩(위치만 재선언)
             actions.Add(new RunPatrolAction());
+            actions.Add(new StopPatrolAction());     // 무한 순찰 정지 → 복귀주차
             actions.Add(new MarkProtectedTargetAction());
         }
 

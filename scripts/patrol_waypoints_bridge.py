@@ -19,6 +19,7 @@ from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
 from geometry_msgs.msg import PoseArray, PoseStamped, PoseWithCovarianceStamped
 from nav_msgs.msg import Odometry
+from std_msgs.msg import Bool
 from rclpy.qos import QoSProfile, DurabilityPolicy
 from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 from rcl_interfaces.msg import Parameter, ParameterType, ParameterValue
@@ -55,10 +56,13 @@ class CmdListener(Node):
         self.q = q
         self.odom_pos = None
         self.amcl_pos = None
+        self.stop_flag = False   # 무한 순찰 정지 요청(/patrol_stop) — 백그라운드 executor가 세우고 메인 루프가 읽음
         # Unity 계약 토픽은 항상 /<robot>/* — nav 스택 쪽 토픽/서비스만 nav_prefix를 따른다
         # (티원=ns 스택이라 /<robot>/*, 젠지=비-ns 표준 스택이라 빈 prefix. --nav-ns 참조)
         self.create_subscription(PoseStamped, f'/{robot}/goal_pose', self.on_goal, 10)
         self.create_subscription(PoseArray, f'/{robot}/patrol_waypoints', self.on_route, 10)
+        # 무한 순찰 정지(Bool). 큐 미경유 — 메인이 레그루프에 묶여 있어도 플래그로 즉시 전달.
+        self.create_subscription(Bool, f'/{robot}/patrol_stop', self.on_stop, 10)
         # 독/구석 출발 시 PolygonStop 일시 해제용 — 상대변위 판정이라 odom으로 충분
         self.create_subscription(Odometry, f'{nav_prefix}/odom', self.on_odom, 10)
         # 복귀주차 방향 정렬용 현재 yaw — amcl 발행 QoS(TRANSIENT_LOCAL)에 맞춤
@@ -90,6 +94,11 @@ class CmdListener(Node):
             return
         self.q.put(('route', msg))
         self.get_logger().info(f'순찰 {len(msg.poses)}점 수신 → 큐')
+
+    def on_stop(self, msg: Bool):
+        if msg.data:
+            self.stop_flag = True
+            self.get_logger().info('순찰 정지 요청 수신 — 현재 랩 마무리 후 복귀주차')
 
 
 def to_stamped(nav, p, frame):
@@ -148,10 +157,14 @@ def _dist(a, b):
     return math.hypot(b.x - a.x, b.y - a.y)
 
 
-def wait_result(nav, log, label, timeout_s=GOAL_TIMEOUT_S, listener=None, depart=None):
+def wait_result(nav, log, label, timeout_s=GOAL_TIMEOUT_S, listener=None, depart=None, cancel_on_stop=False):
     t0 = time.time()
     try:
         while not nav.isTaskComplete():
+            if cancel_on_stop and listener is not None and listener.stop_flag:
+                log.warn(f'{label}: 순찰 정지 요청 — goal 취소')
+                nav.cancelTask()
+                break
             if depart and not depart['restored'] and (
                     _dist(depart['start'], listener.odom_pos) > DEPART_DIST_M
                     or time.time() - depart['t0'] > DEPART_FALLBACK_S):
@@ -282,30 +295,41 @@ def main():
                 if len(goals) >= 2:
                     goals = goals + goals[-2::-1]
                 run_id = int(time.time())
-                log.info(f'FollowWaypoints 시작 ({len(goals)}점, 왕복)')
-                depart = begin_departure(listener, log)
-                # 레그별 실행(2026-07-09, FollowWaypoints 대체): 각 레그 시작 전 다음 목표 방위각으로
-                # 사전 회전("방향 보고→이동", patrol_test_seq 검증 패턴). 레그 시작 헤딩 불일치가 최대
-                # 시간싱크였음 — 실측: 같은 B-회랑이 정방향(등지고 출발) 136s vs 역방향(보고 출발) 29s,
-                # 6→5 회항은 벽 옆 DWB 셔플로 166s. Spin 0.4rad/s면 180°가 ~8s. 실패 레그는 스킵하고 계속.
-                for i, g in enumerate(goals):
-                    if listener.amcl_pos is not None and listener.amcl_yaw is not None:
-                        b = math.atan2(g.pose.position.y - listener.amcl_pos.y,
-                                       g.pose.position.x - listener.amcl_pos.x)
-                        dyaw = (b - listener.amcl_yaw + math.pi) % (2.0 * math.pi) - math.pi
-                        if abs(dyaw) > 0.5:
-                            nav.spin(spin_dist=dyaw, time_allowance=30)
-                            wait_result(nav, log, f'레그{i + 1} 사전회전', 60.0)
-                    g.header.stamp = nav.get_clock().now().to_msg()
-                    log.info(f'레그 {i + 1}/{len(goals)} → ({g.pose.position.x:.2f}, {g.pose.position.y:.2f})')
-                    t0 = time.time()
-                    nav.goToPose(g)
-                    r = wait_result(nav, log, f'레그{i + 1}', GOAL_TIMEOUT_S, listener, depart if i == 0 else None)
-                    record({'kind': 'leg', 'run': run_id, 'leg': i + 1, 'total': len(goals),
-                            'x': round(g.pose.position.x, 3), 'y': round(g.pose.position.y, 3),
-                            'dur_s': round(time.time() - t0, 1),
-                            'result': getattr(r, 'name', str(r)), 't': round(time.time(), 1)})
-                park_at_dock(nav, listener, log, run_id)  # 왕복 후 충전독 원위치·원방향 복귀(실패해도 귀소 시도)
+                listener.stop_flag = False   # 새 순찰 시작 시 정지플래그 리셋(정지 후 재시작 대비)
+                # 무한 연속 순찰(2026-07-09): /patrol_stop(Bool) 올 때까지 왕복을 계속 반복.
+                # 랩 사이 주차 없음 — 주차 정확도는 순찰 중 무관, 정지 시 1회만 복귀주차.
+                log.info(f'무한 순찰 시작 ({len(goals)}점 왕복 반복 — 정지: /{a.robot}/patrol_stop)')
+                lap = 0
+                # 레그별 실행: 각 레그 시작 전 다음 목표 방위각으로 사전 회전("방향 보고→이동").
+                # 레그 시작 헤딩 불일치가 최대 시간싱크였음 — 실측: 같은 B-회랑이 정방향(등지고 출발)
+                # 136s vs 역방향(보고 출발) 29s. Spin 0.4rad/s면 180°가 ~8s. 실패 레그는 스킵하고 계속.
+                while not listener.stop_flag:
+                    lap += 1
+                    log.info(f'--- 랩 {lap} 시작 ---')
+                    depart = begin_departure(listener, log)   # 각 랩 출발점(복귀지점)에서 독존 토글
+                    for i, g in enumerate(goals):
+                        if listener.stop_flag:
+                            break
+                        if listener.amcl_pos is not None and listener.amcl_yaw is not None:
+                            b = math.atan2(g.pose.position.y - listener.amcl_pos.y,
+                                           g.pose.position.x - listener.amcl_pos.x)
+                            dyaw = (b - listener.amcl_yaw + math.pi) % (2.0 * math.pi) - math.pi
+                            if abs(dyaw) > 0.5:
+                                nav.spin(spin_dist=dyaw, time_allowance=30)
+                                wait_result(nav, log, f'랩{lap}레그{i + 1} 사전회전', 60.0)
+                        g.header.stamp = nav.get_clock().now().to_msg()
+                        log.info(f'랩{lap} 레그 {i + 1}/{len(goals)} → ({g.pose.position.x:.2f}, {g.pose.position.y:.2f})')
+                        t0 = time.time()
+                        nav.goToPose(g)
+                        r = wait_result(nav, log, f'랩{lap}레그{i + 1}', GOAL_TIMEOUT_S, listener,
+                                        depart if i == 0 else None, cancel_on_stop=True)
+                        record({'kind': 'leg', 'run': run_id, 'lap': lap, 'leg': i + 1, 'total': len(goals),
+                                'x': round(g.pose.position.x, 3), 'y': round(g.pose.position.y, 3),
+                                'dur_s': round(time.time() - t0, 1),
+                                'result': getattr(r, 'name', str(r)), 't': round(time.time(), 1)})
+                    record({'kind': 'lap', 'run': run_id, 'lap': lap, 't': round(time.time(), 1)})
+                log.info(f'순찰 정지 — {lap}랩 완료, 복귀주차')
+                park_at_dock(nav, listener, log, run_id)  # 정지 시 1회 충전독 복귀주차(실패해도 귀소 시도)
     except KeyboardInterrupt:
         pass
     finally:

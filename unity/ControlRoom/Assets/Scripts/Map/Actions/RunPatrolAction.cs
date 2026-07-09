@@ -9,7 +9,7 @@ namespace URHYNIX.ControlRoom.Map.Actions
     public class RunPatrolAction : IMapAction
     {
         public string Id => "run_patrol";
-        public string DisplayName => "▶ 순찰 시작";
+        public string DisplayName => "▶ 순찰 시작(무한)";
         public bool AppliesTo(MapClickContext ctx)
             => PatrolService.Instance.Count > 0
                && !string.IsNullOrEmpty(ctx.selectedRobotId)

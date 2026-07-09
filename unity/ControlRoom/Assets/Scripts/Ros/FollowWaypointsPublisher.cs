@@ -16,12 +16,25 @@ namespace URHYNIX.ControlRoom.Ros
 
         ROSConnection ros;
         readonly HashSet<string> registered = new HashSet<string>();
+        readonly HashSet<string> stopRegistered = new HashSet<string>();
 
         void Start()
         {
             ros = ROSConnection.GetOrCreateInstance();
             ControlRoomEvents.OnPatrolRunRequested += OnRun;
+            ControlRoomEvents.OnPatrolStopRequested += OnStop;
             Debug.Log("[FollowWaypointsPublisher] ready");
+        }
+
+        // 무한 순찰 정지: /<robotId>/patrol_stop(Bool)=true 발행 → bridge가 랩 마무리+복귀주차.
+        void OnStop(string robotId)
+        {
+            if (string.IsNullOrEmpty(robotId)) return;
+            string topic = TopicRegistry.GetPatrolStop(robotId);
+            if (string.IsNullOrEmpty(topic)) return;
+            if (!stopRegistered.Contains(topic)) { ros.RegisterPublisher<RosMessageTypes.Std.BoolMsg>(topic); stopRegistered.Add(topic); }
+            ros.Publish(topic, new RosMessageTypes.Std.BoolMsg { data = true });
+            ControlRoomEvents.RaiseLogAdded("patrol", "INFO", $"순찰 정지 요청 → {robotId}");
         }
 
         void OnRun(string robotId)
@@ -60,6 +73,10 @@ namespace URHYNIX.ControlRoom.Ros
             Debug.Log($"[FollowWaypointsPublisher] → {topic} ({pts.Count} poses)");
         }
 
-        void OnDestroy() => ControlRoomEvents.OnPatrolRunRequested -= OnRun;
+        void OnDestroy()
+        {
+            ControlRoomEvents.OnPatrolRunRequested -= OnRun;
+            ControlRoomEvents.OnPatrolStopRequested -= OnStop;
+        }
     }
 }

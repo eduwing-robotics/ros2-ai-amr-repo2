@@ -71,6 +71,10 @@ namespace URHYNIX.ControlRoom.App
         public static event Action<string> OnPatrolRunRequested;
         public static void RaisePatrolRunRequested(string robotId) => OnPatrolRunRequested?.Invoke(robotId);
 
+        // 무한 순찰 정지 요청 (robotId). 액션/버튼 → FollowWaypointsPublisher가 Bool 발행 → bridge가 마무리+복귀주차.
+        public static event Action<string> OnPatrolStopRequested;
+        public static void RaisePatrolStopRequested(string robotId) => OnPatrolStopRequested?.Invoke(robotId);
+
         // 주행준비 요청 (robotId). 액션/버튼 → PrepareDrivePublisher가 Bool 발행 → 로봇측 readyd 트리거.
         public static event Action<string> OnPrepareDriveRequested;
         public static void RaisePrepareDriveRequested(string robotId) => OnPrepareDriveRequested?.Invoke(robotId);

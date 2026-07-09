@@ -41,6 +41,11 @@ namespace URHYNIX.ControlRoom.Ros
         public static string GetPatrolWaypoints(string robotId)
             => string.IsNullOrEmpty(robotId) ? null : $"/{robotId}/patrol_waypoints";
 
+        // 무한 순찰 정지(Bool). StopPatrolPublisher가 true 발행 → 로봇측 bridge가 현재 랩 마무리 후
+        // 복귀주차하고 순찰 종료. per-robot 네임스페이스.
+        public static string GetPatrolStop(string robotId)
+            => string.IsNullOrEmpty(robotId) ? null : $"/{robotId}/patrol_stop";
+
         // 주행준비 트리거(Bool). PrepareDrivePublisher가 true 발행 → 로봇측 readyd.py가
         // ~/t1_drive_ready.sh(bringup→AMCL→nav2 lifecycle→검증)를 1회 실행. per-robot 네임스페이스.
         public static string GetPrepareDrive(string robotId)
