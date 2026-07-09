@@ -103,6 +103,32 @@ version: 2
 
 **7웨이포인트**: 같은 날 후속 세션에서 `/dev/shm` 시스템 정체(함정#8, 재부팅으로 해결) + 웨이포인트 벽 인접 플래닝 실패(함정#11, `patrol_safe_clearance.py`로 해결) + `wait_pose()` 버그(함정#10, 수정) 순서로 규명·수정 — 재부팅 후 단일타겟 재현 PASS로 시스템 안정성 확인, 7웨이포인트 중 1번 레그 clean PASS까지 확인. **배터리로 최종 완주는 다음 세션 이월** — 재개 시 AMCL 충전독 재시딩부터 `patrol_multi_waypoint.py` 재실행.
 
+## 2026-07-08 갱신 — "goal 받고도 안 움직임" 3중 결합 + 상주 서비스 표준
+
+**신규 표준 스크립트**: `scripts/nav2_goal_t1.py` — Unity `[MapClick]` 좌표(map 미터)를 그대로 받아 주행. 스턱 감지(무진전 15s)+트인쪽 번갈이 탈출(60°)+도달불가 사전 스킵+구간 타임아웃 90s. patrol_multi_waypoint의 후속 세대(피드백 기반이라 함정#10 원천 회피).
+
+**상주 서비스 4종(systemd user, linger)** — 재부팅 후 동반 프로세스 실종 클래스 종결: `urhynix-endpoint`(:10000)/`urhynix-scanfix`/`urhynix-posepub`/`urhynix-bridge`. 원본 `scripts/robot_services/`. 확인: `journalctl --user -u urhynix-bridge`. **endpoint/posepub/scanfix 수동 기동 단계는 이제 불필요**(스킬 절차 6 대체).
+
+**튜닝 확정값(1.9m 아레나 실주행 — 2026-07-09 협소회랑 왕복으로 재확정)**: inflation_radius **0.15**(0.20도 36cm 회랑을 고비용으로 채움 — 회랑 반폭 18cm보다 얇아야 중심선 저비용 띠 생김), PolygonStop **0.12**, PolygonSlow 0.18, PolygonLimit 0.16, `source_timeout` **1.0**, Smac `cost_travel_multiplier` **1.0**, `expected_planner_frequency` **1.0**(Smac은 플랜 ~560ms — 스톡 10Hz면 Pi 포화로 제어루프 붕괴), progress_checker `movement_time_allowance` **20**(크롤 0.02~0.05m/s 대응), goal_checker `yaw_goal_tolerance` **6.28**(도착회전 해제 — 벽옆 스톨 방지, 주차 방향은 bridge Spin이 담당), bt `default_server_timeout` **200**(20ms는 부하 스파이크에 ack 실패). 전부 `patch_nav_params_ns.py`에 반영됨.
+
+| # | 증상 | 원인 | 해결 |
+|---|---|---|---|
+| 13 | goal 수락+피드백 정상인데 거리 안 줄고 **ETA 0.0s** 고정 | ETA 0 = 컨트롤러 무계획(costmap 굶주림/체인 절단/모니터 차단) — 물리적 스턱과 다른 병 | 진단 트리: [[urhynix-t1-drive-nomove-diag]] |
+| 14 | costmap "KeepoutFilter: Filter mask was not received" 스팸 + 주행 불능 | params에 keepout 필터가 있는데 마스크 서버 미기동(재부팅 소실) | `_keepout_filter_up.sh` 재기동, 마스크 없으면 params에서 filters/keepout_filter 키 제거 후 nav2 재기동 |
+| 15 | collision_monitor "timestamps differ 0.2~0.36s → invalid source → stop" | scan restamp 후에도 Pi 부하 전송지연이 source_timeout(0.2) 초과 | source_timeout 1.0 (반영됨) |
+| 16 | 구석/독 정차 출발 시 전 기능 무력(컨트롤러·behavior 전멸) | PolygonStop 상시 발동 — 라이다 최소거리가 문턱 부근(라이다≠로봇중심 오프셋 주의) | 출발 전 min-scan 점검 → 8방위 트인쪽 직접 cmd_vel 탈출(모니터 우회, 0.05m/s·0.2m 상한) — 검증 3회 |
+| 17 | `ros2 topic pub`이 "rcl context invalid"로 실패해 **구동계 오진** | ros2cli 발행 자체가 실패했는데 에러를 숨기면 "바퀴 고장"으로 오판 | 구동계 테스트는 `drive_rotate.py`(rclpy) 사용 + 에러 출력 절대 숨기지 말 것 |
+| 18 | 속도 체인 진단 시 topic hz를 순차 측정하면 오판 | 측정 사이에 goal이 취소돼 "smoother 무발행"처럼 보임 | 3토픽(cmd_vel_nav/smoothed/cmd_vel) **동시** 구독 카운트로만 판정 |
+| 19 | Unity 순찰/출동 발행이 로봇에 안 옴(발행 로그는 정상) | `Resources/RosConfig/ros_endpoint.json`의 endpointRobotId가 꺼진 로봇 — 발행자는 공유 기본 연결만 씀 | endpointRobotId를 켜져 있는 로봇으로 + Play 재시작. 근본 수정은 발행자 per-robot 라우팅(TODO) |
+
+## 2026-07-09 갱신 — 협소회랑(36cm) 왕복순찰 + bridge 4대 기능
+
+**bridge(`patrol_waypoints_bridge.py`, systemd 상주)가 순찰의 정본 실행기**: ①**왕복** — 수신 경로를 1→N→역순→1로 자동 확장 ②**레그별 goToPose + 사전회전** — FollowWaypoints 대체. 각 레그 시작 전 다음 목표 방위각으로 Spin("방향 보고→이동") — 목표를 등지고 출발하면 DWB가 벽옆에서 셔플(회항 166s vs 사전회전 5s, 같은 회랑 정방향 136s vs 역방향 29s가 결정 증거) ③**복귀주차** — 완주 후 DOCK 상수(=AMCL 시딩값, 맵 재캡처 시 갱신)로 goToPose + Spin 방향정렬(±0.15rad) ④**JSONL 주행기록** `~/patrol_runs.jsonl`(leg/park/align 이벤트, dur_s·result — 레그 시간 판정은 이 파일 하나로). 워치독 240s/레그(회랑 크롤 실측 ~217s — 행 방지용이지 페이스 강제 아님).
+
+**물리 재배치(hand-move) 루프**: [[urhynix-t1-amcl-saved-map]]의 "물리 재배치 표준 루프" — 들기 전 goal 정지(waypoint_follower+bt_navigator lifecycle 재사이클), 배치 후 `bash ~/_dock_reseed.sh` 한 줄.
+
+**잔여(다음 세션)**: 크롤 복불복 — 같은 레그가 판마다 6s↔130s(PolygonSlow ±0.18 경계선을 진입각 따라 밟거나 안 밟음) → `slowdown_ratio` 0.2→0.35 후보. 무한 순회는 FollowWaypoints `number_of_loops` 예약(현재 왕복 1회).
+
 ## 관련
 
-[[urhynix-t1-amcl-saved-map]](선행 단계 — AMCL/pose/endpoint) · [[urhynix-t1-nav2-lifecycle-abi]](lifecycle 우회 원본) · [[urhynix-multirobot-domain-collision]](도메인/ns 배경) · [[urhynix-wifi-codelab-status]](wifi 불안정 배경) · [[urhynix-t1-nav2-keepout-filter]](보호대상 진입금지, 독립 기능) · `urhynix-nav2-waypoint-patrol`(젠지의 non-ns/nav2_simple_commander 방식 — 티원과는 다른 스택)
+[[urhynix-t1-amcl-saved-map]](선행 단계 — AMCL/pose/endpoint + 물리 재배치 루프) · [[urhynix-t1-nav2-lifecycle-abi]](lifecycle 우회 원본) · [[urhynix-t1-drive-nomove-diag]](안 움직일 때 계층 진단) · [[urhynix-multirobot-domain-collision]](도메인/ns 배경) · [[urhynix-wifi-codelab-status]](wifi 불안정 배경) · [[urhynix-t1-nav2-keepout-filter]](보호대상 진입금지, 독립 기능) · `urhynix-nav2-waypoint-patrol`(젠지의 non-ns/nav2_simple_commander 방식 — 티원과는 다른 스택)

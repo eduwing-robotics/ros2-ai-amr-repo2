@@ -1,6 +1,6 @@
 ---
 name: urhynix-t1-amcl-saved-map
-description: 티원(tb3_1)을 저장맵(arena_v*)으로 self-host AMCL 위치추정해 Unity ControlRoom에 정확한 마커로 띄우는 검증된 엔드투엔드. 젠지가 다른 도메인/네임스페이스로 별도 운영 중이어도 0 충돌(도메인 분리 + ns 격리). "티원 amcl", "티원 위치추정", "저장맵 amcl 띄워", "티원 유니티 마커 정확히", "충전독 초기포즈", "로봇 맵상 위치 정확히 구독", "맵 교체 후 초기포즈" 요청에 발동. map_server+amcl 수동 lifecycle, 라이브 /map override pin 함정, 글로벌+회전 수렴, 충전독 초기포즈 박아 무-teleop 업그레이드, **맵 교체 시 옛 dock좌표 무효화 대응 패턴**까지. (2026-07-03 arena_shared 재캡처 맵교체 PASS, 2026-07-01 최초 arena_shared PASS, 도메인 2 재확정, 순회 nav2 스택 설치 완료)
+description: 티원(tb3_1)을 저장맵(arena_v*)으로 self-host AMCL 위치추정해 Unity ControlRoom에 정확한 마커로 띄우는 검증된 엔드투엔드. 젠지가 다른 도메인/네임스페이스로 별도 운영 중이어도 0 충돌(도메인 분리 + ns 격리). "티원 amcl", "티원 위치추정", "저장맵 amcl 띄워", "티원 유니티 마커 정확히", "충전독 초기포즈", "로봇 맵상 위치 정확히 구독", "맵 교체 후 초기포즈", "충전소 물리 이동", "로봇 손으로 옮김/옮겼음(재시딩)" 요청에 발동. map_server+amcl 수동 lifecycle, 라이브 /map override pin 함정, 글로벌+회전 수렴, 충전독 초기포즈 박아 무-teleop 업그레이드, **맵 교체 시 옛 dock좌표 무효화 대응 패턴**까지. (2026-07-03 arena_shared 재캡처 맵교체 PASS, 2026-07-01 최초 arena_shared PASS, 도메인 2 재확정, 순회 nav2 스택 설치 완료)
 ---
 
 # URHYNIX 티원 AMCL — 저장맵 위치추정 → Unity 마커
@@ -42,10 +42,27 @@ description: 티원(tb3_1)을 저장맵(arena_v*)으로 self-host AMCL 위치추
 | 전원 ON인데 `/tb3_1` 없음 | bringup 미실행 | `bash ~/_robot_bringup_ns.sh tb3_1` 꼭 |
 | 맵 교체 후 옛 dock 좌표로 시딩했더니 Unity 마커가 실제 위치와 다름 | SLAM 재캡처마다 맵 `origin`이 달라짐(이전 캡처와 무관) — 옛 좌표는 옛 원점 기준이라 새 맵에선 무의미 | "맵 교체 시 초기포즈 재확보 절차"(아래) — 사용자 클릭 ground truth + 위치고정/방향탐색 패턴 |
 | 글로벌 로컬라이제이션(회전) 반복해도 공분산은 작은데 매번 다른 위치로 수렴 | 좁고 대칭적인 방이라 위치+방향을 동시 탐색하면 벽 대칭에 낚여 로컬 최적점(그럴싸하지만 틀림)에 안착 | 위치는 먼저 사용자 ground truth로 고정(covariance 작게), 방향만 느슨하게 열어서 회전 — 탐색 차원을 1개로 줄이면 급격히 안정화 |
+| initialpose를 발행해도 pose가 안 바뀜 — **에러 없이 무시된 것처럼 보임** (2026-07-08 젠지, 3회 연속 헛시딩) | ①반올림 쿼터니언(예: z=0.146,w=0.989)이 정규화 검사 실패 → amcl "**initialpose message is malformed. Rejecting**"으로 조용히 거부(로그에만) ②수락돼도 amcl_pose/tf는 다음 스캔 업데이트까지 latched 옛값 | ①쿼터니언은 `math.sin/cos(y/2)` 정밀값으로만 ②수락 판정은 amcl 로그 "**Setting pose: x y yaw**"가 유일한 ground truth ③반영 확인은 `/request_nomotion_update` 1회 후 pose 토픽 |
+| 타이트 시딩 후 회전 수렴시켰더니 오히려 0.3~0.55m 이탈 (2026-07-08 젠지) | **옆에 주차된 다른 로봇 = 맵에 없는 큰 블롭**이 근거리 스캔 매칭을 오염 → 회전할수록 파티클이 가짜 위치로 끌려감 | 옆에 미등록 장애물/로봇이 있으면 **회전 수렴 포기** — 위치는 사용자 클릭, 방향은 물리 정렬로 확정 후 타이트 시딩만(pos 0.01/yaw 0.06). 주행 시작하면 블롭에서 멀어지며 자연 수렴 |
 
 ## 무-teleop 업그레이드 (충전독 초기포즈 박기) — 2026-07-03 arena_shared(재캡처)로 갱신
 
 충전독은 **항상 같은 물리적 자리**지만, 맵을 다시 캡처하면(SLAM 원점이 매번 다름) **좌표는 매번 바뀐다**. 현재값(2026-07-03 arena_shared 기준): **x=0.038, y=1.405, yaw=0.293(rad, ≈16.8°)** — 아래 "맵 교체 시" 패턴으로 재확보함. 옛 값(x=0.05,y=0.028,yaw=0.0)은 2026-07-01 캡처본 전용이라 이번 재캡처 이후 무효. `_robot_amcl_ns.sh tb3_1 <map.yaml> 0.038 1.405 0.293 2`로 재현 가능(마지막 인자가 domain=2).
+
+## 물리 재배치(hand-move) 표준 루프 — 2026-07-09 도출, 같은 세션 3회 반복으로 검증
+
+사용자가 로봇을 **손으로 충전독에 다시 놓고** 주행을 재시작하는 반복 패턴. 스택 재기동 없이 3단계로 끝난다(bringup/amcl/nav2 전부 살아있는 상태 전제).
+
+1. **들어올리기 전 정지 보장** — 손으로 드는 순간 goal이 살아있으면 바퀴가 허공에서 돌고(함정#5: 클라이언트 kill로는 nav2가 안 멈춤), 내려놓는 순간 옛 goal로 달려간다:
+   ```bash
+   # cmd_vel이 조용하면 이미 대기 — 이 단계 통째 스킵 가능
+   ros2 lifecycle set /tb3_1/waypoint_follower deactivate && ros2 lifecycle set /tb3_1/bt_navigator deactivate
+   ros2 lifecycle set /tb3_1/bt_navigator activate && ros2 lifecycle set /tb3_1/waypoint_follower activate   # goal만 죽고 스택은 유지
+   ```
+2. **사용자가 평소 주차 방향 그대로 독에 배치** (yaw까지 시딩값과 일치해야 함) → 배치 완료 신호 대기. **재시딩 전에 순찰 시작 금지** — 손으로 옮긴 직후의 AMCL은 완전히 stale(함정#4).
+3. **재시딩+검증 한 줄** — `ssh t1 'bash ~/_dock_reseed.sh'` (원본 `scripts/_dock_reseed.sh`, 기본값이 티원 독). 정밀 쿼터니언 발행→nomotion→**"Setting pose <방금 좌표>" 수락로그**+amcl_pose 에코까지 출력. 수락로그의 좌표가 방금 값이 아니면 latched 옛값 착시이므로 재발행.
+
+로봇이 **자기 힘으로 주행해 간 자리**라면 이 루프 자체가 불필요 — AMCL이 유효하니 그냥 다음 goal을 보내면 된다(재시딩은 손으로 옮겼을 때만).
 
 ## 맵 교체 시 초기포즈 재확보 절차 (재사용 패턴, 2026-07-03 도출)
 
@@ -61,6 +78,15 @@ description: 티원(tb3_1)을 저장맵(arena_v*)으로 self-host AMCL 위치추
 
 **⚠️ 초기포즈 yaw 확정 시 함정 — Unity 2D 맵뷰의 화면회전(PlayerPrefs, 0°가 아닐 수 있음)과 절대 섞지 말 것.**
 `MapPanelView`의 회전 버튼(`Viewport.AddRotation`)이 지도 전체(배경+마커)를 화면상 회전시켜서(`PlayerPrefs["urhynix.map.displayRotationDeg"]`에 영속), 회전이 0°가 아닌 상태에서 "화면에서 보이는 방향"으로 yaw를 역산하면 **실제 AMCL 물리 yaw가 화면회전만큼 틀어진 값**으로 심어진다(화면은 우연히 맞아 보이지만 Nav2/순회가 실제로는 엉뚱한 방향으로 출발함). **반드시 맵뷰 회전을 0°로 리셋한 뒤** "실물 로봇이 향한 방향"을 확인해 yaw를 심을 것. 2.5D뷰(`Map25DRobotMarkerLayer.cs`)는 이 화면회전을 아예 안 타고 순수 ROS-frame yaw(0=+X 동쪽, 90°=+Y 북쪽)로 그리므로, 2D(회전=0°)와 2.5D 두 뷰가 같은 방향을 보이면 물리 yaw가 진짜 맞다는 교차검증이 된다.
+
+## 맵-현실 정합 검증 + 스캔매칭 정밀 재시딩 (2026-07-08 신설, 젠지 98.5% PASS)
+
+"맵의 벽/장애물이 현실과 진짜 일치하나?" 또는 "마커가 어긋난 게 맵 탓인가 위치추정 탓인가"를 분리 판정:
+
+1. **캡처**: 로봇에서 rclpy로 tf `map→<scan frame>` + `/scan` 1장을 JSON 덤프(sensor QoS 필수). 필드: x,y,yaw,amin,ainc,rmin,rmax,ranges.
+2. **렌더+판정**: `python3 scripts/scan_vs_map_check.py <scan.json> <out.png> --fit` — 스캔점을 맵에 오버레이(빨강=일치/주황=불일치, 10cm 게이트) + (dx,dy,dyaw) 그리드 탐색.
+3. **해석**: baseline 낮은데 fit이 높으면(예: 45.6%→98.7%) **맵은 맞고 위치추정이 어긋난 것** → fit이 출력한 corrected pose로 `/initialpose` 타이트 재시딩(스캔매칭 ground truth라 사용자 클릭보다 정밀). fit도 낮으면 맵≠현실 → 재SLAM 검토.
+4. **주의**: 옆에 주차된 다른 로봇 등 맵에 없는 실물은 정당한 주황(불일치)으로 나옴 — 일치율 판정에서 그 방향 섹터는 감안.
 
 ## 재사용 스크립트
 - `scripts/_robot_bringup_ns.sh` — ns bringup(tb3_1/tb3_2), domain 인자 파라미터화(3번째 인자, 기본 210 — 티원은 반드시 2 명시) [[urhynix-multirobot-domain-collision]]

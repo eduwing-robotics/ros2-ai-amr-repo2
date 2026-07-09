@@ -61,7 +61,8 @@ bash .claude/skills/ip-drift-resync/resync.sh tb3_2 192.168.20.7       # explici
 
 | 증상 | 원인 | 해법 |
 |---|---|---|
-| `tb3-ip` 응답 없음 | 다른 Wi-Fi 대역 | `scripts/tb3.sh`의 `TB3_LAN_CIDR` 변경, 또는 explicit IP로 직접 지정 |
+| `tb3-ip` 응답 없음 | 다른 Wi-Fi 대역 | `scripts/tb3.sh`의 `TB3_LAN_CIDR` 변경(2026-07-08: 10→**20**으로 갱신됨), 또는 explicit IP로 직접 지정 |
+| IP·마커 다 정상인데 **Unity 명령(순찰/출동)만 로봇에 안 감** | `Resources/RosConfig/ros_endpoint.json`의 `endpointRobotId`가 **꺼진 로봇** — 발행자들은 공유 기본 연결만 씀(구독은 per-robot이라 마커는 뜸) | endpointRobotId를 켜져 있는 로봇으로 바꾸고 **Play 재시작**(Resources 캐시). 2026-07-08 실사고 — [[urhynix-t1-drive-nomove-diag]] §5 |
 | 두 로봇이 같은 서브넷이라 `tb3-ip`가 헷갈림 | MAC OUI만으론 어느 로봇인지 모호 | `robot-ip-detect-fallback`(ed25519 키 매칭, 신원 보장)으로 먼저 IP 확정 후 explicit로 이 스킬 호출 |
 | patch 후에도 Unity가 옛 IP로 붙음 | Play 모드가 이미 `Resources.Load` 캐시 | `unityctl play stop` → `play start`로 재시작 |
 | `Host key verification failed` | known_hosts 정리 안 됨 | 수동: `ssh-keygen -R <old_ip>` |

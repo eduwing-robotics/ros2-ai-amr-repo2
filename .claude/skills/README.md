@@ -50,6 +50,7 @@
 | `api-contract-guard` | 외부 API/스키마/모델명을 코드에 박으려 할 때 | 런타임 확인, 중앙화, 검증 기록 |
 | `change-impact-map` | route/schema/env/worker/UI 변경 영향 범위를 먼저 그려야 할 때 | impact map, companion docs, verify matrix |
 | `evidence-review` | 완료 선언 전에 근거를 점검할 때 | executed verify, changed docs, release verdict |
+| `urhynix-dogfood-audit` | 시연 직전/기능 뭉치 완성 후 "실사용 페르소나 감사"로 Blocker를 선제 발굴할 때 | 정찰→페르소나 워커 4(관제운영자/시연진행자/강건성/성능)→메인모델 검증 매트릭스, 반증 장려. 2026-07-08 Blocker 2건 발굴 검증 |
 | `stack-drift-guard` | 현재 프로젝트가 원래 stack profile에서 벗어났는지 볼 때 | drift verdict, re-profile recommendation |
 | `migration-manifest` | 마이그레이션/대규모 리팩터링 시 | parity ID, wave plan, progress tracking |
 | `parallel-qa` | E2E 회귀를 빨리 넓게 돌리고 싶을 때 | grouped QA scenarios, pass/fail report |
@@ -83,6 +84,8 @@
 | `urhynix-yolo-capture-train` | T1 RealSense 브라우저 UI로 맞춤 물체를 Space 촬영, ROI 연사, 마스크 bbox 보정, YOLO 학습, best.pt 탐지 검증, hard-negative 오탐 배경 정제까지 이어갈 때 | 8090 preview polling, datasets/runs 위치, ROI crop→mask→bbox→YOLO txt, rembg/SAM/GrabCut/fallback 규칙, 검수 삭제, `N 오탐 배경 저장`, 학습 후 live detect 검증 |
 | `urhynix-t1-amcl-saved-map` | 티원(tb3_1)을 저장맵으로 self-host AMCL 위치추정해 Unity에 정확한 마커로 띄울 때 | ns bringup+map_server+amcl 수동 lifecycle, 라이브 /map override pin 함정, 충전독 초기포즈 무-teleop 시딩. 2026-07-01 arena_shared PASS |
 | `urhynix-t1-nav2-patrol-drive` | AMCL까지 뜬 티원에 nav2 순회 풀스택을 얹어 "방향보고→1초정지→이동→도착시360도회전" 시퀀스로 순회지점까지, 또는 N웨이포인트+충전독 복귀주차까지 실주행시킬 때 | tf 네임스페이스 리매핑 함정 수정 launch, 수동 lifecycle 8노드, amcl_pose QoS/재시딩 안전규칙, `/dev/shm` 시스템정체(재부팅해결), 벽인접 웨이포인트 플래닝실패(patrol_safe_clearance.py). 2026-07-01 단일타겟 3.5cm PASS |
+| `urhynix-t1-drive-nomove-diag` | 티원이 goal은 수락하는데 물리적으로 안 움직일 때 층별 이분탐색으로 원인을 특정할 때 | ETA 신호 판독→구동계(drive_rotate)→속도체인 3토픽 동시측정→collision_monitor→costmap→상류(Unity 발행) 진단 트리, "원인은 다중결합" 전제. 2026-07-08 3중결합 실전 검증 |
+| `urhynix-genji-nav2-drive` | 젠지(tb3_2)를 비-ns 단일 스택으로 한방 기동해 Unity 좌표주행시킬 때 (티원과 구조 반대) | nav_up.sh 한방기동 + 함정 9종(lifecycle 부분활성/bridge --nav-ns/malformed 쿼터니언/옆 로봇 블롭/stale TextAsset/유령 마커 등). 2026-07-08 0.8m 오차 4.1cm PASS |
 | `urhynix-t1-nav2-keepout-filter` | 티원 nav2 costmap에 보호대상 주변 원형 진입금지구역(Keepout Zone)을 등록할 때 | 마스크(pgm+yaml) 생성, costmap filters 플러그인 배선, 마스크 map_server+filter_info_server 수동 lifecycle. 2026-07-01 로그 검증 PASS |
 | `t1-rgbd-mapping-session` | 티원 D435로 새 공간을 주행 매핑해서 bag(rosbag2 mcap)을 뜰 때 | bringup+D435+bag녹화+WASD teleop 표준 절차, TwistStamped, `ros2 bag record`는 SIGTERM으로만 멈출 수 있음. 2026-06-30 검증, 2026-07-03 SIGINT 함정 추가 |
 | `rtabmap-bag-to-ply` | 뜬 bag을 OrbStack VM의 RTAB-Map으로 재처리해 컬러 3D 점군 PLY를 만들 때 | Docker-on-Mac 안 되고 네이티브 VM만 동작, mcap 손상복구, tf 함정, map↔odom SE2 변환으로 2D맵과 정합검증. 2026-06-30 PASS, 2026-07-03 SIGINT/loop closure 실패 함정 추가 |
@@ -129,6 +132,7 @@
 - "뜬 bag을 3D 점군 PLY로 만들고 싶다" -> `rtabmap-bag-to-ply`
 - "PLY를 Unity 3D 탭에 실제로 렌더링" -> `unity-pcx-pointcloud-view`
 - "또 개선할 점 찾아줘 / 시연 전 점검 / 도그푸딩 감사" -> `urhynix-dogfood-audit`
+- "로봇이 goal 받고도 안 움직여 / 순찰 무반응 / ETA 0" -> `urhynix-t1-drive-nomove-diag`
 
 ## Writing Rules
 

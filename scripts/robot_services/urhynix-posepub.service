@@ -1,0 +1,9 @@
+[Unit]
+Description=URHYNIX urhynix-posepub
+[Service]
+Type=simple
+ExecStart=/bin/bash -c "source /opt/ros/jazzy/setup.bash && source /home/t1/turtlebot3_ws/install/setup.bash 2>/dev/null; export ROS_DOMAIN_ID=2 RMW_IMPLEMENTATION=rmw_fastrtps_cpp ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET; exec python3 /home/t1/robot_pose_publisher.py --robot tb3_1 --root map --target tb3_1/base_footprint"
+Restart=on-failure
+RestartSec=5
+[Install]
+WantedBy=default.target

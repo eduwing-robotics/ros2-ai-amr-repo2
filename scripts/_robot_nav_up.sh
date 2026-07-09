@@ -45,10 +45,24 @@ sleep 10   # gyro 캘리브레이션 + Run! 대기
 #   headless 로봇에서 rviz가 Qt 없어 죽고 재시작 반복하며 CPU를 갉아 controller_server configure가
 #   타임아웃(async_send_request)으로 실패. bringup_launch.py는 rviz 없는 정식 헤드리스 런치(2026-06-25).
 NAV_LAUNCH=/opt/ros/jazzy/share/nav2_bringup/launch/bringup_launch.py
-NAV_PARAMS=/opt/ros/jazzy/share/turtlebot3_navigation2/param/burger.yaml
+# 협소통과 패치(2026-07-09): 중앙 장애물↔벽 병목 36/44cm(arena_shared 거리변환 실측).
+# 스톡 inflation_radius 0.5는 회랑(반폭 18cm) 전체를 고비용으로 채워 통과 회피/정지 유발 → 0.15.
+# /opt 원본은 안 건드리고(apt 업그레이드 시 증발+오염) 홈에 패치 사본을 생성해 사용.
+NAV_PARAMS_SRC=/opt/ros/jazzy/share/turtlebot3_navigation2/param/burger.yaml
+NAV_PARAMS="$HOME/nav2_${ID}_params.yaml"
+python3 - "$NAV_PARAMS_SRC" "$NAV_PARAMS" <<'PY'
+import sys, yaml
+src, dst = sys.argv[1], sys.argv[2]
+d = yaml.safe_load(open(src))
+for k in ("global_costmap", "local_costmap"):
+    d[k][k]["ros__parameters"]["inflation_layer"]["inflation_radius"] = 0.15
+with open(dst, "w") as f:
+    yaml.safe_dump(d, f, sort_keys=False)
+print("params patched:", dst)
+PY
 setsid nohup bash -c "unset AMENT_PREFIX_PATH CMAKE_PREFIX_PATH COLCON_PREFIX_PATH LD_LIBRARY_PATH PYTHONPATH ROS_PACKAGE_PATH; source /opt/ros/jazzy/setup.bash; export ROS_DOMAIN_ID=210 TURTLEBOT3_MODEL=burger RMW_IMPLEMENTATION=rmw_fastrtps_cpp ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET; exec ros2 launch '$NAV_LAUNCH' map:='$MAP' params_file:='$NAV_PARAMS' use_sim_time:=false autostart:=true" \
   > "/tmp/nav_$ID.log" 2>&1 </dev/null &
-sleep 14   # lifecycle active 대기(patrol bridge가 waitUntilNav2Active로 한번 더 보장)
+sleep 14   # lifecycle active 대기(patrol bridge가 wait_for_server로 한번 더 보장)
 
 # 3) 초기포즈 = 충전소. yaw(도)→quaternion. AMCL이 여기서 출발해 회전으로 수렴.
 read QZ QW < <(python3 -c "import math;y=math.radians($IYAW);print(math.sin(y/2),math.cos(y/2))")
@@ -61,7 +75,9 @@ setsid nohup python3 /tmp/robot_pose_publisher.py --robot "$ID" --root map --tar
   > "/tmp/pose_$ID.log" 2>&1 </dev/null &
 
 # 5) Unity goal_pose/patrol_waypoints → Nav2 goToPose/FollowWaypoints 브리지.
-setsid nohup python3 /tmp/patrol_waypoints_bridge.py --robot "$ID" \
+# --nav-ns '' 필수: 이 스택은 비-ns라 액션이 /navigate_to_pose. 생략하면 bridge가
+# BasicNavigator(namespace=tb3_2)로 /tb3_2/navigate_to_pose를 영원히 기다림(2026-07-08, 티원 ns 수정의 부작용).
+setsid nohup python3 /tmp/patrol_waypoints_bridge.py --robot "$ID" --nav-ns '' \
   > "/tmp/bridge_$ID.log" 2>&1 </dev/null &
 
 # 6) Unity 연결용 endpoint(:10000).

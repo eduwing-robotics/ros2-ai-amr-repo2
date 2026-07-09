@@ -3,7 +3,54 @@
 
 > **📌 최신 5건은 DECISION-CURRENT.md 참조. 이 파일은 전체 역사 기록입니다.**
 
+## 2026-07-09
+
+### 🚇 티원 36cm 협소회랑 왕복순찰 완성 — 근본원인 5연타 + 복귀주차·사전회전·JSONL 주행기록
+
+- **판정**: 어제 activate FAIL = **저전압 확정** — 만충(12.48V)에서 8/8 activate OK(코드·파라미터 동일 조건).
+- **협소통과 처방**(맵 거리변환 실측: 중앙 장애물↔벽 병목 좌 36cm/우 44cm): inflation 0.20→**0.15**(회랑 반폭 18cm보다 얇게 — 중심선에 저비용 띠), PolygonStop 0.14→**0.12**, Smac `cost_travel_multiplier` 2.0→**1.0**. 젠지도 `_robot_nav_up.sh`에 스톡(/opt burger.yaml, inflation 0.5) 패치 사본 생성 단계 신설 — 다음 기동 자동.
+- **근본원인 체인 5연타**(하나 풀면 다음이 등장, 전부 로그 실측 규명):
+  1. Smac 2D+스톡 재플랜 10Hz가 Pi 포화(플랜 1회 ~560ms, 제어루프 10→1.5Hz, cmd 끊김 "Failed to make progress") → `expected_planner_frequency` **1.0**
+  2. 회랑 크롤(0.02~0.05m/s) 중 진행률 창 10s 간헐 초과 → `movement_time_allowance` **20**
+  3. Unity 웨이포인트 theta=0이 매 도착 회전 강제 → 벽 옆(0.21m)에선 collision monitor에 눌려 스톨 → `yaw_goal_tolerance` **6.28**(순찰은 도착방향 무의미)
+  4. bt_navigator ack 대기 20ms가 부하 스파이크에 즉시 실패("Timed out...acknowledge") → `default_server_timeout` **200**
+  5. 회항(6→5) 166s = 목표를 등지고 출발한 DWB 벽옆 셔플 → bridge **레그별 사전회전**(방향 보고→이동) → **5s**. 결정 증거: 같은 B-회랑이 정방향 136s vs 역방향 29s 비대칭.
+- **bridge 진화**(`patrol_waypoints_bridge.py`): 왕복(1→N→역순→1) · **복귀주차**(DOCK 상수로 goToPose+Spin 방향정렬, 실측 3s+2s) · FollowWaypoints→레그별 goToPose(사전회전+실패 스킵) · 워치독 90→**240s/레그**(회랑 레그 실측 ~217s, 페이스 강제 아님) · **JSONL 주행기록** `~/patrol_runs.jsonl`(레그/주차/정렬 이벤트, /tmp 금지 — 로봇 배포됨, 다음 부팅부터). 기존 주행기록은 저널+/tmp 로그 3곳 분산·휘발이었음.
+- **검증**: 왕복 풀시퀀스 3판 연속 성공 — 최종판 레그 11/11 성공+주차+정렬 -91°(총 454s). "6번 도착 애매" 의혹은 기록으로 반증(전 레그 Succeeded).
+- **물리 재배치 표준 루프 스킬화**(세션 중 3회 실전): ①들기 전 goal 정지(lifecycle 재사이클) ②평소 방향 배치 ③`ssh t1 'bash ~/_dock_reseed.sh'` 한 줄(정밀 쿼터니언+수락판정) — `urhynix-t1-amcl-saved-map`에 절차·"충전소 물리 이동" 트리거 추가.
+- **잔여**: 크롤 복불복(같은 레그가 판마다 6s↔130s — PolygonSlow ±0.18 경계선 진입각 차이) → `slowdown_ratio` 0.2→0.35 후보 / 젠지 프리셋 P2 실주행 / 무한 순회(FollowWaypoints `number_of_loops` 예약).
+- **다음 진입**: 티원 bringup→`_dock_reseed.sh`→`_restart_nav_ns.sh`+8노드 lifecycle→순찰→`~/patrol_runs.jsonl`로 레그 시간 자동 판정.
+
 ## 2026-07-08
+
+### 🤝 젠지 좌표주행 PASS(4.1cm) + 맵-현실 정합 검증 도구 + 순찰 프리셋 5종/Unity 드롭다운
+
+- **주행**: 젠지(비-ns 스택) 기동 — `nav_up.sh`(arena_shared·현IP 갱신판) → 0.8m 실주행 13s, **도착 오차 4.1cm PASS**. bridge 신기능(PolygonStop 존 토글 해제→0.3m 이동 시 복원, 레그 90s 타임아웃) 첫 실전 검증. bridge는 `--nav-ns ''` 신설로 티원(ns)/젠지(비-ns) 겸용화.
+- **AMCL 삽질 3종 규명→스킬 함정화**: ①반올림 쿼터니언이 "malformed. Rejecting"으로 **조용히 거부**(수락 판정은 amcl 로그 "Setting pose"가 유일) ②amcl_pose/tf는 latched 옛값 — nomotion 1회로 반영 ③옆에 주차된 티원(맵에 없는 블롭)이 회전 수렴을 발산시킴 → 위치 사용자 확정+방향 물리 정렬+타이트 시딩으로 해결.
+- **맵-현실 정합 검증(사용자 질문 "장애물 위치 진짜 맞나")**: 신규 `scripts/scan_vs_map_check.py` — 라이다 스캔 1장 오버레이+`--fit`(포즈오차 분리). baseline 45.6%→fit **98.7%** = **맵(장애물 2개 포함)은 현실과 일치**, 어긋남은 위치추정 잔차 → fit 보정값으로 정밀 재시딩(재검증 98.5%). 장애물 인식 2단 확인: 라이다 스캔점 밀착 + 로컬 costmap cost=100. 우측 장애물만 실물이 맵보다 ~8cm 삐짐(주행 무해, 프리셋 마진에 반영).
+- **순찰 프리셋(사용자 클릭 실패 대안)**: 신규 `scripts/patrol_presets.py` — 거리변환 클리어런스 ≥0.25m 검증 5종(좌측세로/중앙크로스/우측순회/외곽대순환/전시물A링, 장애물B 삐짐 마진 포함) → `StreamingAssets/Maps/arena_shared.presets.json` + **MapPanelView 프리셋 드롭다운**(적용·"내 경로 복원", 세션+디스크 백업). 컴파일 PASS — 실주행·육안 검증은 다음. 클릭 실패의 정체 = 25cm 클리어런스 회색지대(장애물A 남쪽 통로는 유효점 자체가 0).
+- **유령 티원 마커 규명**: `MapMarkerLayer.cs` 전역 tf 폴백이 Play 재시작으로 리셋된 SelectedRobotId(tb3_1) 마커에 젠지 tf를 얹던 것 — 젠지 선택+Play 재시작으로 해소. 오프라인 로봇 폴백 차단 코드 수정은 TODO.
+- **부수 산출물**: 신규 스킬 `urhynix-genji-nav2-drive`(함정 9종), `urhynix-t1-amcl-saved-map` 함정 3종+"맵-현실 정합 검증" 절, 스킬 README 색인 2건, evidence `2026-07-08-scan-vs-map-{before,after}.png`.
+- **종료 상태**: 젠지 독 복귀 재시딩(0.10,1.11,0.293 — "Setting pose" 수락 확인) 후 안전 셧다운(핑 사망). 티원은 저녁에 이미 셧다운.
+- **다음 진입**: ①티원 트랙 — 완전충전→activate 재시도→Smac·유령장애물·토글 검증 3종(아래 🧭 캡슐) ②젠지 트랙 — 프리셋 드롭다운 육안 확인+P2(중앙 크로스) 실주행 ③백로그 — 유령 마커 폴백 차단, Unity 발행자 per-robot 라우팅.
+
+### 🧭 주행 개선 4종 처방(웹조사) — Smac 2D·유령장애물·독 존 토글·bridge 강건화 배포 (활성화 검증은 배터리로 이월)
+
+- **결정**: "장애물 회피 못하고 멈춤" 웹조사(하이쿠+직접검색)로 병인 특정 → 4종 처방 확정: ①obstacle layer `inf_is_valid: true`(무반사 inf 광선이 버려져 raytrace clearing 불가 → **유령 장애물**이 영구 정지 유발) ②플래너 NavFn→**Smac 2D**(협소공간 경로질·속도 2~3배, 플러그인 설치 확인) ③독/구석 출발 = PolygonStop **`enabled` 동적 토글**(nav2 공식 도킹 패턴 — 8방위 cmd_vel 탈출 대체) ④bridge `wait_result` 타임아웃(90s/레그)+cancel. 컨트롤러는 DWB 유지(RPP는 회피 불가라 기각), MPPI/TEB 제외.
+- **미세 조정(주인님 확정)**: max_vel_x/max_speed_xy 0.08→**0.12**, xy_goal_tolerance 0.25→**0.15**. controller_frequency는 스톡이 이미 10이라 무변경.
+- **지뢰 2개 해체**: `patch_nav_params_ns.py`가 ①keepout filter를 여전히 주입(재생성 시 "마스크 미수신" 정지 부활) → `--keepout` 플래그 게이트(기본 OFF) ②source_timeout 1.0 미영속(로봇 yaml 직접 수정분) → 스크립트에 박음. **"로봇 yaml 직접 수정은 재생성 때 증발한다" — 수정은 반드시 patch 스크립트에.**
+- **진행 상태**: Phase A(params) 로봇 배포+재생성+키 검증(grep 5종 전부 OK) 완료. 그러나 nav2 재기동 후 **controller/planner activate FAIL — 같은 시점 배터리 상태불량(47.8%에서 급락 추정)이라 원인 미확정(저전압 의심)**, 진단 없이 안전 셧다운. bridge 패치(존 토글+타임아웃)는 로컬 완료·py_compile OK, **로봇 미배포**.
+- **다음 진입(순서)**: 완전 충전 → bringup+AMCL 독 시딩 → `bash ~/_restart_nav_ns.sh`+8노드 lifecycle → activate 재시도(성공하면 저전압 원인 확정, 실패하면 `/tmp/nav_tb3_1.log`에서 Smac configure 에러 확인) → `scp patrol_waypoints_bridge.py t1:~/ && systemctl --user restart urhynix-bridge` → 수동 `ros2 param set /tb3_1/collision_monitor PolygonStop.enabled false` 동적 토글 실측 → Phase C 검증 3종(C1 UI 4점 순찰 완주+벽스침 0, C2 사람 5~10초 막았다 비키기→≤10s 자동재개, C3 완주 후 enabled=true 복원).
+- **부수 산출물**: `scripts/patch_nav_params_ns.py`(keepout 게이트·inf_is_valid·Smac·0.12·tol 0.15·source_timeout), `scripts/patrol_waypoints_bridge.py`(존 토글·타임아웃), 플랜 `~/.claude/plans/logical-crafting-pearl.md`
+
+### 🤖 티원 첫 좌표주행 세션 — "안 움직임" 3중 결합 규명 + 1.5m 실주행 PASS + 상주 서비스 표준화 (배터리로 완주 이월)
+
+- **결정/증상**: Unity 우클릭 좌표로 티원 주행 시도 — goal 수락·피드백 정상인데 물리 정지. 규명 결과 **단일 원인이 아니라 3중 결합**: ①keepout 마스크 서버 부재(재부팅 소실) → costmap 미완성 ②collision_monitor scan `source_timeout 0.2` < Pi 부하지연 0.21~0.36s → 상시 정지 ③독/구석 정차 → PolygonStop 상시 발동. 하나 풀 때마다 다음 층 노출 — 층별 이분탐색으로 해결 후 **1.5m 실주행 확인**.
+- **추가 발견(상류)**: Unity 순찰/출동 발행이 로봇에 안 간 진범 = `ros_endpoint.json`의 `endpointRobotId: tb3_2`(꺼진 젠지) — 발행자는 공유 기본 연결만 씀(구독은 per-robot이라 마커는 뜸). **tb3_1로 전환**(Play 재시작 필요). 근본 수정(발행자 per-robot 라우팅)은 TODO.
+- **튜닝 확정**: inflation 0.35→**0.20**(통로 폐색 해소), PolygonStop 0.18→**0.14**, Slow/Limit 0.18/0.16, source_timeout **1.0**, 탈출각 30→**60°** — `patch_nav_params_ns.py` 반영.
+- **인프라 표준화**: 로봇 상주 4서비스(systemd user+linger, 재부팅 생존) — endpoint/scanfix/posepub/**bridge**(UI 순찰 수신). 원본 `scripts/robot_services/`. "재부팅 후 동반 프로세스 실종" 클래스 종결.
+- **부수 산출물**: `scripts/nav2_goal_t1.py`(표준 주행 — 외부 nav2_goal_v3 이식+티원 3대 즉사 수정), 신규 스킬 `urhynix-t1-drive-nomove-diag`(계층 진단 트리), patrol-drive 스킬 함정#13~19, ip-drift-resync 함정 추가, `tb3.sh` CIDR 10→20.
+- **다음 진입**: 충전 후 ①Play 재시작(endpointRobotId=tb3_1 반영) ②UI "순찰 시작" → bridge 수신·완주 확인 ③주행엔진 처방 6종(출발 전 자기점검/직접탈출 폴백/ETA0 조기진단/조기 스턱/입력단 클리어런스/회전 진전) + bridge P0 4종(타임아웃/선점/안전이식/상태방송) 이식 — 상세 설계는 이 날짜 대화 로그.
 
 ### 🏛️ 2.5D 박물관 장식 시스템 구축 + dogfood 감사 → P1~7 수정 PASS (컴파일 검증, 육안 대기)
 

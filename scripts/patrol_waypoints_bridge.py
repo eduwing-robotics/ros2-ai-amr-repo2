@@ -8,25 +8,72 @@
 # 로봇/Nav2 PC(같은 저장맵+AMCL, 도메인 210)에서 실행:
 #   python3 patrol_waypoints_bridge.py --robot tb3_1
 import argparse
+import json
+import math
+import os
 import queue
 import threading
 import time
 import rclpy
 from rclpy.executors import SingleThreadedExecutor
 from rclpy.node import Node
-from geometry_msgs.msg import PoseArray, PoseStamped
+from geometry_msgs.msg import PoseArray, PoseStamped, PoseWithCovarianceStamped
+from nav_msgs.msg import Odometry
+from rclpy.qos import QoSProfile, DurabilityPolicy
 from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
+from rcl_interfaces.msg import Parameter, ParameterType, ParameterValue
+from rcl_interfaces.srv import SetParameters
+
+GOAL_TIMEOUT_S = 240.0     # 레그 1개 상한 — 초과 시 cancel(무한대기로 큐 블록 방지, 2026-07-08)
+                           # 2026-07-09: 90→240 — 협소 회랑(36cm) 레그가 PolygonSlow/Limit 크롤로
+                           # 실측 ~217s. 이건 행 방지 워치독이지 페이스 강제가 아님 — 넉넉히.
+DEPART_DIST_M = 0.3        # 출발점에서 이만큼 벗어나면 PolygonStop 복원
+DEPART_FALLBACK_S = 30.0   # 이동 실패해도 무조건 복원(안전 성역)
+# 복귀주차 목표(= AMCL 독 시딩값, urhynix-t1-amcl-saved-map 참조) — 맵 재캡처 시 갱신 필수(2026-07-09).
+DOCK_X, DOCK_Y, DOCK_YAW = 0.038, 1.405, 0.293
+# 주행기록(레그 단위 JSONL, 2026-07-09) — /tmp 금지(재부팅 증발), 홈에 영속. 분석: tail/jq/python 1줄.
+RUN_LOG = os.path.expanduser('~/patrol_runs.jsonl')
+
+
+def record(event):
+    """주행기록 1건 append(JSONL). 기록 실패는 주행에 무영향(로그는 부업, 주행이 본업)."""
+    try:
+        with open(RUN_LOG, 'a') as f:
+            f.write(json.dumps(event, ensure_ascii=False) + '\n')
+    except OSError:
+        pass
+YAW_ALIGN_TOL = 0.15       # 주차 방향 허용오차(rad) — goal_checker yaw 체크가 해제돼 있어 Spin으로 정렬
 
 
 class CmdListener(Node):
     """Unity 명령을 구독해 큐에 적재만 한다(Nav2 호출은 메인 스레드가)."""
 
-    def __init__(self, robot, q):
+    def __init__(self, robot, q, nav_prefix):
         super().__init__('patrol_waypoints_bridge')
         self.q = q
+        self.odom_pos = None
+        self.amcl_pos = None
+        # Unity 계약 토픽은 항상 /<robot>/* — nav 스택 쪽 토픽/서비스만 nav_prefix를 따른다
+        # (티원=ns 스택이라 /<robot>/*, 젠지=비-ns 표준 스택이라 빈 prefix. --nav-ns 참조)
         self.create_subscription(PoseStamped, f'/{robot}/goal_pose', self.on_goal, 10)
         self.create_subscription(PoseArray, f'/{robot}/patrol_waypoints', self.on_route, 10)
+        # 독/구석 출발 시 PolygonStop 일시 해제용 — 상대변위 판정이라 odom으로 충분
+        self.create_subscription(Odometry, f'{nav_prefix}/odom', self.on_odom, 10)
+        # 복귀주차 방향 정렬용 현재 yaw — amcl 발행 QoS(TRANSIENT_LOCAL)에 맞춤
+        self.amcl_yaw = None
+        aq = QoSProfile(depth=1)
+        aq.durability = DurabilityPolicy.TRANSIENT_LOCAL
+        self.create_subscription(PoseWithCovarianceStamped, f'{nav_prefix}/amcl_pose', self.on_amcl, aq)
+        self.param_cli = self.create_client(SetParameters, f'{nav_prefix}/collision_monitor/set_parameters')
         self.get_logger().info(f'구독: /{robot}/goal_pose, /{robot}/patrol_waypoints — Unity 명령 대기')
+
+    def on_odom(self, msg: Odometry):
+        self.odom_pos = msg.pose.pose.position
+
+    def on_amcl(self, msg: PoseWithCovarianceStamped):
+        o = msg.pose.pose.orientation
+        self.amcl_yaw = 2.0 * math.atan2(o.z, o.w)
+        self.amcl_pos = msg.pose.pose.position
 
     def on_goal(self, msg: PoseStamped):
         self.q.put(('goal', msg))
@@ -49,29 +96,110 @@ def to_stamped(nav, p, frame):
     return ps
 
 
-def wait_result(nav, log, label):
-    while not nav.isTaskComplete():
-        fb = nav.getFeedback()
-        if fb and hasattr(fb, 'current_waypoint'):
-            log.info(f'{label}: 웨이포인트 #{fb.current_waypoint + 1}', throttle_duration_sec=2.0)
-        time.sleep(0.2)
-    r = nav.getResult()
-    if r == TaskResult.SUCCEEDED:
-        log.info(f'{label}: 성공')
-    elif r == TaskResult.CANCELED:
-        log.warn(f'{label}: 취소됨')
-    else:
-        log.error(f'{label}: 실패 result={r}')
+def set_polygon_stop(listener, log, enabled):
+    """collision_monitor PolygonStop 동적 토글. 독 존 안에서 출발할 때 잠깐 끄는 용도(nav2 공식 패턴).
+    실패해도 주행은 계속(토글은 편의, 안전장치 복원은 wait_result가 보장)."""
+    if not listener.param_cli.service_is_ready():
+        log.warn('collision_monitor set_parameters 서비스 없음 — 존 토글 스킵')
+        return False
+    p = Parameter(name='PolygonStop.enabled',
+                  value=ParameterValue(type=ParameterType.PARAMETER_BOOL, bool_value=enabled))
+    fut = listener.param_cli.call_async(SetParameters.Request(parameters=[p]))
+    t0 = time.time()
+    while not fut.done() and time.time() - t0 < 5.0:
+        time.sleep(0.1)  # future 완료는 백그라운드 executor가 처리
+    ok = bool(fut.done() and fut.result().results and fut.result().results[0].successful)
+    (log.info if ok else log.warn)(f'PolygonStop.enabled={enabled} → {"OK" if ok else "실패"}')
+    return ok
+
+
+def begin_departure(listener, log):
+    """출발 직전 PolygonStop 해제. 복원 조건(변위/시간)은 wait_result가 감시."""
+    if not set_polygon_stop(listener, log, False):
+        return None
+    return {'start': listener.odom_pos, 't0': time.time(), 'restored': False}
+
+
+def _dist(a, b):
+    if a is None or b is None:
+        return 0.0
+    return math.hypot(b.x - a.x, b.y - a.y)
+
+
+def wait_result(nav, log, label, timeout_s=GOAL_TIMEOUT_S, listener=None, depart=None):
+    t0 = time.time()
+    try:
+        while not nav.isTaskComplete():
+            if depart and not depart['restored'] and (
+                    _dist(depart['start'], listener.odom_pos) > DEPART_DIST_M
+                    or time.time() - depart['t0'] > DEPART_FALLBACK_S):
+                set_polygon_stop(listener, log, True)
+                depart['restored'] = True
+            if time.time() - t0 > timeout_s:
+                log.error(f'{label}: {timeout_s:.0f}s 타임아웃 — goal 취소')
+                nav.cancelTask()
+                break
+            fb = nav.getFeedback()
+            if fb and hasattr(fb, 'current_waypoint'):
+                log.info(f'{label}: 웨이포인트 #{fb.current_waypoint + 1}', throttle_duration_sec=2.0)
+            time.sleep(0.2)
+        r = nav.getResult()
+        if r == TaskResult.SUCCEEDED:
+            log.info(f'{label}: 성공')
+        elif r == TaskResult.CANCELED:
+            log.warn(f'{label}: 취소됨')
+        else:
+            log.error(f'{label}: 실패 result={r}')
+        return r
+    finally:
+        # 어떤 경로로 끝나도(성공/취소/예외) PolygonStop은 반드시 복원 — 안전 성역
+        if depart and not depart['restored']:
+            set_polygon_stop(listener, log, True)
+            depart['restored'] = True
+
+
+def park_at_dock(nav, listener, log, run_id=None):
+    """순찰 종료 후 충전독 복귀주차(2026-07-09): 위치는 goToPose, 방향은 Spin으로 원방향(DOCK_YAW)
+    정렬 — goal_checker의 yaw 체크가 해제돼 있어(벽 인접 회전 스톨 방지) 위치·방향을 분리 처리."""
+    dock = PoseStamped()
+    dock.header.frame_id = 'map'
+    dock.header.stamp = nav.get_clock().now().to_msg()
+    dock.pose.position.x = DOCK_X
+    dock.pose.position.y = DOCK_Y
+    dock.pose.orientation.z = math.sin(DOCK_YAW / 2)
+    dock.pose.orientation.w = math.cos(DOCK_YAW / 2)
+    log.info(f'복귀주차: 독({DOCK_X}, {DOCK_Y})으로 이동')
+    t0 = time.time()
+    nav.goToPose(dock)
+    r = wait_result(nav, log, '복귀주차')
+    record({'kind': 'park', 'run': run_id, 'x': DOCK_X, 'y': DOCK_Y,
+            'dur_s': round(time.time() - t0, 1), 'result': getattr(r, 'name', str(r)),
+            't': round(time.time(), 1)})
+    yaw = listener.amcl_yaw
+    if yaw is None:
+        log.warn('amcl_pose 미수신 — 주차 방향 정렬 스킵')
+        return
+    d = (DOCK_YAW - yaw + math.pi) % (2.0 * math.pi) - math.pi
+    if abs(d) > YAW_ALIGN_TOL:
+        log.info(f'주차 방향 정렬: {math.degrees(d):.0f}° 회전')
+        nav.spin(spin_dist=d, time_allowance=30)
+        r = wait_result(nav, log, '방향정렬', 60.0)
+        record({'kind': 'align', 'run': run_id, 'deg': round(math.degrees(d)),
+                'result': getattr(r, 'name', str(r)), 't': round(time.time(), 1)})
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--robot', default='tb3_1')
+    # nav2 스택 네임스페이스. 기본 = --robot과 동일(티원 ns 스택). 젠지(비-ns 표준 스택)는 --nav-ns '' 전달.
+    ap.add_argument('--nav-ns', default=None)
     a = ap.parse_args()
+    nav_ns = a.robot if a.nav_ns is None else a.nav_ns
+    nav_prefix = f'/{nav_ns}' if nav_ns else ''
     rclpy.init()
 
     q = queue.Queue()
-    listener = CmdListener(a.robot, q)
+    listener = CmdListener(a.robot, q, nav_prefix)
     log = listener.get_logger()
     # 구독 노드는 *전용* executor로 백그라운드 spin. rclpy.spin()은 전역 executor를 잡는데
     # BasicNavigator도 전역 executor를 써서 충돌("Executor is already spinning") → 전용 executor로 분리.
@@ -83,7 +211,7 @@ def main():
     # 어긋난다. waitUntilNav2Active()도 안 씀 — 기본 localizer='amcl'이 <robot>/amcl/get_state를 찾는데
     # 이 프로젝트의 AMCL은 노드명 <robot>_amcl(언더스코어, PushRosNamespace 미사용 — tf 리매핑 충돌 회피,
     # urhynix-t1-nav2-lifecycle-abi 참고)이라 매칭 불가 → 액션서버 자체 대기로 대체.
-    nav = BasicNavigator(namespace=a.robot)
+    nav = BasicNavigator(namespace=nav_ns)
     log.info('Nav2 액션서버(navigate_to_pose) 대기...')
     nav.nav_to_pose_client.wait_for_server()
     log.info('Nav2 활성 확인 — 명령 처리 시작')
@@ -99,13 +227,45 @@ def main():
                 if not msg.header.frame_id:
                     msg.header.frame_id = 'map'
                 log.info(f'goToPose 시작 ({msg.pose.position.x:.2f}, {msg.pose.position.y:.2f})')
+                depart = begin_departure(listener, log)
+                t0 = time.time()
                 nav.goToPose(msg)
-                wait_result(nav, log, 'goToPose')
+                r = wait_result(nav, log, 'goToPose', GOAL_TIMEOUT_S, listener, depart)
+                record({'kind': 'goal', 'x': round(msg.pose.position.x, 3),
+                        'y': round(msg.pose.position.y, 3), 'dur_s': round(time.time() - t0, 1),
+                        'result': getattr(r, 'name', str(r)), 't': round(time.time(), 1)})
             else:
                 goals = [to_stamped(nav, p, msg.header.frame_id) for p in msg.poses]
-                log.info(f'FollowWaypoints 시작 ({len(goals)}점)')
-                nav.followWaypoints(goals)
-                wait_result(nav, log, 'FollowWaypoints')
+                # 왕복 순찰(2026-07-09): 마지막 점 도착 후 역순(N-1→…→1)으로 출발점 복귀.
+                # ponytail: 무한 루프 순회는 아직 아님 — 필요해지면 FollowWaypoints의
+                # number_of_loops(goal 필드 직접 구성)로 업그레이드.
+                if len(goals) >= 2:
+                    goals = goals + goals[-2::-1]
+                run_id = int(time.time())
+                log.info(f'FollowWaypoints 시작 ({len(goals)}점, 왕복)')
+                depart = begin_departure(listener, log)
+                # 레그별 실행(2026-07-09, FollowWaypoints 대체): 각 레그 시작 전 다음 목표 방위각으로
+                # 사전 회전("방향 보고→이동", patrol_test_seq 검증 패턴). 레그 시작 헤딩 불일치가 최대
+                # 시간싱크였음 — 실측: 같은 B-회랑이 정방향(등지고 출발) 136s vs 역방향(보고 출발) 29s,
+                # 6→5 회항은 벽 옆 DWB 셔플로 166s. Spin 0.4rad/s면 180°가 ~8s. 실패 레그는 스킵하고 계속.
+                for i, g in enumerate(goals):
+                    if listener.amcl_pos is not None and listener.amcl_yaw is not None:
+                        b = math.atan2(g.pose.position.y - listener.amcl_pos.y,
+                                       g.pose.position.x - listener.amcl_pos.x)
+                        dyaw = (b - listener.amcl_yaw + math.pi) % (2.0 * math.pi) - math.pi
+                        if abs(dyaw) > 0.5:
+                            nav.spin(spin_dist=dyaw, time_allowance=30)
+                            wait_result(nav, log, f'레그{i + 1} 사전회전', 60.0)
+                    g.header.stamp = nav.get_clock().now().to_msg()
+                    log.info(f'레그 {i + 1}/{len(goals)} → ({g.pose.position.x:.2f}, {g.pose.position.y:.2f})')
+                    t0 = time.time()
+                    nav.goToPose(g)
+                    r = wait_result(nav, log, f'레그{i + 1}', GOAL_TIMEOUT_S, listener, depart if i == 0 else None)
+                    record({'kind': 'leg', 'run': run_id, 'leg': i + 1, 'total': len(goals),
+                            'x': round(g.pose.position.x, 3), 'y': round(g.pose.position.y, 3),
+                            'dur_s': round(time.time() - t0, 1),
+                            'result': getattr(r, 'name', str(r)), 't': round(time.time(), 1)})
+                park_at_dock(nav, listener, log, run_id)  # 왕복 후 충전독 원위치·원방향 복귀(실패해도 귀소 시도)
     except KeyboardInterrupt:
         pass
     finally:

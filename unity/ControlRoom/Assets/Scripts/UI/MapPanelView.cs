@@ -5,7 +5,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 using URHYNIX.ControlRoom.App;
+using URHYNIX.ControlRoom.Data;
 using URHYNIX.ControlRoom.Map;
+using URHYNIX.ControlRoom.Persistence;
 using URHYNIX.ControlRoom.Services;
 
 namespace URHYNIX.ControlRoom.UI
@@ -40,6 +42,7 @@ namespace URHYNIX.ControlRoom.UI
 
             SetupSlotDropdown(root);
             SetupPatrolControls(root);
+            SetupPresetDropdown(root);
 
             // 맵 회전 컨트롤 (SLAM 원점↔실제 경기장 정렬 보정). 맵+마커 함께 회전.
             var btnCcw = root.Q<Button>("btn-map-rot-ccw");
@@ -81,6 +84,65 @@ namespace URHYNIX.ControlRoom.UI
                 ControlRoomEvents.RaiseLogAdded("map", "INFO", $"맵 슬롯 전환: {evt.newValue}");
                 RebuildMap25D();                                // built 1회 빌드의 슬롯 stale 해소
             });
+        }
+
+        // 검증된 순찰 프리셋 드롭다운(StreamingAssets/Maps/<mapId>.presets.json — scripts/patrol_presets.py 산출).
+        // 선택 시 현재 경로를 프리셋으로 교체(마커·자동저장은 기존 OnPatrolChanged 경로 재사용).
+        // 첫 적용 전 사용자 경로를 세션 백업 — "내 경로 복원"으로 비교 왕복 가능.
+        const string RestoreLabel = "내 경로 복원";
+        PatrolPoint[] userRouteBackup;
+
+        void SetupPresetDropdown(VisualElement root)
+        {
+            var btnEdit = root.Q<Button>("btn-patrol-edit");
+            if (btnEdit?.parent == null) return;
+
+            var dd = new DropdownField { name = "patrol-preset-dropdown" };
+            dd.style.minWidth = 120;
+            var presets = new List<PatrolPreset>();
+
+            void Refresh(string mapId)
+            {
+                presets.Clear();
+                presets.AddRange(PatrolPresetCatalog.Load(mapId));
+                var choices = new List<string> { "프리셋…" };
+                foreach (var p in presets) choices.Add(p.name);
+                choices.Add(RestoreLabel);
+                dd.choices = choices;
+                dd.SetValueWithoutNotify(choices[0]);
+                dd.style.display = presets.Count > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+
+            Refresh(StaticMapLoader.LatestSlotId);
+            StaticMapLoader.OnStaticMapLoaded += (slotId, tex, w, h, res, ox, oy, oyaw) => Refresh(slotId);
+
+            dd.RegisterValueChangedCallback(evt =>
+            {
+                if (evt.newValue == RestoreLabel)
+                {
+                    if (userRouteBackup != null)
+                    {
+                        PatrolService.Instance.Replace(userRouteBackup);
+                        ControlRoomEvents.RaiseLogAdded("patrol", "INFO", "프리셋 적용 전 내 경로로 복원");
+                    }
+                    else
+                        ControlRoomEvents.RaiseLogAdded("patrol", "WARN", "백업된 내 경로 없음(프리셋 적용 전이라면 이미 그 경로)");
+                    return;
+                }
+                var preset = presets.Find(p => p.name == evt.newValue);
+                if (preset == null) return;
+                if (userRouteBackup == null && PatrolService.Instance.Count > 0)
+                {
+                    var cur = PatrolService.Instance.Points;
+                    userRouteBackup = new PatrolPoint[cur.Count];
+                    for (int i = 0; i < cur.Count; i++) userRouteBackup[i] = cur[i];
+                }
+                PatrolService.Instance.Replace(preset.points);
+                ControlRoomEvents.RaiseLogAdded("patrol", "INFO",
+                    $"순찰 프리셋 적용: {preset.name} ({preset.points.Length}점, 클리어런스 검증됨)");
+            });
+
+            btnEdit.parent.Add(dd);
         }
 
         // 순찰 편집 토글 + 전체삭제 버튼. 토글 ON이면 맵 좌클릭=추가, 우클릭=마지막제거.

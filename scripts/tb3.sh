@@ -11,7 +11,7 @@ export TB3_MAC_PATTERN='2c:cf:67:47:38:0?3'   # robot Wi-Fi MAC (leading-zero to
 export TB3_USER='kim'
 export TB3_HOSTNAME='urhynix-robot'             # mDNS hostname (avahi publishes <hostname>.local)
 export TB3_ROBOT_IP_HINT='192.168.10.87'       # last known (fallback only)
-export TB3_LAN_CIDR='192.168.10'                # /24 to sweep (fallback only)
+export TB3_LAN_CIDR='192.168.20'                # /24 to sweep (fallback only)
 
 # Passwords live OUTSIDE the repo. Put them in ~/.tb3rc (see scripts/tb3rc.example):
 #   export TB3_PASSWORD='your-ssh-password'
