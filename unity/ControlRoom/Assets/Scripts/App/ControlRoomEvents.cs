@@ -75,6 +75,10 @@ namespace URHYNIX.ControlRoom.App
         public static event Action<string> OnPrepareDriveRequested;
         public static void RaisePrepareDriveRequested(string robotId) => OnPrepareDriveRequested?.Invoke(robotId);
 
+        // 재시딩 요청 (robotId). 액션/버튼 → PrepareDrivePublisher가 Bool 발행 → 로봇측 readyd가 _dock_reseed.sh 실행.
+        public static event Action<string> OnReseedRequested;
+        public static void RaiseReseedRequested(string robotId) => OnReseedRequested?.Invoke(robotId);
+
         // 텔레오프 명령 (robotId, linear m/s, angular rad/s, isPressed).
         // D-pad 누름/뗌 모두 발행; 뗄 때는 linear=0, angular=0.
         public static event Action<string, float, float, bool> OnTeleopCmd;

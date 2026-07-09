@@ -22,36 +22,45 @@ class ReadyD(Node):
     def __init__(self):
         super().__init__('urhynix_readyd')
         self.ns = os.environ.get('READYD_NS', 'tb3_1')
-        self.script = os.path.expanduser('~/t1_drive_ready.sh')
+        self.prepare_script = os.path.expanduser('~/t1_drive_ready.sh')  # 주행준비 6단계(bringup→nav2)
+        self.reseed_script = os.path.expanduser('~/_dock_reseed.sh')     # 충전독 고정좌표 AMCL 재시딩만
         # 마지막 상태를 latch(transient_local) → Unity가 늦게 붙어도 최근 진행상황을 받음
         qos = QoSProfile(depth=20, history=HistoryPolicy.KEEP_LAST,
                          durability=DurabilityPolicy.TRANSIENT_LOCAL)
         self.pub = self.create_publisher(String, f'/{self.ns}/drive_ready_status', qos)
-        self.create_subscription(Bool, f'/{self.ns}/prepare_drive', self.on_trigger, 10)
-        self._busy = threading.Lock()
-        self.get_logger().info(f'readyd 대기: /{self.ns}/prepare_drive → {self.script}')
-        self._status('READY — 주행준비 버튼 대기 중')
+        self.create_subscription(Bool, f'/{self.ns}/prepare_drive', self.on_prepare, 10)
+        self.create_subscription(Bool, f'/{self.ns}/reseed', self.on_reseed, 10)
+        self._busy = threading.Lock()   # 주행준비/재시딩 상호배타(동시 실행 방지)
+        self.get_logger().info(
+            f'readyd 대기: /{self.ns}/prepare_drive→{self.prepare_script} · /{self.ns}/reseed→{self.reseed_script}')
+        self._status('READY — 주행준비/재시딩 버튼 대기 중')
 
     def _status(self, text):
         m = String()
         m.data = text
         self.pub.publish(m)
 
-    def on_trigger(self, msg: Bool):
+    def on_prepare(self, msg: Bool):
+        self._maybe_run(msg, self.prepare_script, '주행준비 6단계')
+
+    def on_reseed(self, msg: Bool):
+        self._maybe_run(msg, self.reseed_script, '충전독 재시딩')
+
+    def _maybe_run(self, msg: Bool, script: str, label: str):
         if not msg.data:
             return
         if not self._busy.acquire(blocking=False):
             self._status('이미 진행 중 — 재요청 무시')
             return
-        threading.Thread(target=self._run, daemon=True).start()
+        threading.Thread(target=self._run, args=(script, label), daemon=True).start()
 
-    def _run(self):
+    def _run(self, script: str, label: str):
         try:
-            if not os.path.isfile(self.script):
-                self._status(f'FAIL: 스크립트 없음 {self.script}')
+            if not os.path.isfile(script):
+                self._status(f'FAIL: 스크립트 없음 {script}')
                 return
-            self._status('시작: 주행준비 6단계')
-            p = subprocess.Popen(['bash', self.script],
+            self._status(f'시작: {label}')
+            p = subprocess.Popen(['bash', script],
                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                  text=True, bufsize=1)
             for line in p.stdout:
@@ -60,7 +69,7 @@ class ReadyD(Node):
                     self._status(line)
                     self.get_logger().info(line)
             rc = p.wait()
-            self._status('DRIVE-READY: PASS' if rc == 0 else f'FAIL (rc={rc})')
+            self._status(f'{label}: 완료' if rc == 0 else f'{label} FAIL (rc={rc})')
         except Exception as e:  # noqa: BLE001 — 데몬은 어떤 예외에도 죽지 않고 상태만 회신
             self._status(f'FAIL: readyd 예외 {e}')
         finally:

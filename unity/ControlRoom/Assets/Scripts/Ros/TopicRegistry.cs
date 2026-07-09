@@ -47,9 +47,15 @@ namespace URHYNIX.ControlRoom.Ros
             => string.IsNullOrEmpty(robotId) ? null : $"/{robotId}/prepare_drive";
 
         // 주행준비 진행상황(String, 로봇측 latched). readyd.py가 6단계 각 줄을 발행 →
-        // PrepareDrivePublisher가 구독해 관제 로그로 중계. per-robot 네임스페이스.
+        // PrepareDrivePublisher가 구독해 관제 로그로 중계. 재시딩 진행도 이 토픽 공유. per-robot 네임스페이스.
         public static string GetDriveReadyStatus(string robotId)
             => string.IsNullOrEmpty(robotId) ? null : $"/{robotId}/drive_ready_status";
+
+        // 재시딩 트리거(Bool). PrepareDrivePublisher가 true 발행 → 로봇측 readyd가 _dock_reseed.sh
+        // (충전독 고정좌표로 AMCL 위치 재선언)를 1회 실행. 주행준비와 달리 bringup/nav2 미변경
+        // (이미 기동된 상태 전제). per-robot 네임스페이스.
+        public static string GetReseed(string robotId)
+            => string.IsNullOrEmpty(robotId) ? null : $"/{robotId}/reseed";
 
         // 수동 조종 속도 명령(TwistStamped). TeleopCmdPublisher가 발행 → TurtleBot3 HW 직접 구동(Nav2 비경유).
         // ⚠ 메시지 타입은 TwistStamped(TurtleBot3 Jazzy 실기). CONTRACT.md의 Twist 표기는 드리프트.
