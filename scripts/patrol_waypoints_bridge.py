@@ -31,6 +31,8 @@ DEPART_DIST_M = 0.3        # 출발점에서 이만큼 벗어나면 PolygonStop 
 DEPART_FALLBACK_S = 30.0   # 이동 실패해도 무조건 복원(안전 성역)
 # 복귀주차 목표(= AMCL 독 시딩값, urhynix-t1-amcl-saved-map 참조) — 맵 재캡처 시 갱신 필수(2026-07-09).
 DOCK_X, DOCK_Y, DOCK_YAW = 0.038, 1.405, 0.293
+# 주차 전용 위치 허용오차(m) — 순찰 레그(0.15)보다 조여 독 정밀주차. park 끝나면 원복(2026-07-09 P0).
+PARK_XY_TOL, PATROL_XY_TOL = 0.10, 0.15
 # 주행기록(레그 단위 JSONL, 2026-07-09) — /tmp 금지(재부팅 증발), 홈에 영속. 분석: tail/jq/python 1줄.
 RUN_LOG = os.path.expanduser('~/patrol_runs.jsonl')
 
@@ -65,6 +67,8 @@ class CmdListener(Node):
         aq.durability = DurabilityPolicy.TRANSIENT_LOCAL
         self.create_subscription(PoseWithCovarianceStamped, f'{nav_prefix}/amcl_pose', self.on_amcl, aq)
         self.param_cli = self.create_client(SetParameters, f'{nav_prefix}/collision_monitor/set_parameters')
+        # 주차 전용 goal_checker xy tolerance 동적 조정용(SimpleGoalChecker dynamic reconfigure)
+        self.ctrl_param_cli = self.create_client(SetParameters, f'{nav_prefix}/controller_server/set_parameters')
         self.get_logger().info(f'구독: /{robot}/goal_pose, /{robot}/patrol_waypoints — Unity 명령 대기')
 
     def on_odom(self, msg: Odometry):
@@ -110,6 +114,24 @@ def set_polygon_stop(listener, log, enabled):
         time.sleep(0.1)  # future 완료는 백그라운드 executor가 처리
     ok = bool(fut.done() and fut.result().results and fut.result().results[0].successful)
     (log.info if ok else log.warn)(f'PolygonStop.enabled={enabled} → {"OK" if ok else "실패"}')
+    return ok
+
+
+def set_xy_goal_tol(listener, log, tol):
+    """controller_server goal_checker의 xy_goal_tolerance 동적 변경(SimpleGoalChecker는 dynamic reconfigure 지원).
+    주차만 조이고 순찰 레그엔 원복하는 용도. 실패해도 주차는 계속(정밀도만 손해)."""
+    cli = listener.ctrl_param_cli
+    if not cli.service_is_ready():
+        log.warn('controller_server set_parameters 서비스 없음 — 주차 tolerance 조정 스킵')
+        return False
+    p = Parameter(name='goal_checker.xy_goal_tolerance',
+                  value=ParameterValue(type=ParameterType.PARAMETER_DOUBLE, double_value=float(tol)))
+    fut = cli.call_async(SetParameters.Request(parameters=[p]))
+    t0 = time.time()
+    while not fut.done() and time.time() - t0 < 5.0:
+        time.sleep(0.1)
+    ok = bool(fut.done() and fut.result().results and fut.result().results[0].successful)
+    (log.info if ok else log.warn)(f'goal_checker.xy_goal_tolerance={tol} → {"OK" if ok else "실패"}')
     return ok
 
 
@@ -160,7 +182,8 @@ def wait_result(nav, log, label, timeout_s=GOAL_TIMEOUT_S, listener=None, depart
 
 def park_at_dock(nav, listener, log, run_id=None):
     """순찰 종료 후 충전독 복귀주차(2026-07-09): 위치는 goToPose, 방향은 Spin으로 원방향(DOCK_YAW)
-    정렬 — goal_checker의 yaw 체크가 해제돼 있어(벽 인접 회전 스톨 방지) 위치·방향을 분리 처리."""
+    정렬 — goal_checker의 yaw 체크가 해제돼 있어(벽 인접 회전 스톨 방지) 위치·방향을 분리 처리.
+    2026-07-09 P0: 주차만 xy tolerance 조이고(PARK_XY_TOL) 실제 도착 포즈·오차를 기록(측정 없으면 최적화 불가)."""
     dock = PoseStamped()
     dock.header.frame_id = 'map'
     dock.header.stamp = nav.get_clock().now().to_msg()
@@ -168,13 +191,24 @@ def park_at_dock(nav, listener, log, run_id=None):
     dock.pose.position.y = DOCK_Y
     dock.pose.orientation.z = math.sin(DOCK_YAW / 2)
     dock.pose.orientation.w = math.cos(DOCK_YAW / 2)
-    log.info(f'복귀주차: 독({DOCK_X}, {DOCK_Y})으로 이동')
+    log.info(f'복귀주차: 독({DOCK_X}, {DOCK_Y})으로 이동 (tol {PARK_XY_TOL}m)')
+    set_xy_goal_tol(listener, log, PARK_XY_TOL)          # 주차만 조임
     t0 = time.time()
     nav.goToPose(dock)
     r = wait_result(nav, log, '복귀주차')
+    set_xy_goal_tol(listener, log, PATROL_XY_TOL)        # 순찰용으로 원복(어떤 결과든)
+    # 실제 도착 포즈 + 오차 기록. amcl_pos/yaw는 백그라운드 executor가 최신화 — 정지 직후 값이 최종 근사.
+    ax = ay = ayaw = err_xy = err_yaw = None
+    if listener.amcl_pos is not None:
+        ax, ay = round(listener.amcl_pos.x, 3), round(listener.amcl_pos.y, 3)
+        err_xy = round(math.hypot(ax - DOCK_X, ay - DOCK_Y), 3)
+    if listener.amcl_yaw is not None:
+        ayaw = round(math.degrees(listener.amcl_yaw), 1)
+        err_yaw = round(math.degrees((DOCK_YAW - listener.amcl_yaw + math.pi) % (2.0 * math.pi) - math.pi), 1)
     record({'kind': 'park', 'run': run_id, 'x': DOCK_X, 'y': DOCK_Y,
-            'dur_s': round(time.time() - t0, 1), 'result': getattr(r, 'name', str(r)),
-            't': round(time.time(), 1)})
+            'ax': ax, 'ay': ay, 'ayaw_deg': ayaw, 'err_xy_m': err_xy, 'err_yaw_deg': err_yaw,
+            'tol': PARK_XY_TOL, 'dur_s': round(time.time() - t0, 1),
+            'result': getattr(r, 'name', str(r)), 't': round(time.time(), 1)})
     yaw = listener.amcl_yaw
     if yaw is None:
         log.warn('amcl_pose 미수신 — 주차 방향 정렬 스킵')
@@ -184,7 +218,13 @@ def park_at_dock(nav, listener, log, run_id=None):
         log.info(f'주차 방향 정렬: {math.degrees(d):.0f}° 회전')
         nav.spin(spin_dist=d, time_allowance=30)
         r = wait_result(nav, log, '방향정렬', 60.0)
+        # 정렬 후 최종 헤딩 오차 기록(Spin이 실제로 맞췄는지 실측)
+        fyaw = listener.amcl_yaw
+        ferr = (round(math.degrees((DOCK_YAW - fyaw + math.pi) % (2.0 * math.pi) - math.pi), 1)
+                if fyaw is not None else None)
         record({'kind': 'align', 'run': run_id, 'deg': round(math.degrees(d)),
+                'final_yaw_deg': round(math.degrees(fyaw), 1) if fyaw is not None else None,
+                'final_err_yaw_deg': ferr,
                 'result': getattr(r, 'name', str(r)), 't': round(time.time(), 1)})
 
 
