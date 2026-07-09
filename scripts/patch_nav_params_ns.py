@@ -96,7 +96,7 @@ fp["decel_lim_theta"] = -1.2
 # 0.25m 벽간격은 안 침범하는 값으로 축소.
 cm["PolygonStop"]["radius"] = 0.12  # 2026-07-09: 0.14→0.12 — 병목 36cm 회랑 반폭 18cm에서 0.14는 여유 4cm뿐(AMCL 오차±5cm에 통과 중 상시 하드스톱). 0.12=몸통 0.105+1.5cm; 회랑 내 속도는 PolygonSlow/Limit이 0.024~0.05로 이미 눌러줌
 cm["PolygonSlow"]["points"] = "[[0.18, 0.18], [0.18, -0.18], [-0.18, -0.18], [-0.18, 0.18]]"
-cm["PolygonSlow"]["slowdown_ratio"] = 0.2
+cm["PolygonSlow"]["slowdown_ratio"] = 0.35  # 2026-07-09: 0.2→0.35 — 왕복 실주행서 레그2/5가 117s/106s 크롤. 원인=PolygonSlow가 "20%감속↔normal"을 0.1s 간격 무한진동(회랑 벽이 슬로우존 0.18 경계 들락). 20%는 과감속(재가속 stuttering) — 35%로 벽 근접 시에도 굴러 크롤 대략 반감. 하드정지(PolygonStop 0.12)는 불변이라 안전 동일
 cm["PolygonLimit"]["points"] = "[[0.16, 0.16], [0.16, -0.16], [-0.16, -0.16], [-0.16, 0.16]]"
 cm["PolygonLimit"]["linear_limit"] = 0.05
 cm["PolygonLimit"]["angular_limit"] = 0.2
