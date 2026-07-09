@@ -147,6 +147,13 @@ namespace URHYNIX.ControlRoom.App
                 go.transform.SetParent(transform, false);
                 go.AddComponent<FollowWaypointsPublisher>();
             }
+            // 주행준비 트리거 발행기(Bool → 로봇측 readyd → t1_drive_ready.sh, drive_ready_status 구독 중계).
+            if (FindObjectOfType<PrepareDrivePublisher>() == null)
+            {
+                var go = new GameObject("PrepareDrivePublisher");
+                go.transform.SetParent(transform, false);
+                go.AddComponent<PrepareDrivePublisher>();
+            }
             // 수동 조종 cmd_vel 발행기(TeleopPad D-pad → /<id>/cmd_vel TwistStamped).
             if (FindObjectOfType<TeleopCmdPublisher>() == null)
             {

@@ -41,6 +41,16 @@ namespace URHYNIX.ControlRoom.Ros
         public static string GetPatrolWaypoints(string robotId)
             => string.IsNullOrEmpty(robotId) ? null : $"/{robotId}/patrol_waypoints";
 
+        // 주행준비 트리거(Bool). PrepareDrivePublisher가 true 발행 → 로봇측 readyd.py가
+        // ~/t1_drive_ready.sh(bringup→AMCL→nav2 lifecycle→검증)를 1회 실행. per-robot 네임스페이스.
+        public static string GetPrepareDrive(string robotId)
+            => string.IsNullOrEmpty(robotId) ? null : $"/{robotId}/prepare_drive";
+
+        // 주행준비 진행상황(String, 로봇측 latched). readyd.py가 6단계 각 줄을 발행 →
+        // PrepareDrivePublisher가 구독해 관제 로그로 중계. per-robot 네임스페이스.
+        public static string GetDriveReadyStatus(string robotId)
+            => string.IsNullOrEmpty(robotId) ? null : $"/{robotId}/drive_ready_status";
+
         // 수동 조종 속도 명령(TwistStamped). TeleopCmdPublisher가 발행 → TurtleBot3 HW 직접 구동(Nav2 비경유).
         // ⚠ 메시지 타입은 TwistStamped(TurtleBot3 Jazzy 실기). CONTRACT.md의 Twist 표기는 드리프트.
         public static string GetCmdVel(string robotId)
