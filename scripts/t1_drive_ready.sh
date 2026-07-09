@@ -68,14 +68,22 @@ done
 for n in $NODES; do timeout 12 ros2 lifecycle set /$NS/$n configure >/dev/null 2>&1; done
 for n in $NODES; do timeout 12 ros2 lifecycle set /$NS/$n activate  >/dev/null 2>&1; done
 
-# 6. 최종 검증
-say "6/6 검증"
+# 6. 최종 검증 — lifecycle 전이가 이 Pi에서 느림(planner configure→activate 실측 ~50s)이라
+#    activate 직후 즉시검사하면 아직 전이 중인 걸 FAIL로 오판한다. 노드별 active를 최대 60s
+#    폴링대기(뜨는 즉시 통과) — activate CLI가 timeout 12로 끊겨도 노드는 백그라운드에서 계속 전이.
+say "6/6 검증(활성 폴링대기, 느린 전이 대비)"
 bad=0
 for n in $NODES; do
-  st=$(timeout 6 ros2 lifecycle get /$NS/$n 2>/dev/null | tail -1)
-  case "$st" in active*) ;; *) echo "    $n=$st"; bad=1;; esac
+  ok=0
+  for t in $(seq 1 30); do
+    case "$(timeout 5 ros2 lifecycle get /$NS/$n 2>/dev/null | tail -1)" in
+      active*) ok=1; break;;
+    esac
+    sleep 2
+  done
+  [ "$ok" = 1 ] || { echo "    $n 미활성"; bad=1; }
 done
-[ "$bad" = "0" ] || fail "8노드 중 일부 미활성"
+[ "$bad" = "0" ] || fail "8노드 중 일부 미활성(60s 대기 후에도)"
 timeout 8 ros2 action list 2>/dev/null | grep -q "/$NS/navigate_to_pose" || fail "navigate_to_pose 액션서버 없음"
 pr=$(timeout 8 ros2 param get /$NS/collision_monitor PolygonStop.radius 2>/dev/null | grep -oE "[0-9.]+$")
 echo ""
