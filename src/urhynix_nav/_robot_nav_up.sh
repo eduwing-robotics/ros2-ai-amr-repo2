@@ -10,7 +10,8 @@ ID=$1; IX=$2; IY=$3; IYAW=${4:-0}; EP=${5:-no}
 MAP="${6:-$HOME/maps/arena_v4/map.yaml}"   # 6번째 인자로 맵 override (예: ~/maps/map5/map5.yaml)
 source /opt/ros/jazzy/setup.bash
 source "$HOME/turtlebot3_ws/install/setup.bash"
-export ROS_DOMAIN_ID=210 TURTLEBOT3_MODEL=burger LDS_MODEL=LDS-03
+# 도메인 1 = 젠지 팀 표준(사용자 확정 2026-07-10, .bashrc와 동일. 티원=2와 분리 유지. 210은 드리프트였음)
+export ROS_DOMAIN_ID=1 TURTLEBOT3_MODEL=burger LDS_MODEL=LDS-03
 export RMW_IMPLEMENTATION=rmw_fastrtps_cpp ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET
 
 # 기존 우리 프로세스 정리. bracket 트릭 + 이 파일 cmdline엔 비-bracket 키워드 없음(파일이라 안전).
@@ -30,7 +31,10 @@ sleep 3
 if [ ! -f "$MAP" ]; then echo "맵 없음: $MAP (nav_up.sh가 scp했는지 확인)"; exit 1; fi
 
 # 1) bringup (라이다 /scan + 모터 + tf base_footprint). non-ns.
-setsid nohup ros2 launch turtlebot3_bringup robot.launch.py usb_port:=/dev/ttyACM0 \
+# ★OpenCR 포트는 by-id 고정 — 젠지는 아두이노 센서보드가 ttyACM0을 선점할 수 있어(2026-07-10 실측:
+#   Arduino=ACM0, OpenCR=ACM1) ttyACM0 하드코딩이면 turtlebot3_ros가 아두이노에 붙어 SIGABRT로 죽음.
+OPENCR=$(ls /dev/serial/by-id/usb-ROBOTIS_OpenCR* 2>/dev/null | head -1)
+setsid nohup ros2 launch turtlebot3_bringup robot.launch.py usb_port:="${OPENCR:-/dev/ttyACM0}" \
   > "/tmp/bu_$ID.log" 2>&1 </dev/null &
 sleep 10   # gyro 캘리브레이션 + Run! 대기
 
@@ -45,22 +49,12 @@ sleep 10   # gyro 캘리브레이션 + Run! 대기
 #   headless 로봇에서 rviz가 Qt 없어 죽고 재시작 반복하며 CPU를 갉아 controller_server configure가
 #   타임아웃(async_send_request)으로 실패. bringup_launch.py는 rviz 없는 정식 헤드리스 런치(2026-06-25).
 NAV_LAUNCH=/opt/ros/jazzy/share/nav2_bringup/launch/bringup_launch.py
-# 협소통과 패치(2026-07-09): 중앙 장애물↔벽 병목 36/44cm(arena_shared 거리변환 실측).
-# 스톡 inflation_radius 0.5는 회랑(반폭 18cm) 전체를 고비용으로 채워 통과 회피/정지 유발 → 0.15.
+# 파라미터 패치(2026-07-10): 인라인 inflation 패치 → patch_nav_params_genji.py로 승격.
+# 젠지 실측 footprint(앞18/뒤10/반폭8.75cm) + collision polygon + 티원 검증 튜닝 이식.
 # /opt 원본은 안 건드리고(apt 업그레이드 시 증발+오염) 홈에 패치 사본을 생성해 사용.
-NAV_PARAMS_SRC=/opt/ros/jazzy/share/turtlebot3_navigation2/param/burger.yaml
 NAV_PARAMS="$HOME/nav2_${ID}_params.yaml"
-python3 - "$NAV_PARAMS_SRC" "$NAV_PARAMS" <<'PY'
-import sys, yaml
-src, dst = sys.argv[1], sys.argv[2]
-d = yaml.safe_load(open(src))
-for k in ("global_costmap", "local_costmap"):
-    d[k][k]["ros__parameters"]["inflation_layer"]["inflation_radius"] = 0.15
-with open(dst, "w") as f:
-    yaml.safe_dump(d, f, sort_keys=False)
-print("params patched:", dst)
-PY
-setsid nohup bash -c "unset AMENT_PREFIX_PATH CMAKE_PREFIX_PATH COLCON_PREFIX_PATH LD_LIBRARY_PATH PYTHONPATH ROS_PACKAGE_PATH; source /opt/ros/jazzy/setup.bash; export ROS_DOMAIN_ID=210 TURTLEBOT3_MODEL=burger RMW_IMPLEMENTATION=rmw_fastrtps_cpp ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET; exec ros2 launch '$NAV_LAUNCH' map:='$MAP' params_file:='$NAV_PARAMS' use_sim_time:=false autostart:=true" \
+python3 /tmp/patch_nav_params_genji.py "$NAV_PARAMS" || { echo "params 패치 실패 (nav_up.sh가 scp했는지 확인)"; exit 1; }
+setsid nohup bash -c "unset AMENT_PREFIX_PATH CMAKE_PREFIX_PATH COLCON_PREFIX_PATH LD_LIBRARY_PATH PYTHONPATH ROS_PACKAGE_PATH; source /opt/ros/jazzy/setup.bash; export ROS_DOMAIN_ID=1 TURTLEBOT3_MODEL=burger RMW_IMPLEMENTATION=rmw_fastrtps_cpp ROS_AUTOMATIC_DISCOVERY_RANGE=SUBNET; exec ros2 launch '$NAV_LAUNCH' map:='$MAP' params_file:='$NAV_PARAMS' use_sim_time:=false autostart:=true" \
   > "/tmp/nav_$ID.log" 2>&1 </dev/null &
 sleep 14   # lifecycle active 대기(patrol bridge가 wait_for_server로 한번 더 보장)
 
@@ -77,7 +71,9 @@ setsid nohup python3 /tmp/robot_pose_publisher.py --robot "$ID" --root map --tar
 # 5) Unity goal_pose/patrol_waypoints → Nav2 goToPose/FollowWaypoints 브리지.
 # --nav-ns '' 필수: 이 스택은 비-ns라 액션이 /navigate_to_pose. 생략하면 bridge가
 # BasicNavigator(namespace=tb3_2)로 /tb3_2/navigate_to_pose를 영원히 기다림(2026-07-08, 티원 ns 수정의 부작용).
-setsid nohup python3 /tmp/patrol_waypoints_bridge.py --robot "$ID" --nav-ns '' \
+# --dock = 초기포즈(충전소) — 기본값이 티원 독이라 젠지가 티원 자리로 주차하러 감(2026-07-10).
+YAWRAD=$(python3 -c "import math;print(repr(math.radians($IYAW)))")
+setsid nohup python3 /tmp/patrol_waypoints_bridge.py --robot "$ID" --nav-ns '' --dock "$IX" "$IY" "$YAWRAD" \
   > "/tmp/bridge_$ID.log" 2>&1 </dev/null &
 
 # 6) Unity 연결용 endpoint(:10000).

@@ -5,7 +5,7 @@
 # ★구독은 *전용* SingleThreadedExecutor로 백그라운드 spin, BasicNavigator는 메인에서 실행.
 #   rclpy.spin()도 BasicNavigator도 기본값이 전역 executor라 같이 쓰면 "Executor is already spinning"으로
 #   터짐 → 리스너에 전용 executor를 줘서 전역과 분리(2026-06-25 수정).
-# 로봇/Nav2 PC(같은 저장맵+AMCL, 도메인 210)에서 실행:
+# 로봇/Nav2 PC(같은 저장맵+AMCL, 도메인은 로봇별 팀 표준 — 젠지 1, 티원 2)에서 실행:
 #   python3 patrol_waypoints_bridge.py --robot tb3_1
 import argparse
 import json
@@ -159,6 +159,7 @@ def _dist(a, b):
 
 def wait_result(nav, log, label, timeout_s=GOAL_TIMEOUT_S, listener=None, depart=None, cancel_on_stop=False):
     t0 = time.time()
+    timed_out = False
     try:
         while not nav.isTaskComplete():
             if cancel_on_stop and listener is not None and listener.stop_flag:
@@ -173,12 +174,17 @@ def wait_result(nav, log, label, timeout_s=GOAL_TIMEOUT_S, listener=None, depart
             if time.time() - t0 > timeout_s:
                 log.error(f'{label}: {timeout_s:.0f}s 타임아웃 — goal 취소')
                 nav.cancelTask()
+                timed_out = True
                 break
             fb = nav.getFeedback()
             if fb and hasattr(fb, 'current_waypoint'):
                 log.info(f'{label}: 웨이포인트 #{fb.current_waypoint + 1}', throttle_duration_sec=2.0)
             time.sleep(0.2)
         r = nav.getResult()
+        # 타임아웃 취소 후 getResult가 SUCCEEDED를 주는 가짜 성공 차단(2026-07-10 젠지 복귀주차 실측:
+        # 240s 타임아웃·독에서 1.3m 이탈인데 JSONL에 SUCCEEDED로 기록됨) — 목표 미달이므로 CANCELED로 강등.
+        if timed_out and r == TaskResult.SUCCEEDED:
+            r = TaskResult.CANCELED
         if r == TaskResult.SUCCEEDED:
             log.info(f'{label}: 성공')
         elif r == TaskResult.CANCELED:
@@ -263,7 +269,13 @@ def main():
     ap.add_argument('--robot', default='tb3_1')
     # nav2 스택 네임스페이스. 기본 = --robot과 동일(티원 ns 스택). 젠지(비-ns 표준 스택)는 --nav-ns '' 전달.
     ap.add_argument('--nav-ns', default=None)
+    # 복귀주차 좌표 x y yaw(rad). 미지정 = 모듈 기본(티원 독). 젠지가 기본값으로 돌면 티원 주차 자리로
+    # 파고들므로(2026-07-10 발견) 로봇별로 자기 독을 넘길 것 — _robot_nav_up.sh가 초기포즈로 전달.
+    ap.add_argument('--dock', nargs=3, type=float, default=None, metavar=('X', 'Y', 'YAW'))
     a = ap.parse_args()
+    if a.dock:
+        global DOCK_X, DOCK_Y, DOCK_YAW
+        DOCK_X, DOCK_Y, DOCK_YAW = a.dock
     nav_ns = a.robot if a.nav_ns is None else a.nav_ns
     nav_prefix = f'/{nav_ns}' if nav_ns else ''
     rclpy.init()

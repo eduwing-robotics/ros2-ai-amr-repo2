@@ -1,18 +1,20 @@
 #!/bin/bash
 # nav_up.sh — AMCL+Nav2 단일(젠지) 한방 기동(Mac에서 실행). 좌표주행용. odom 쌍(dual_marker_up.sh)의 주행판.
 # ★전제: 젠지를 충전소에 도킹한 뒤 실행(초기포즈=충전소). 젠지는 풀 nav2 스택 보유(티원은 패키지 미설치라 제외).
-# 하는 일: 스크립트4종+arena_shared 맵을 젠지에 scp → _robot_nav_up.sh 기동. (2026-07-08: arena_v4→arena_shared, IP 갱신)
-# 사용: bash scripts/nav_up.sh [GENJI_SSH] [IX] [IY] [IYAW_deg]   (IP drift/충전소좌표/heading은 인자로 덮어쓰기)
+# 하는 일: 스크립트5종+arena_shared 맵을 젠지에 scp → _robot_nav_up.sh 기동. (2026-07-10: 젠지 실측 params 패치 추가)
+# 사용: bash src/urhynix_nav/nav_up.sh [GENJI_SSH] [IX] [IY] [IYAW_deg]   (IP drift/충전소좌표/heading은 인자로 덮어쓰기)
 # Unity: ros_endpoint.json endpointRobotId=tb3_2. Play 후 맵 우클릭 "출동"=/tb3_2/goal_pose → 브리지 → Nav2 실주행.
 set -u
 GENJI=${1:-kim@192.168.20.7}
 IX=${2:-0.0}; IY=${3:-0.0}; IYAW=${4:-0}
 D="$(cd "$(dirname "$0")" && pwd)"
-MAPDIR="$D/../docs/evidence/maps/arena_shared"
+MAPDIR="$D/maps/arena_shared"
 SSH="ssh -o ConnectTimeout=12 -o ControlMaster=no"
 
 echo "== 스크립트 scp =="
-for f in robot_pose_publisher.py patrol_waypoints_bridge.py drive_rotate.py _robot_nav_up.sh; do
+# 새 repo 구조(2026-07-10 재구성): pose퍼블리셔=urhynix_slam, bridge/회전=urhynix_patrol, 나머지=이 폴더
+for f in ../urhynix_slam/robot_pose_publisher.py ../urhynix_patrol/patrol_waypoints_bridge.py \
+         ../urhynix_patrol/drive_rotate.py patch_nav_params_genji.py _robot_nav_up.sh; do
   scp -o ConnectTimeout=10 "$D/$f" "$GENJI":/tmp/ || { echo "scp 실패: $f"; exit 1; }
 done
 
@@ -28,7 +30,7 @@ cat <<'EOF'
 DONE.
 1) Unity ros_endpoint.json = 젠지 IP 확인 → Stop→Play.
 2) 충전소에 젠지 마커(파랑) 뜨는지 확인. 위치 어긋나면(AMCL 미수렴):
-   ssh <GENJI> 'source /opt/ros/jazzy/setup.bash; export ROS_DOMAIN_ID=210 RMW_IMPLEMENTATION=rmw_fastrtps_cpp; python3 /tmp/drive_rotate.py /cmd_vel 0.4 12'
+   ssh <GENJI> 'source /opt/ros/jazzy/setup.bash; export ROS_DOMAIN_ID=1 RMW_IMPLEMENTATION=rmw_fastrtps_cpp; python3 /tmp/drive_rotate.py /cmd_vel 0.4 12'
    → 제자리 회전으로 particle 수렴, Unity 마커가 실제 위치에 붙는지 재확인.
 3) 마커 정합되면 맵에서 목표 클릭(출동) → /tb3_2/goal_pose → Nav2 실주행.
 EOF
