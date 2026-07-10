@@ -53,9 +53,12 @@ bash "$HOME/_robot_amcl_ns.sh" "$NS" "$MAP" "" "" "" "$DOM" >/dev/null 2>&1
 MPID=$(systemctl --user show -p MainPID --value urhynix-scanfix 2>/dev/null)   # systemd 관리본만 유지
 for p in $(pgrep -f "[s]can_frame_fix"); do [ "$p" != "$MPID" ] && kill -9 "$p" 2>/dev/null; done
 bash "$HOME/_dock_reseed.sh" "$NS" "$DX" "$DY" "$DYAW" "$DOM" >/dev/null 2>&1
-read px py < <(timeout 6 ros2 topic echo --once /$NS/amcl_pose 2>/dev/null | awk '/^      x:/{x=$2} /^      y:/{y=$2} END{print x, y}')
+# amcl_pose는 TRANSIENT_LOCAL latch → 같은 QoS로 회수(정지 중엔 재발행 안 해 default VOLATILE는 유실).
+# awk는 position 블록 안에서만 x/y를 읽는다(과거 버그: 뒤따르는 orientation.x/y가 덮어써 항상 (0,0) 판정=가짜 통과).
+read px py < <(timeout 6 ros2 topic echo --once --qos-durability transient_local --qos-reliability reliable /$NS/amcl_pose 2>/dev/null | awk '/position:/{p=1;next} /orientation:/{p=0} p&&/x:/{x=$2} p&&/y:/{y=$2} END{print x, y}')
 [ -n "$px" ] || fail "amcl_pose 무응답"
-awk "BEGIN{exit !(($px+0<-5)||($px+0>5)||($py+0<-5)||($py+0>5))}" && fail "amcl_pose 발산 ($px,$py)"
+# 독 재시딩 직후이므로 목표(DX,DY)에서 1.5m 이상 벗어나면 미수렴으로 판정(과거 ±5 껍데기 검증 대체).
+awk "BEGIN{dx=($px)-($DX); dy=($py)-($DY); exit !(dx*dx+dy*dy>2.25)}" && fail "amcl_pose 독 이탈 ($px,$py ≠ 목표 $DX,$DY)"
 say "    amcl_pose=($px,$py) — 충전독 수렴"
 
 # 5. nav2 8노드 기동 + lifecycle configure→activate

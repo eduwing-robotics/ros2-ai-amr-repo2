@@ -193,6 +193,23 @@ def wait_result(nav, log, label, timeout_s=GOAL_TIMEOUT_S, listener=None, depart
             depart['restored'] = True
 
 
+def recover(nav, log, tag):
+    """레그 실패 탈출(2026-07-10): costmap 청소 + 소폭 후진 → 'Start occupied'(출발셀이 장애물셀) 자동 해제.
+    오늘 실측: 3랩 뒤 로봇이 좁은 회랑서 장애물 가장자리에 얹혀 전 레그 0초 실패 → 무한순찰 붕괴.
+    후진으로 자유공간에 복귀시키면 다음 레그가 다시 계획 가능 → 순찰 지속. 실패해도 다음 레그로 진행."""
+    log.warn(f'{tag}: 탈출 리커버리 — costmap 청소 + 후진 0.12m')
+    try:
+        nav.clearLocalCostmap()
+        nav.clearGlobalCostmap()
+    except Exception:  # noqa: BLE001 — 리커버리는 best-effort, 실패해도 순찰 계속
+        pass
+    try:
+        nav.backup(backup_dist=0.12, backup_speed=0.05, time_allowance=15)
+        wait_result(nav, log, f'{tag} 후진', 20.0)
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def park_at_dock(nav, listener, log, run_id=None):
     """순찰 종료 후 충전독 복귀주차(2026-07-09): 위치는 goToPose, 방향은 Spin으로 원방향(DOCK_YAW)
     정렬 — goal_checker의 yaw 체크가 해제돼 있어(벽 인접 회전 스톨 방지) 위치·방향을 분리 처리.
@@ -327,6 +344,9 @@ def main():
                                 'x': round(g.pose.position.x, 3), 'y': round(g.pose.position.y, 3),
                                 'dur_s': round(time.time() - t0, 1),
                                 'result': getattr(r, 'name', str(r)), 't': round(time.time(), 1)})
+                        # 레그 실패(주로 'Start occupied' 낌) → 탈출 리커버리로 자유공간 복귀 후 다음 레그 진행
+                        if r != TaskResult.SUCCEEDED and not listener.stop_flag:
+                            recover(nav, log, f'랩{lap}레그{i + 1}')
                     record({'kind': 'lap', 'run': run_id, 'lap': lap, 't': round(time.time(), 1)})
                 log.info(f'순찰 정지 — {lap}랩 완료, 복귀주차')
                 park_at_dock(nav, listener, log, run_id)  # 정지 시 1회 충전독 복귀주차(실패해도 귀소 시도)
