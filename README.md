@@ -47,7 +47,7 @@ URHYNIX는 두 대의 TurtleBot3가 사용하는 지도와 상태를 TurtleBot W
 | 기능 | 설명 |
 |---|---|
 | **Multi-Robot Patrol** | `tb3_1`과 `tb3_2`를 로봇별 ROS 도메인과 endpoint로 분리해 운용 |
-| **Autonomous Navigation** | AMCL·SmacPlanner2D·DWB 기반 `main`, RPP 도킹 브랜치, Web A*·Pure Pursuit fallback 운용 |
+| **Autonomous Navigation** | `main`의 AMCL·SmacPlanner2D·DWB와 기능 브랜치의 RPP·ArUco/LiDAR 도킹, 축 정렬 주행 실험 |
 | **Safe Patrol Routing** | 점유격자에서 clearance를 계산하고 협소 회랑 중심으로 순찰 경로 생성 |
 | **TurtleBot Web Dashboard** | 로봇 검색·설정, 맵 제작, A* 경로, 수동 주행, 카메라·LiDAR, SSH bring-up 제공 |
 | **Unity Dashboard** | 2D·2.5D·3D 지도, 로봇 상태, 센서, 카메라, 순찰·출동 제어 제공 |
@@ -136,73 +136,70 @@ TurtleBot Web Dashboard는 `server.py`가 브라우저 요청과 ROS 2를 중계
 
 ## Driving, Navigation & Safety
 
-URHYNIX는 하나의 주행 방식만 사용하지 않습니다. 운영 목적과 ROS 상태에 따라 수동 주행, Nav2 자율주행, Web A* 직접 추종, 정밀 도킹을 분리합니다.
+아래 주행 설명은 **이 저장소의 공개 원격 브랜치에 실제로 존재하는 ROS 2/Nav2 코드만** 근거로 작성했습니다. Unity의 `SimNavGrid`, 시나리오 경로 재생, 애니메이션 이동은 실제 로봇 주행 알고리즘으로 계산하지 않습니다. Unity Dashboard와 Web Dashboard는 좌표·명령을 전달하고 상태를 시각화하는 command surface이며, 경로 계획·추종·충돌 판단은 로봇 측 ROS 2 코드가 수행합니다.
 
 ```mermaid
 flowchart TD
-    OP["Operator"]
-    WEB["TurtleBot Web Dashboard"]
-    UNITY["Unity Dashboard"]
+    UI["Unity · Web · CLI<br/>coordinates and commands only"]
     OWNER{"Single command owner"}
+    GOAL["main<br/>PoseStamped → /goal_pose"]
+    PATROL["main<br/>PoseArray → /patrol_waypoints"]
+    AXIS["sunil/nav-axis-drive<br/>axis-aligned P control experiment"]
+    FEATURE["T1 · Gen.G feature branches<br/>FollowWaypoints + RPP"]
 
-    MANUAL["Manual Teleop<br/>geometry_msgs/Twist → /cmd_vel"]
-    GOAL["Single Dispatch<br/>PoseStamped → /goal_pose"]
-    PATROL["Patrol<br/>PoseArray → /patrol_waypoints"]
-    DIRECT["Web Fallback<br/>8-neighbor A* → Pure Pursuit"]
-
-    BRIDGE["Robot-side Patrol Bridge<br/>topic → Nav2 action"]
+    BRIDGE["Robot-side ROS 2 bridge<br/>goToPose · FollowWaypoints"]
     LOCALIZE["Saved PGM/YAML + AMCL<br/>LiDAR + odometry + TF"]
-    PLAN["SmacPlanner2D<br/>global path"]
-    CONTROL["DWB in main<br/>RPP in docking branches"]
-    SAFE["Costmaps + Inflation<br/>Collision Monitor + velocity smoothing"]
+    ROUTE["main route optimizer<br/>clearance BFS → maximin widest path"]
+    PLAN["SmacPlanner2D<br/>cost-aware global path"]
+    CONTROL["DWB · main<br/>Regulated Pure Pursuit · feature branches"]
+    SAFE["Robot footprint + costmaps<br/>Collision Monitor + velocity smoother"]
     DRIVE["OpenCR → Dynamixel wheels"]
-    DOCK["Precision Docking<br/>ArUco bearing → rear LiDAR wall → reverse"]
+    DOCK["Feature-branch docking<br/>ArUco solvePnP → rear LiDAR wall fit"]
 
-    OP --> WEB
-    OP --> UNITY
-    WEB --> OWNER
-    UNITY --> OWNER
-    OWNER --> MANUAL
+    UI --> OWNER
     OWNER --> GOAL
     OWNER --> PATROL
-    OWNER --> DIRECT
+    OWNER --> AXIS
+    OWNER --> FEATURE
     GOAL --> BRIDGE
     PATROL --> BRIDGE
+    FEATURE --> BRIDGE
     BRIDGE --> LOCALIZE
-    DIRECT --> SAFE
+    LOCALIZE --> ROUTE
     LOCALIZE --> PLAN
+    ROUTE --> PLAN
     PLAN --> CONTROL
     CONTROL --> SAFE
+    AXIS --> SAFE
     SAFE --> DRIVE
     DRIVE --> DOCK
 ```
 
-### Driving modes
+### Branch-backed driving paths
 
-| 방식 | 입력과 실행 경로 | 사용 알고리즘·도구 | 용도와 상태 |
+| 브랜치 | 실제 코드 경로 | 사용 알고리즘·도구 | 역할과 상태 |
 |---|---|---|---|
-| **Manual Teleop** | Dashboard D-pad → `/cmd_vel` | ROS 2 `Twist`, focus-loss zero stop | 저속 점검·초기 위치 조정 · ✅ |
-| **Single Dispatch** | 지도 좌표 → `/<robot>/goal_pose` → bridge → `goToPose` | AMCL, Nav2 BT Navigator, SmacPlanner2D | 사건 위치로 단발 출동 · ✅ `main` |
-| **Continuous Patrol** | waypoint `PoseArray` → 레그별 `goToPose` → 역순 복귀 | 사전 회전, 레그 watchdog, JSONL 기록 | 두 구역 반복 순찰·중지 후 독 복귀 · ✅ `main` |
-| **Web Nav2 Drive** | Web A* 경로의 목표·경유지 → Nav2 actions | `navigate_to_pose`, `navigate_through_poses` | Web Dashboard의 기본 자율주행 · ✅ companion repo |
-| **Web Direct Fallback** | Web A* cell path → `server.py` → `/cmd_vel` | Pure Pursuit-style lookahead, LiDAR 예측 충돌 검사 | Nav2가 없을 때의 제한적 비상 주행 · ✅ companion repo |
-| **Precision Docking** | Nav2 staging → ArUco 정렬 → 후방 LiDAR 도킹 | OpenCV ArUco, `solvePnP`, RPP, LiDAR RANSAC | T1·Gen.G 정밀 주차 · 🧪 feature branches |
+| [`main`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/main) | [`patrol_waypoints_bridge.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/d79535d1270ff9526eca974455a2e03c39e8a2c0/src/urhynix_patrol/patrol_waypoints_bridge.py) | `goToPose`, 레그별 watchdog, costmap clear, 탈출 후진, 독 복귀·Spin 정렬, JSONL 오차 기록 | 단발 출동과 연속 순찰 · ✅ |
+| [`main`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/main) | [`patrol_route_optimizer.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/d79535d1270ff9526eca974455a2e03c39e8a2c0/src/urhynix_patrol/patrol_route_optimizer.py), [`patrol_safe_clearance.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/d79535d1270ff9526eca974455a2e03c39e8a2c0/src/urhynix_patrol/patrol_safe_clearance.py) | 다중소스 clearance BFS, maximin widest path, 벽 안전여유 보정 | 안전 순찰 경로 전처리 · ✅ |
+| [`feature/t1-rpp-patrol2-aruco-dock`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/feature/t1-rpp-patrol2-aruco-dock) | [`nav2_params_t1_patrol_rpp.yaml`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/e481e9bfe38a47145d52f0655761873d5f91aab3/t1_rpp_patrol2_aruco_dock/config/nav2_params_t1_patrol_rpp.yaml), [`run_patrol.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/e481e9bfe38a47145d52f0655761873d5f91aab3/t1_rpp_patrol2_aruco_dock/scripts/run_patrol.py) | SmacPlanner2D, Regulated Pure Pursuit, velocity-scaled lookahead, `FollowWaypoints` | T1 순찰·정밀 접근 · 🧪 |
+| [`feature/geng-rpp-patrol-aruco-dock`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/feature/geng-rpp-patrol-aruco-dock) | [`nav2_params_geng_rpp.yaml`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/996d8fed4ed1116ee13c4d2dda3d487c66ea6779/geng_rpp_patrol_dock/config/nav2_params_geng_rpp.yaml), [`run_patrol.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/996d8fed4ed1116ee13c4d2dda3d487c66ea6779/geng_rpp_patrol_dock/scripts/run_patrol.py) | Gen.G footprint·inflation 튜닝, SmacPlanner2D, RPP, `FollowWaypoints` | Gen.G 순찰·정밀 접근 · 🧪 |
+| [`sunil/nav-axis-drive`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/sunil/nav-axis-drive) | [`goto_axis.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/266231b20548e6c106055fed1fb45ae1c1d0de45/scripts/goto_axis.py), [`nav2_goal_v4.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/266231b20548e6c106055fed1fb45ae1c1d0de45/scripts/v2/nav2_goal_v4.py) | X/Y축 정렬 P 제어, map YAML 좌표 변환, Nav2 스턱 감지·탈출 | 주행 실험 브랜치 · 🧪 |
 
 ### Navigation algorithms
 
-| 단계 | 실제 구현 |
+| 단계 | 브랜치 코드에서 확인한 실제 구현 |
 |---|---|
 | **Localization** | 저장된 `PGM/YAML` 지도에서 AMCL이 LiDAR scan, wheel odometry와 TF를 결합해 `map` 기준 pose를 추정합니다. 독에서 시작할 때는 `/initialpose` 재시딩과 nomotion update로 초기 수렴을 돕습니다. |
-| **Patrol route generation** | 점유격자에 다중소스 BFS clearance field를 만들고, 좌·우 구역의 최대 여유점을 maximin **widest path**로 연결합니다. 이후 직선 레그가 로봇 반폭 이상의 여유를 유지할 때만 재귀적으로 단순화합니다. |
-| **Web A\*** | 8방향 grid search, diagonal corner-cut 차단, octile-distance heuristic을 사용합니다. 로봇의 사각 footprint와 부착물 크기로 벽을 팽창시키고, soft inflation cell에는 비용 배수 `4.0`을 적용합니다. |
-| **Global planning** | `main`은 SmacPlanner2D를 사용합니다. T1 협소 아레나 preset은 inflation `0.15m`, cost multiplier `1.0`, planner frequency `1Hz`로 Pi 부하와 좁은 회랑 통과를 함께 조정합니다. |
-| **Local control** | `main`의 TurtleBot3 `FollowPath`는 DWB 계열 설정을 사용하고 최대 선속도를 `0.12m/s`로 제한합니다. ArUco 도킹 브랜치는 Regulated Pure Pursuit Controller와 velocity-scaled lookahead를 사용합니다. |
-| **Web direct control** | 목표 경로에서 lookahead point를 고르고 `curvature = 2·sin(heading error)/distance`로 각속도를 계산합니다. 큰 방향 오차에서는 제자리 회전한 뒤 전진합니다. |
-| **Safety envelope** | global/local costmap, obstacle·voxel·inflation layers, 실제 footprint, PolygonStop·Slow·Limit, velocity smoother를 사용합니다. Web fallback은 LiDAR 점을 footprint 좌표로 변환해 향후 `1.5s` 궤적 충돌을 예측합니다. |
-| **Recovery and docking** | 레그 실패 시 local/global costmap을 지우고 `0.12m` 후진합니다. 순찰 종료 시 위치는 `goToPose`, 방향은 `Spin`으로 분리해 맞추며 레그·주차 오차를 JSONL로 남깁니다. |
+| **Patrol route generation** | `main`의 [`patrol_route_optimizer.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/d79535d1270ff9526eca974455a2e03c39e8a2c0/src/urhynix_patrol/patrol_route_optimizer.py)가 점유격자에 clearance field를 만들고, 구역 사이를 maximin **widest path**로 연결합니다. [`patrol_safe_clearance.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/d79535d1270ff9526eca974455a2e03c39e8a2c0/src/urhynix_patrol/patrol_safe_clearance.py)는 벽에 가까운 waypoint를 최소 여유점으로 이동시킵니다. |
+| **Global planning** | `main`의 [`patch_nav_params_ns.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/d79535d1270ff9526eca974455a2e03c39e8a2c0/src/urhynix_nav/patch_nav_params_ns.py)는 T1에 SmacPlanner2D, inflation `0.15m`, cost multiplier `1.0`, planner `1Hz`를 적용합니다. [`patch_nav_params_genji.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/d79535d1270ff9526eca974455a2e03c39e8a2c0/src/urhynix_nav/patch_nav_params_genji.py)는 Smac 설치 여부를 확인하고 없으면 NavFn을 유지합니다. |
+| **Local control** | `main`은 TurtleBot3 `FollowPath`의 DWB 파라미터를 최대 선속도 `0.12m/s`, 완만한 가감속으로 제한합니다. T1·Gen.G 기능 브랜치는 `RegulatedPurePursuitController`와 속도 연동 lookahead `0.20~0.50m`를 사용합니다. |
+| **Waypoint patrol** | T1·Gen.G 기능 브랜치의 `run_patrol.py`는 Nav2 `FollowWaypoints` action을 사용하고, 첫 waypoint 이후 불필요한 도착 yaw 정렬을 완화해 협소 공간 회전을 줄입니다. |
+| **Axis-drive experiment** | `sunil/nav-axis-drive`의 `goto_axis.py`는 `ALIGN_X → DRIVE_X → ALIGN_Y → DRIVE_Y` 상태기계와 heading P 제어를 사용합니다. `nav2_goal_v4.py`는 map YAML 기반 좌표 변환, AMCL 가드, 스턱 감지와 탈출을 추가합니다. |
+| **Safety envelope** | `main`의 Nav2 패치는 실제 footprint, obstacle·voxel·inflation layers, PolygonStop·Slow·Limit, scan timeout과 velocity smoother를 조정합니다. 이 판단과 `/cmd_vel` 생성은 Unity가 아니라 로봇 측 Nav2에서 수행됩니다. |
+| **Recovery and docking** | `main`은 실패 시 local/global costmap을 지우고 `0.12m` 후진한 뒤 재시도합니다. T1 브랜치의 [`aruco_align_t1.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/e481e9bfe38a47145d52f0655761873d5f91aab3/t1_rpp_patrol2_aruco_dock/scripts/aruco_align_t1.py)는 ArUco ID 11을 `solvePnP(IPPE_SQUARE)`로 정렬하고, [`dock_t1_rear_wall.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/e481e9bfe38a47145d52f0655761873d5f91aab3/t1_rpp_patrol2_aruco_dock/scripts/dock_t1_rear_wall.py)는 후방 LaserScan 벽선을 맞춘 뒤 후진 도킹합니다. Gen.G 브랜치도 동일한 RPP·ArUco/LiDAR 파이프라인을 별도 파라미터로 구성합니다. |
 
 > [!NOTE]
-> DWB, RPP, Web Pure Pursuit는 같은 이름의 단일 제어기가 아닙니다. `main`, 기능 브랜치, 별도 Web Dashboard fallback에서 각각 다른 역할로 사용됩니다.
+> Unity는 목적 좌표·waypoint·정지 요청을 전달하는 관제 계층입니다. 위 알고리즘 표에는 Unity C# 시뮬레이션 이동 코드와 별도 Web Dashboard의 fallback 제어기를 포함하지 않았습니다.
 
 ## Vision Pipeline
 
@@ -364,6 +361,7 @@ chmod +x run_ubuntu.sh stop_dashboard.sh stop_robot.sh check_camera.sh
 | 저장 지도·AMCL·순찰·복귀 흐름 | ✅ `main` | `src/urhynix_nav`, `src/urhynix_patrol` |
 | T1 ArUco 도킹 | 🧪 feature branch | [`feature/t1-rpp-patrol2-aruco-dock`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/feature/t1-rpp-patrol2-aruco-dock) |
 | Gen.G ArUco 도킹 | 🧪 feature branch | [`feature/geng-rpp-patrol-aruco-dock`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/feature/geng-rpp-patrol-aruco-dock) |
+| 축 정렬·map-aware Nav2 주행 실험 | 🧪 experiment branch | [`sunil/nav-axis-drive`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/sunil/nav-axis-drive) |
 | 박물관 YOLO finetune·실시간 필터 | 🧪 integration branch | [`integration/museum-bacchus`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/integration/museum-bacchus) |
 | 고정 ROI 진위 판정 | 🧪 integration branch | [`integration/museum-bacchus`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/integration/museum-bacchus) |
 | Unity Dashboard 화재·침입 시나리오 | 🎬 simulation | 프로젝트 영상과 Unity demo scene |
@@ -382,7 +380,7 @@ chmod +x run_ubuntu.sh stop_dashboard.sh stop_robot.sh check_camera.sh
 | ROS foundation | ROS 2 Jazzy, DDS domain isolation, TF2, lifecycle nodes | 로봇별 통신 격리와 좌표·노드 상태 관리 |
 | Localization | AMCL, wheel odometry, LaserScan, saved `PGM/YAML` map | 지도 기준 실시간 pose 추정 |
 | Global planning | Nav2 BT Navigator, SmacPlanner2D, custom clearance/widest-path optimizer | 목표·순찰 경로 생성 |
-| Motion control | DWB (`main`), Regulated Pure Pursuit (docking branches), Pure Pursuit-style Web fallback | 경로 추종과 속도 명령 생성 |
+| Motion control | DWB (`main`), Regulated Pure Pursuit (T1·Gen.G branches), axis-aligned P control (`sunil/nav-axis-drive`) | 로봇 측 경로 추종과 속도 명령 생성 |
 | Safety | global/local costmap, obstacle·voxel·inflation layers, Collision Monitor, velocity smoother | 벽·장애물 감속과 정지 |
 | Web operations | Python 3, `rclpy`, HTTP, HTML Canvas, JavaScript Binary Heap A*, MJPEG, SSH/systemd | 설정·진단·맵 제작·실기 주행 |
 | Unity Dashboard | Unity 6.3 LTS, C#, UI Toolkit, ROS-TCP-Connector, RenderTexture | 2D·2.5D·3D 관제와 순찰·출동 UI |
