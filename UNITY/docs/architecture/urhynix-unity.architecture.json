@@ -1,0 +1,205 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "URHYNIX Unity Dashboard Architecture",
+    "subtitle": "실물 로봇의 ROS 2 데이터가 Unity 관제와 기록으로 이어지는 구조",
+    "output": "urhynix-unity-architecture.html",
+    "viewBox": [1220, 720]
+  },
+  "components": [
+    {
+      "id": "t1",
+      "type": "external",
+      "label": "T1 · tb3_1",
+      "sublabel": "RealSense D435 · domain 2",
+      "pos": [60, 200],
+      "size": [170, 70]
+    },
+    {
+      "id": "geng",
+      "type": "external",
+      "label": "Gen.G · tb3_2",
+      "sublabel": "Pi Camera · sensors · domain 1",
+      "pos": [60, 390],
+      "size": [170, 70]
+    },
+    {
+      "id": "vision",
+      "type": "backend",
+      "label": "Vision",
+      "sublabel": "YOLO · EfficientNet · ArUco",
+      "pos": [320, 140],
+      "size": [180, 70]
+    },
+    {
+      "id": "nav2",
+      "type": "backend",
+      "label": "Navigation",
+      "sublabel": "AMCL · Smac · DWB/RPP",
+      "pos": [320, 450],
+      "size": [180, 70]
+    },
+    {
+      "id": "bridge",
+      "type": "messagebus",
+      "label": "ROS 2 Bridge",
+      "sublabel": "topics · actions · services",
+      "pos": [565, 295],
+      "size": [170, 70],
+      "tag": "robot-side"
+    },
+    {
+      "id": "unity",
+      "type": "frontend",
+      "label": "Unity Dashboard",
+      "sublabel": "2D · 2.5D · 3D · Gallery",
+      "pos": [810, 295],
+      "size": [190, 70],
+      "tag": "command owner"
+    },
+    {
+      "id": "operator",
+      "type": "external",
+      "label": "Operator",
+      "sublabel": "순찰 · 출동 · 정지 · 복귀",
+      "pos": [1045, 140],
+      "size": [150, 70]
+    },
+    {
+      "id": "supabase",
+      "type": "database",
+      "label": "Supabase",
+      "sublabel": "session · event · dispatch · pose",
+      "pos": [1045, 450],
+      "size": [150, 70]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Physical robots",
+      "wraps": ["t1", "geng"],
+      "pad": 24
+    },
+    {
+      "kind": "security-group",
+      "label": "Robot-side ROS 2",
+      "wraps": ["vision", "nav2", "bridge"],
+      "pad": 24
+    }
+  ],
+  "connections": [
+    {
+      "from": "t1",
+      "to": "bridge",
+      "label": "pose · camera",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left",
+      "route": "orthogonal-h",
+      "labelAt": [445, 266]
+    },
+    {
+      "from": "geng",
+      "to": "bridge",
+      "label": "pose · sensor",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left",
+      "route": "orthogonal-h",
+      "labelAt": [445, 432]
+    },
+    {
+      "from": "t1",
+      "to": "vision",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "left",
+      "route": "orthogonal-h"
+    },
+    {
+      "from": "geng",
+      "to": "vision",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "left",
+      "route": "orthogonal-h",
+      "via": [[270, 425], [270, 175]]
+    },
+    {
+      "from": "vision",
+      "to": "bridge",
+      "label": "detections",
+      "fromSide": "right",
+      "toSide": "top",
+      "route": "orthogonal-h",
+      "labelAt": [545, 245]
+    },
+    {
+      "from": "bridge",
+      "to": "nav2",
+      "label": "Nav2 actions",
+      "fromSide": "bottom",
+      "toSide": "right",
+      "route": "orthogonal-v",
+      "labelAt": [575, 420]
+    },
+    {
+      "from": "bridge",
+      "to": "unity",
+      "label": "ROS-TCP pub/sub",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left",
+      "route": "straight",
+      "labelAt": [773, 291]
+    },
+    {
+      "from": "operator",
+      "to": "unity",
+      "label": "operate",
+      "variant": "emphasis",
+      "fromSide": "left",
+      "toSide": "top",
+      "route": "orthogonal-h",
+      "labelAt": [1020, 245]
+    },
+    {
+      "from": "unity",
+      "to": "supabase",
+      "label": "audit trail",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "left",
+      "route": "orthogonal-h",
+      "labelAt": [1020, 415]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Unity",
+      "items": [
+        "상태·지도·센서·사건을 한 화면에서 시각화",
+        "목표와 waypoint 요청을 robot-side bridge로 전달"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Robot-side",
+      "items": [
+        "AMCL·Nav2·DWB/RPP·Collision Monitor가 실제 주행 판단",
+        "Unity demo 이동은 실주행 알고리즘 근거에서 제외"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Evidence boundary",
+      "items": [
+        "카메라·ROS·실물 트랙 캡처는 실제 통합 근거",
+        "scenario presentation과 실제 센서 evidence를 분리 표기"
+      ]
+    }
+  ]
+}
