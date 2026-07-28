@@ -1,0 +1,44 @@
+frame_id: map
+map: t1_map_new.yaml
+patrol:
+  patrol_1:
+    x: -0.0533
+    y: 0.0236
+    yaw: 1.5859
+  patrol_2:
+    x: 0.5424
+    y: -0.1598
+    yaw: -0.5826
+  patrol_3:
+    x: 1.1026
+    y: -0.3339
+    yaw: 1.3826
+  patrol_4:
+    x: 0.3674
+    y: 0.5539
+    yaw: -2.9559
+  patrol_5:
+    x: 0.2912
+    y: 0.9484
+    yaw: 1.5056
+  patrol_6:
+    x: 1.3739
+    y: 0.8609
+    yaw: -1.354
+  patrol_7:
+    x: 0.5013
+    y: 0.0174
+    yaw: 3.0981
+waiting:
+  t1_dock:
+    x: -0.039853
+    y: -0.385125
+    yaw: 1.617123
+  t1:
+    x: -0.066952
+    y: -0.05496
+    yaw: 1.633087
+  t1_aruco_stage:
+    x: -0.054
+    y: -0.038
+    yaw: -1.511

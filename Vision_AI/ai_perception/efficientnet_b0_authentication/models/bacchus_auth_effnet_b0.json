@@ -1,0 +1,835 @@
+{
+  "checkpoint": "/home/hc/workspace/robot_project/ai_perception/efficientnet_b0_authentication/models/bacchus_auth_effnet_b0.pt",
+  "device": "cuda",
+  "epochs": 20,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.65421,
+      "val": {
+        "loss": 0.728778,
+        "accuracy": 0.24,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              19,
+              1
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 0.2083,
+            "recall": 1.0,
+            "f1": 0.3448,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 0.05,
+            "f1": 0.0952,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.643671,
+      "val": {
+        "loss": 0.648791,
+        "accuracy": 0.6,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              10,
+              10
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 0.3333,
+            "recall": 1.0,
+            "f1": 0.5,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 0.5,
+            "f1": 0.6667,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.615105,
+      "val": {
+        "loss": 0.602757,
+        "accuracy": 0.8,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              5,
+              15
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 0.5,
+            "recall": 1.0,
+            "f1": 0.6667,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 0.75,
+            "f1": 0.8571,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.570863,
+      "val": {
+        "loss": 0.557514,
+        "accuracy": 0.88,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              3,
+              17
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 0.625,
+            "recall": 1.0,
+            "f1": 0.7692,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 0.85,
+            "f1": 0.9189,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.556006,
+      "val": {
+        "loss": 0.543264,
+        "accuracy": 0.84,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              4,
+              16
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 0.5556,
+            "recall": 1.0,
+            "f1": 0.7143,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 0.8,
+            "f1": 0.8889,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 6,
+      "train_loss": 0.494593,
+      "val": {
+        "loss": 0.510943,
+        "accuracy": 0.88,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              3,
+              17
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 0.625,
+            "recall": 1.0,
+            "f1": 0.7692,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 0.85,
+            "f1": 0.9189,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 7,
+      "train_loss": 0.49362,
+      "val": {
+        "loss": 0.448914,
+        "accuracy": 1.0,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              0,
+              20
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 8,
+      "train_loss": 0.459074,
+      "val": {
+        "loss": 0.438012,
+        "accuracy": 1.0,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              0,
+              20
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 9,
+      "train_loss": 0.449985,
+      "val": {
+        "loss": 0.390175,
+        "accuracy": 1.0,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              0,
+              20
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 10,
+      "train_loss": 0.404562,
+      "val": {
+        "loss": 0.371746,
+        "accuracy": 1.0,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              0,
+              20
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 11,
+      "train_loss": 0.401547,
+      "val": {
+        "loss": 0.351304,
+        "accuracy": 1.0,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              0,
+              20
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 12,
+      "train_loss": 0.393307,
+      "val": {
+        "loss": 0.310869,
+        "accuracy": 1.0,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              0,
+              20
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 13,
+      "train_loss": 0.386898,
+      "val": {
+        "loss": 0.287372,
+        "accuracy": 1.0,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              0,
+              20
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 14,
+      "train_loss": 0.361478,
+      "val": {
+        "loss": 0.257163,
+        "accuracy": 1.0,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              0,
+              20
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 15,
+      "train_loss": 0.318626,
+      "val": {
+        "loss": 0.262326,
+        "accuracy": 1.0,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              0,
+              20
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 16,
+      "train_loss": 0.316398,
+      "val": {
+        "loss": 0.223303,
+        "accuracy": 1.0,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              0,
+              20
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 17,
+      "train_loss": 0.312976,
+      "val": {
+        "loss": 0.219917,
+        "accuracy": 1.0,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              0,
+              20
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 18,
+      "train_loss": 0.28053,
+      "val": {
+        "loss": 0.236834,
+        "accuracy": 1.0,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              0,
+              20
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 19,
+      "train_loss": 0.311875,
+      "val": {
+        "loss": 0.198071,
+        "accuracy": 1.0,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              0,
+              20
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    },
+    {
+      "epoch": 20,
+      "train_loss": 0.256993,
+      "val": {
+        "loss": 0.189555,
+        "accuracy": 1.0,
+        "confusion_matrix": {
+          "labels": [
+            "genuine",
+            "fake"
+          ],
+          "matrix": [
+            [
+              5,
+              0
+            ],
+            [
+              0,
+              20
+            ]
+          ]
+        },
+        "per_class": {
+          "genuine": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 5
+          },
+          "fake": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "support": 20
+          }
+        },
+        "n": 25
+      }
+    }
+  ],
+  "best_val_loss": 0.189555,
+  "test": {
+    "loss": 0.16845,
+    "accuracy": 1.0,
+    "confusion_matrix": {
+      "labels": [
+        "genuine",
+        "fake"
+      ],
+      "matrix": [
+        [
+          5,
+          0
+        ],
+        [
+          0,
+          15
+        ]
+      ]
+    },
+    "per_class": {
+      "genuine": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 5
+      },
+      "fake": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 15
+      }
+    },
+    "n": 20
+  },
+  "train_counts": {
+    "genuine": 21,
+    "fake": 60
+  },
+  "val_counts": {
+    "genuine": 5,
+    "fake": 20
+  },
+  "test_counts": {
+    "genuine": 5,
+    "fake": 15
+  }
+}

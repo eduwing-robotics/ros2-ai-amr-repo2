@@ -1,0 +1,8 @@
+# Fixed paths for local Ultralytics training (Roboflow export used broken ../ paths)
+path: /home/hc/Downloads/museum-finetune.v1i.yolov8
+train: train/images
+val: valid/images
+test: test/images
+
+nc: 3
+names: ['fire', 'person', 'statue']

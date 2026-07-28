@@ -1,0 +1,10 @@
+dictionary: DICT_4X4_50
+robots:
+  t1:
+    marker_id: 11
+    marker_size_m: 0.05
+    target_bearing_deg: 3.9
+    image_5cm: t1_aruco_id11_5cm.png
+    image_a4: t1_aruco_id11_A4_5cm.png
+    image_topic: /tb3_1/camera/color/image_raw/compressed
+    camera_info_topic: /tb3_1/camera/color/camera_info

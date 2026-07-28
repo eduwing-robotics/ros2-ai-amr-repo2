@@ -1,0 +1,11 @@
+dictionary: DICT_4X4_50
+robots:
+  geng:
+    marker_id: 12
+    marker_size_m: 0.05
+    target_image_error: 0.0148
+    target_bearing_deg: 0.0
+    image_5cm: geng_aruco_id12_5cm.png
+    image_a4: geng_aruco_id12_A4_5cm.png
+    image_topic: /tb3_2/camera/image_raw/compressed
+    camera_info_topic: /tb3_2/camera/camera_info

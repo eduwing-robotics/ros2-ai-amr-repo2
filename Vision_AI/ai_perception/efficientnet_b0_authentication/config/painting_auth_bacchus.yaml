@@ -1,0 +1,16 @@
+exhibit_id: bacchus_and_ariadne
+roi:
+  x1: 249
+  y1: 40
+  x2: 1050
+  y2: 597
+pose:
+  frame_id: map
+  x: 0.3442
+  y: 0.5283
+  yaw: -1.5455
+dataset_root: datasets/museum_auth_dataset
+reference_depth_m: null
+rgb_topic_compressed: /tb3_1/camera/color/image_raw/compressed
+rgb_topic_raw: /tb3_1/camera/color/image_raw
+depth_topic: /tb3_1/camera/aligned_depth_to_color/image_raw

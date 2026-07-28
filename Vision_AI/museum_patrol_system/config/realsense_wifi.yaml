@@ -1,0 +1,15 @@
+# RealSense D435 — Wi-Fi 순찰용 (RGB only, depth/infra OFF)
+# 형식: WIDTHxHEIGHTxFPS  (424x240: 6/15/30만 지원)
+rgb_camera.color_profile: '424x240x6'
+enable_depth: false
+enable_sync: false
+enable_infra: false
+enable_infra1: false
+enable_infra2: false
+enable_gyro: false
+enable_accel: false
+pointcloud.enable: false
+colorizer.enable: false
+align_depth.enable: false
+# initial_reset은 Pi에서 USB 끊김 유발 가능 — launch 전 reset_realsense_usb.sh 사용
+initial_reset: false

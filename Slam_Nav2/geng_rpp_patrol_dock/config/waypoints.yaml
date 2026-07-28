@@ -1,0 +1,44 @@
+frame_id: map
+map: museum_map.yaml
+patrol:
+  patrol_1:
+    x: -0.0533
+    y: 0.0236
+    yaw: 1.5859
+  patrol_2:
+    x: 0.5424
+    y: -0.1598
+    yaw: -0.5826
+  patrol_3:
+    x: 1.1026
+    y: -0.3339
+    yaw: 1.3826
+  patrol_4:
+    x: 0.3674
+    y: 0.5539
+    yaw: -2.9559
+  patrol_5:
+    x: 0.2912
+    y: 0.9484
+    yaw: 1.5056
+  patrol_6:
+    x: 1.3739
+    y: 0.8609
+    yaw: -1.354
+  patrol_7:
+    x: 0.5013
+    y: 0.0174
+    yaw: 3.0981
+waiting:
+  geng_dock:
+    x: 0.2653
+    y: -0.3995
+    yaw: 1.6152
+  geng:
+    x: 0.2608
+    y: -0.1477
+    yaw: 1.6161
+  geng_aruco_stage:
+    x: 0.26
+    y: -0.0951
+    yaw: -1.5209

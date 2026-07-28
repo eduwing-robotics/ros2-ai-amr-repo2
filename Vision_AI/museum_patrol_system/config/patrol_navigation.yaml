@@ -1,0 +1,29 @@
+patrol_navigation:
+  ros__parameters:
+    robot_id: "t1"
+    display_name: "T1"
+    navigate_action: "navigate_to_pose"
+    task_state_topic: "/museum/task/state"
+    battery_topic: "/museum/battery/level"
+    status_topic: "/museum/navigation/status"
+    battery_low_threshold_pct: 20.0
+    battery_resume_threshold_pct: 35.0
+    goal_frame: "map"
+    goal_timeout_sec: 60.0
+    waypoint_pause_sec: 1.0
+    start_patrolling: true
+    patrol_on_battery_handoff: false
+    dispatch_on_events: true
+
+    # Format: "x,y,yaw(rad)" in map frame. Tune these in RViz for the real exhibits.
+    patrol_waypoints:
+      - "0.10,-1.05,0.0"
+      - "0.95,-1.05,1.57"
+      - "0.95,-0.25,3.14"
+      - "0.10,-0.25,-1.57"
+
+    # T1 moves here when battery is low. Put the charging queue pose here.
+    charge_wait_pose: [-0.05, -1.15, 0.0]
+
+    # Generic event response pose until scenario-specific event poses are added.
+    event_pose: [0.75, -0.55, 0.0]

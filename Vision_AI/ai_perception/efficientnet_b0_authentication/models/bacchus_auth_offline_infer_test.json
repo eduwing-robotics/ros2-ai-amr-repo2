@@ -1,0 +1,209 @@
+{
+  "results": [
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/genuine/session_06_20260722_084735_009_000_crop.jpg",
+      "genuine_probability": 0.6734,
+      "fake_probability": 0.3266,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/genuine/session_06_20260722_084742_228_000_crop.jpg",
+      "genuine_probability": 0.642,
+      "fake_probability": 0.358,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/genuine/session_06_20260722_084746_434_000_crop.jpg",
+      "genuine_probability": 0.6227,
+      "fake_probability": 0.3773,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/genuine/session_06_20260722_084750_201_000_crop.jpg",
+      "genuine_probability": 0.5885,
+      "fake_probability": 0.4115,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/genuine/session_06_20260722_084759_191_000_crop.jpg",
+      "genuine_probability": 0.5927,
+      "fake_probability": 0.4073,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/fake/fake_02__session_05_20260722_102431_057_000_crop.jpg",
+      "genuine_probability": 0.3862,
+      "fake_probability": 0.6138,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/fake/fake_02__session_05_20260722_102435_037_000_crop.jpg",
+      "genuine_probability": 0.3226,
+      "fake_probability": 0.6774,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/fake/fake_02__session_05_20260722_102438_340_000_crop.jpg",
+      "genuine_probability": 0.392,
+      "fake_probability": 0.608,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/fake/fake_02__session_05_20260722_102446_527_000_crop.jpg",
+      "genuine_probability": 0.3318,
+      "fake_probability": 0.6682,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/fake/fake_02__session_05_20260722_102455_386_000_crop.jpg",
+      "genuine_probability": 0.3258,
+      "fake_probability": 0.6742,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/fake/fake_03__session_05_20260722_102643_505_000_crop.jpg",
+      "genuine_probability": 0.3561,
+      "fake_probability": 0.6439,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/fake/fake_03__session_05_20260722_102649_778_000_crop.jpg",
+      "genuine_probability": 0.3889,
+      "fake_probability": 0.6111,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/fake/fake_03__session_05_20260722_102653_453_000_crop.jpg",
+      "genuine_probability": 0.3744,
+      "fake_probability": 0.6256,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/fake/fake_03__session_05_20260722_102659_225_000_crop.jpg",
+      "genuine_probability": 0.4549,
+      "fake_probability": 0.5451,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/fake/fake_03__session_05_20260722_102702_619_000_crop.jpg",
+      "genuine_probability": 0.3585,
+      "fake_probability": 0.6415,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/fake/fake_04__session_05_20260722_104447_654_000_crop.jpg",
+      "genuine_probability": 0.428,
+      "fake_probability": 0.572,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/fake/fake_04__session_05_20260722_104450_505_000_crop.jpg",
+      "genuine_probability": 0.3932,
+      "fake_probability": 0.6068,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/fake/fake_04__session_05_20260722_104538_846_000_crop.jpg",
+      "genuine_probability": 0.3396,
+      "fake_probability": 0.6604,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/fake/fake_04__session_05_20260722_104542_903_000_crop.jpg",
+      "genuine_probability": 0.3658,
+      "fake_probability": 0.6342,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    },
+    {
+      "image": "datasets/museum_auth_dataset/dataset/test/fake/fake_04__session_05_20260722_104613_226_000_crop.jpg",
+      "genuine_probability": 0.3841,
+      "fake_probability": 0.6159,
+      "prediction": "RECHECK",
+      "thresholds": {
+        "genuine": 0.85,
+        "fake": 0.7
+      }
+    }
+  ],
+  "summary": {
+    "GENUINE": 0,
+    "FAKE": 0,
+    "RECHECK": 20
+  }
+}
