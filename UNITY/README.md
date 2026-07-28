@@ -88,7 +88,7 @@ PPT의 System Flow와 Scenario 구성을 Unity 실행 경계에 맞춰 정리했
 |---|---|---|
 | 위치 추정 | robot-side ROS 2 | saved map, AMCL, odometry, LaserScan, TF |
 | 전역 계획 | robot-side Nav2 | SmacPlanner2D, clearance/widest-path preprocessing |
-| 경로 추종 | robot-side Nav2 | DWB, feature branch의 Regulated Pure Pursuit |
+| 경로 추종 | robot-side Nav2 | DWB, `Slam_Nav2`의 Regulated Pure Pursuit |
 | 안전 | robot-side Nav2 | costmap, obstacle·voxel·inflation, Collision Monitor |
 | 정밀 접근 | robot-side package | ArUco `solvePnP`, rear LiDAR wall alignment |
 | 비전 | robot 또는 integration host | YOLO, EfficientNet-B0, camera post-processing |
@@ -99,8 +99,8 @@ PPT의 System Flow와 Scenario 구성을 Unity 실행 경계에 맞춰 정리했
 주행 구현 근거:
 
 - [`main/src/urhynix_nav`](../src/urhynix_nav/) — AMCL·Nav2 설정, DWB, collision safety와 recovery
-- [`feature/t1-rpp-patrol2-aruco-dock`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/feature/t1-rpp-patrol2-aruco-dock) — T1 RPP 순찰·ArUco/LiDAR 정밀 접근
-- [`feature/geng-rpp-patrol-aruco-dock`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/feature/geng-rpp-patrol-aruco-dock) — Gen.G RPP 순찰·정밀 접근
+- [`Slam_Nav2/robot_navigation/t1_rpp_patrol2_aruco_dock`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/Slam_Nav2/robot_navigation/t1_rpp_patrol2_aruco_dock) — T1 RPP 순찰·ArUco/LiDAR 정밀 접근
+- [`Slam_Nav2/robot_navigation/geng_rpp_patrol_dock`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/Slam_Nav2/robot_navigation/geng_rpp_patrol_dock) — Gen.G RPP 순찰·정밀 접근
 
 ## 기술 스택
 

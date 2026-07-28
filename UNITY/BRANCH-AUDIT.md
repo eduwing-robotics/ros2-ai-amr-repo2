@@ -7,9 +7,23 @@
 ## 결론
 
 - 공개 Unity 프로젝트 정본은 `main`의 저장소 루트 `UNITY/` 하나로 둡니다.
+- T1·Gen.G 주행 package는 후속 작업에서 `Slam_Nav2/robot_navigation/` 아래로 통합됐습니다.
 - feature branch는 Git 스냅샷이므로 정본 파일이 함께 보이는 것이 정상입니다. 폴더만 삭제하면 이후 merge에서 `main`의 Unity 프로젝트까지 삭제하는 충돌을 만들 수 있습니다.
 - 고유 주행·비전 커밋이 있는 브랜치는 Unity 폴더 유무만 보고 삭제하지 않습니다.
 - 완전히 `main`에 포함된 과거 브랜치는 원격 branch 삭제 후보입니다. 삭제 전 아래 SHA로 복구 가능성을 보존합니다.
+
+## 후속 원격 상태
+
+README 시각화 푸시 직전 원격을 다시 fetch한 결과, 이전 T1·Gen.G feature branch는 삭제되고 두 package가 `Slam_Nav2`로 통합돼 있었습니다.
+
+| 현재 브랜치 | main 대비 | 내용 | 판정 |
+|---|---:|---|---|
+| `main` | 기준 | 공개 Unity 정본과 공통 ROS 2 코드 | 유지 |
+| `Slam_Nav2` · `cdd51e7` | 20 unique commits | `robot_navigation/{t1_rpp_patrol2_aruco_dock,geng_rpp_patrol_dock}` | 유지 · 두 주행 package 통합 |
+| `backup/genji-drive-20260710` | 2 unique commits | Gen.G drive·bringup 기록 | 유지 |
+| `integration/museum-bacchus` | 19 unique commits | vision/navigation integration | 유지 |
+
+아래 전수조사 표는 feature branch 통합 전의 역사 기록입니다.
 
 ## 전수조사 결과
 
@@ -48,4 +62,4 @@ codex/robot-goal-pose-bridge  1ec6f30212915abf904ca05386617305fd6768d0
 sunil/nav-axis-drive          266231b20548e6c106055fed1fb45ae1c1d0de45
 ```
 
-`backup/genji-drive-20260710`과 세 고유 feature/integration branch는 고유 커밋을 보존하기 위해 삭제하지 않았습니다.
+`backup/genji-drive-20260710`과 `integration/museum-bacchus`는 고유 커밋을 보존하기 위해 삭제하지 않았습니다. T1·Gen.G feature branch의 고유 내용은 후속 `Slam_Nav2`에 통합됐습니다.
