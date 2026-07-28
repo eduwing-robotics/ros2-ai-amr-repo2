@@ -30,8 +30,7 @@
 | 상황 대응 | 사건 위치 확인, 단발 출동, 정지와 운영자 피드백 |
 | 기록 | session, event, dispatch, pose와 media metadata 조회 |
 
-Unity Dashboard는 **상태·공간·사건을 시각화하고 운영자의 요청을 전달**합니다. AMCL·Nav2·DWB/RPP·Collision Monitor가 수행하는 실제 주행 판단은 robot-side ROS 2의 책임입니다.
-
+Unity Dashboard는 **상태·공간·사건을 시각화하고 운영자의 요청을 전달**합니다. AMCL·Nav2·DWB/RPP·Collision Monitor가 수행하는 실제 주행 판단은 robot-side ROS 2에서 담당합니다
 ## 시스템 아키텍처
 
 <p align="center">
@@ -54,7 +53,6 @@ Unity Dashboard는 **상태·공간·사건을 시각화하고 운영자의 요�
 
 ## 발표 자료 기반 통합 화면
 
-아래 이미지는 최종 발표 PPT에 사용된 원본 미디어에서 추출했습니다. 화면 캡처는 시스템 이해를 위한 시각 근거이며, 현재 실행 계약은 이 저장소의 코드와 설정 파일을 기준으로 합니다.
 
 | 실물 공간과 디지털 트윈 | Unity · RViz · Camera 통합 |
 |---|---|
@@ -80,7 +78,7 @@ PPT의 System Flow와 Scenario 구성을 Unity 실행 경계에 맞춰 정리했
 | 5. robot-side 실행 | Nav2 goal·waypoint·recovery | 경로·pose·camera feedback |
 | 6. 기록 | session·event·dispatch·pose 저장 | 기록 탭과 audit trail |
 
-실제 운용에서는 Web Dashboard와 Unity Dashboard 중 **하나만 command owner**로 선택합니다.
+실제 운용에서는 Web Dashboard와 Unity Dashboard 중 하나만 선택합니다.
 
 ## 주행·비전 기술 경계
 
