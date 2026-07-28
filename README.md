@@ -14,7 +14,7 @@ ROS 2 자율주행, Web Dashboard 실기 운영, Unity 디지털 트윈, AI 비�
 [![TurtleBot3](https://img.shields.io/badge/Robot-TurtleBot3-00A6D6)](https://emanual.robotis.com/docs/en/platform/turtlebot3/overview/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2EA44F.svg)](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/main/LICENSE)
 
-[Project Film](#project-film) · [Dashboards](#two-dashboards) · [Architecture](#architecture) · [Navigation](#driving-navigation--safety) · [Vision](#vision-pipeline) · [Quick Start](#quick-start)
+[Project Film](#project-film) · [Team](#team-urhynix) · [Dashboards](#two-dashboards) · [Architecture](#architecture) · [Navigation](#driving-navigation--safety) · [Vision](#vision-pipeline) · [Quick Start](#quick-start)
 
 </div>
 
@@ -41,6 +41,42 @@ URHYNIX는 두 대의 TurtleBot3가 사용하는 지도와 상태를 TurtleBot W
 ```text
 감지 → 위치 확인 → 운영자 판단 → 로봇 출동 → 결과 기록
 ```
+
+### Team URhynix
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>🧭 김주영 · Project Lead</strong><br><br>
+      <code>PM</code> <code>Unity GUI</code> <code>Media</code> <code>AI Tools</code><br><br>
+      프로젝트 운영과 발표 영상 제작·편집<br>
+      Unity GUI 설계·개발·유지보수<br>
+      AI Agent 및 제작 도구 활용
+    </td>
+    <td width="50%" valign="top">
+      <strong>🔧 박태진 · Hardware & Dashboard</strong><br><br>
+      <code>Arduino</code> <code>3D Design</code> <code>Dashboard</code> <code>Map</code><br><br>
+      Arduino 센서 설정 및 연동<br>
+      로봇 부속 기계 3D 설계·출력<br>
+      자율주행 Dashboard 설계·개발·유지보수와 맵 디자인
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>🖥️ 김선일 · GUI & Integration</strong><br><br>
+      <code>GUI Coordinates</code> <code>Layout</code> <code>ROS-TCP</code><br><br>
+      Unity GUI 좌표 체계와 화면 레이아웃<br>
+      관제 UI·ROS-TCP 통신·로봇 통합 협업
+    </td>
+    <td width="50%" valign="top">
+      <strong>🤖 임현찬 · Navigation & Vision</strong><br><br>
+      <code>Nav2</code> <code>ArUco</code> <code>YOLO</code> <code>EfficientNet-B0</code><br><br>
+      자율주행 및 ArUco 정밀 도킹<br>
+      YOLO 비전과 EfficientNet-B0 진품·가품 판별<br>
+      맵 세팅과 로봇 부속품 조립
+    </td>
+  </tr>
+</table>
 
 ## Highlights
 
