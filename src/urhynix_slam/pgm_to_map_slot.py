@@ -7,6 +7,9 @@ from pathlib import Path
 from PIL import Image
 from make_pretty_map_slot import create_pretty_slot, write_unity_meta
 
+ROOT = Path(__file__).resolve().parents[2]
+MAP_DIR = ROOT / "client/UNITY/Assets/StreamingAssets/Maps"
+
 def load_pgm(path):
     with open(path, 'rb') as f: d = f.read()
     assert d[:2] == b'P5', "P5(binary) PGM만 지원"
@@ -35,9 +38,7 @@ def main():
     ox, oy = float(o.group(1)), float(o.group(2))
     w, h, pix = load_pgm(pgm)
 
-    out_dir = os.path.join(os.path.dirname(__file__), '..',
-                           'unity/ControlRoom/Assets/StreamingAssets/Maps')
-    out_dir = os.path.abspath(out_dir)
+    out_dir = str(MAP_DIR)
     os.makedirs(out_dir, exist_ok=True)
     png_path = os.path.join(out_dir, slot + '.png')
     json_path = os.path.join(out_dir, slot + '.json')

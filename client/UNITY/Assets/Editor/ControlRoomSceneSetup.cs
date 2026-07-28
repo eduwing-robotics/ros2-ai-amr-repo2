@@ -5,7 +5,7 @@
 // CLI 실행:
 //   /Applications/Unity/Hub/Editor/6000.3.16f1/Unity.app/Contents/MacOS/Unity \
 //     -batchmode -quit -nographics \
-//     -projectPath /Users/family/jason/URHYNIX/unity/ControlRoom \
+//     -projectPath /path/to/ros2-ai-amr-repo2/client/UNITY \
 //     -executeMethod URHYNIX.ControlRoom.Editor.ControlRoomSceneSetup.Setup \
 //     -logFile /tmp/unity-controlroom-scene.log
 using UnityEditor;

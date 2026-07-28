@@ -11,8 +11,8 @@ from pathlib import Path
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 
-ROOT = Path(__file__).resolve().parents[1]
-MAP_DIR = ROOT / "unity/ControlRoom/Assets/StreamingAssets/Maps"
+ROOT = Path(__file__).resolve().parents[2]
+MAP_DIR = ROOT / "client/UNITY/Assets/StreamingAssets/Maps"
 
 
 def load_slot(slot_id):

@@ -68,7 +68,7 @@ TurtleBot Web Dashboard와 Unity Dashboard는 같은 화면을 복제한 도구�
 | 주행 | 수동 조작, 목표·경유지, A*, 반복 주행, 중단 지점 재개 | 주행 준비, 순찰 경로, 단발 출동, 정지·복귀 |
 | 센서 | LiDAR 안전 반경·회피, odometry, raw/compressed 카메라 | 카메라, LiDAR, 환경 센서, 상태·이벤트 패널 |
 | 운영 강점 | SSH bring-up, OpenCR 검증, Nav2 또는 LiDAR direct fallback | 시나리오 재현, 공간 상황 이해, Supabase audit trail |
-| 소스 | [`ensacom2019/TurtleBot_Dashboard`](https://github.com/ensacom2019/TurtleBot_Dashboard) | 이 저장소의 `client/ControlRoom/` |
+| 소스 | [`ensacom2019/TurtleBot_Dashboard`](https://github.com/ensacom2019/TurtleBot_Dashboard) | 이 저장소의 [`client/UNITY/`](./client/UNITY/) |
 
 ### TurtleBot Web Dashboard
 
@@ -83,7 +83,7 @@ TurtleBot Web Dashboard와 Unity Dashboard는 같은 화면을 복제한 도구�
 
 ### Unity Dashboard
 
-`client/ControlRoom/`은 실제 코드 폴더명이며, 공개 제품명은 **Unity Dashboard**입니다. 로봇의 위치와 센서, 순찰·출동 흐름을 하나의 공간 안에서 보여주는 Unity 기반 디지털 트윈 대시보드입니다.
+[`client/UNITY/`](./client/UNITY/)가 Unity 프로젝트의 공개 정본 경로입니다. 제품명은 **Unity Dashboard**이며, 기존 C# 클래스·씬·namespace의 `ControlRoom*` 이름은 Unity 직렬화 호환성을 위해 유지합니다. 로봇의 위치와 센서, 순찰·출동 흐름을 하나의 공간 안에서 보여주는 Unity 기반 디지털 트윈 대시보드입니다.
 
 - `tb3_1`과 `tb3_2`의 상태를 로봇별 ROS-TCP endpoint로 분리해 수신합니다.
 - 같은 박물관 지도를 2D·2.5D·3D로 전환하며 실제 로봇 위치와 경로를 시각화합니다.
@@ -144,7 +144,7 @@ flowchart TD
     OWNER{"Single command owner"}
     GOAL["main<br/>PoseStamped → /goal_pose"]
     PATROL["main<br/>PoseArray → /patrol_waypoints"]
-    AXIS["sunil/nav-axis-drive<br/>axis-aligned P control experiment"]
+    AXIS["main · src/urhynix_nav/nav_axis_drive<br/>axis-aligned P control experiment"]
     FEATURE["T1 · Gen.G feature branches<br/>FollowWaypoints + RPP"]
 
     BRIDGE["Robot-side ROS 2 bridge<br/>goToPose · FollowWaypoints"]
@@ -183,7 +183,7 @@ flowchart TD
 | [`main`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/main) | [`patrol_route_optimizer.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/d79535d1270ff9526eca974455a2e03c39e8a2c0/src/urhynix_patrol/patrol_route_optimizer.py), [`patrol_safe_clearance.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/d79535d1270ff9526eca974455a2e03c39e8a2c0/src/urhynix_patrol/patrol_safe_clearance.py) | 다중소스 clearance BFS, maximin widest path, 벽 안전여유 보정 | 안전 순찰 경로 전처리 · ✅ |
 | [`feature/t1-rpp-patrol2-aruco-dock`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/feature/t1-rpp-patrol2-aruco-dock) | [`nav2_params_t1_patrol_rpp.yaml`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/e481e9bfe38a47145d52f0655761873d5f91aab3/t1_rpp_patrol2_aruco_dock/config/nav2_params_t1_patrol_rpp.yaml), [`run_patrol.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/e481e9bfe38a47145d52f0655761873d5f91aab3/t1_rpp_patrol2_aruco_dock/scripts/run_patrol.py) | SmacPlanner2D, Regulated Pure Pursuit, velocity-scaled lookahead, `FollowWaypoints` | T1 순찰·정밀 접근 · 🧪 |
 | [`feature/geng-rpp-patrol-aruco-dock`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/feature/geng-rpp-patrol-aruco-dock) | [`nav2_params_geng_rpp.yaml`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/996d8fed4ed1116ee13c4d2dda3d487c66ea6779/geng_rpp_patrol_dock/config/nav2_params_geng_rpp.yaml), [`run_patrol.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/996d8fed4ed1116ee13c4d2dda3d487c66ea6779/geng_rpp_patrol_dock/scripts/run_patrol.py) | Gen.G footprint·inflation 튜닝, SmacPlanner2D, RPP, `FollowWaypoints` | Gen.G 순찰·정밀 접근 · 🧪 |
-| [`sunil/nav-axis-drive`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/sunil/nav-axis-drive) | [`goto_axis.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/266231b20548e6c106055fed1fb45ae1c1d0de45/scripts/goto_axis.py), [`nav2_goal_v4.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/266231b20548e6c106055fed1fb45ae1c1d0de45/scripts/v2/nav2_goal_v4.py) | X/Y축 정렬 P 제어, map YAML 좌표 변환, Nav2 스턱 감지·탈출 | 주행 실험 브랜치 · 🧪 |
+| [`main`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/main/src/urhynix_nav/nav_axis_drive) | [`goto_axis.py`](./src/urhynix_nav/nav_axis_drive/goto_axis.py), [`nav2_goal_v4.py`](./src/urhynix_nav/nav_axis_drive/v2/nav2_goal_v4.py) | X/Y축 정렬 P 제어, map YAML 좌표 변환, Nav2 스턱 감지·탈출 | 병합된 주행 실험 · ✅ |
 
 ### Navigation algorithms
 
@@ -194,7 +194,7 @@ flowchart TD
 | **Global planning** | `main`의 [`patch_nav_params_ns.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/d79535d1270ff9526eca974455a2e03c39e8a2c0/src/urhynix_nav/patch_nav_params_ns.py)는 T1에 SmacPlanner2D, inflation `0.15m`, cost multiplier `1.0`, planner `1Hz`를 적용합니다. [`patch_nav_params_genji.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/d79535d1270ff9526eca974455a2e03c39e8a2c0/src/urhynix_nav/patch_nav_params_genji.py)는 Smac 설치 여부를 확인하고 없으면 NavFn을 유지합니다. |
 | **Local control** | `main`은 TurtleBot3 `FollowPath`의 DWB 파라미터를 최대 선속도 `0.12m/s`, 완만한 가감속으로 제한합니다. T1·Gen.G 기능 브랜치는 `RegulatedPurePursuitController`와 속도 연동 lookahead `0.20~0.50m`를 사용합니다. |
 | **Waypoint patrol** | T1·Gen.G 기능 브랜치의 `run_patrol.py`는 Nav2 `FollowWaypoints` action을 사용하고, 첫 waypoint 이후 불필요한 도착 yaw 정렬을 완화해 협소 공간 회전을 줄입니다. |
-| **Axis-drive experiment** | `sunil/nav-axis-drive`의 `goto_axis.py`는 `ALIGN_X → DRIVE_X → ALIGN_Y → DRIVE_Y` 상태기계와 heading P 제어를 사용합니다. `nav2_goal_v4.py`는 map YAML 기반 좌표 변환, AMCL 가드, 스턱 감지와 탈출을 추가합니다. |
+| **Axis-drive experiment** | `main`의 `src/urhynix_nav/nav_axis_drive/goto_axis.py`는 `ALIGN_X → DRIVE_X → ALIGN_Y → DRIVE_Y` 상태기계와 heading P 제어를 사용합니다. `nav2_goal_v4.py`는 map YAML 기반 좌표 변환, AMCL 가드, 스턱 감지와 탈출을 추가합니다. |
 | **Safety envelope** | `main`의 Nav2 패치는 실제 footprint, obstacle·voxel·inflation layers, PolygonStop·Slow·Limit, scan timeout과 velocity smoother를 조정합니다. 이 판단과 `/cmd_vel` 생성은 Unity가 아니라 로봇 측 Nav2에서 수행됩니다. |
 | **Recovery and docking** | `main`은 실패 시 local/global costmap을 지우고 `0.12m` 후진한 뒤 재시도합니다. T1 브랜치의 [`aruco_align_t1.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/e481e9bfe38a47145d52f0655761873d5f91aab3/t1_rpp_patrol2_aruco_dock/scripts/aruco_align_t1.py)는 ArUco ID 11을 `solvePnP(IPPE_SQUARE)`로 정렬하고, [`dock_t1_rear_wall.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/e481e9bfe38a47145d52f0655761873d5f91aab3/t1_rpp_patrol2_aruco_dock/scripts/dock_t1_rear_wall.py)는 후방 LaserScan 벽선을 맞춘 뒤 후진 도킹합니다. Gen.G 브랜치도 동일한 RPP·ArUco/LiDAR 파이프라인을 별도 파라미터로 구성합니다. |
 
@@ -276,7 +276,7 @@ ros2-ai-amr-repo2/
 │   ├── urhynix_bridge/       # Robot-side Unity↔ROS services
 │   ├── urhynix_slam/         # Mapping and scan validation
 │   └── urhynix_perception/   # Sensors, ArUco, and perception utilities
-├── client/ControlRoom/       # Unity Dashboard source (actual folder name)
+├── client/UNITY/             # Unity Dashboard source
 ├── server/                   # Supabase migrations and SQL
 ├── Aduino/                   # Arduino sketches and wiring references
 ├── urhynix.repos             # External ROS 2 dependencies
@@ -341,7 +341,7 @@ chmod +x run_ubuntu.sh stop_dashboard.sh stop_robot.sh check_camera.sh
 
 ### 3B. Open the Unity Dashboard
 
-1. Unity Hub에서 `client/ControlRoom/`을 엽니다.
+1. Unity Hub에서 `client/UNITY/`를 엽니다.
 2. `Resources/RosConfig/ros_endpoint.json`에 로봇별 IP와 `10000` 포트를 설정합니다.
 3. 필요한 경우 `.gitignore` 대상인 Supabase 설정 파일에 **anon key만** 입력합니다.
 4. Play 후 주행준비, 순찰, 단발 출동 기능을 사용합니다.
@@ -361,7 +361,7 @@ chmod +x run_ubuntu.sh stop_dashboard.sh stop_robot.sh check_camera.sh
 | 저장 지도·AMCL·순찰·복귀 흐름 | ✅ `main` | `src/urhynix_nav`, `src/urhynix_patrol` |
 | T1 ArUco 도킹 | 🧪 feature branch | [`feature/t1-rpp-patrol2-aruco-dock`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/feature/t1-rpp-patrol2-aruco-dock) |
 | Gen.G ArUco 도킹 | 🧪 feature branch | [`feature/geng-rpp-patrol-aruco-dock`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/feature/geng-rpp-patrol-aruco-dock) |
-| 축 정렬·map-aware Nav2 주행 실험 | 🧪 experiment branch | [`sunil/nav-axis-drive`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/sunil/nav-axis-drive) |
+| 축 정렬·map-aware Nav2 주행 실험 | ✅ `main` | [`src/urhynix_nav/nav_axis_drive`](./src/urhynix_nav/nav_axis_drive/) |
 | 박물관 YOLO finetune·실시간 필터 | 🧪 integration branch | [`integration/museum-bacchus`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/integration/museum-bacchus) |
 | 고정 ROI 진위 판정 | 🧪 integration branch | [`integration/museum-bacchus`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/integration/museum-bacchus) |
 | Unity Dashboard 화재·침입 시나리오 | 🎬 simulation | 프로젝트 영상과 Unity demo scene |
@@ -380,7 +380,7 @@ chmod +x run_ubuntu.sh stop_dashboard.sh stop_robot.sh check_camera.sh
 | ROS foundation | ROS 2 Jazzy, DDS domain isolation, TF2, lifecycle nodes | 로봇별 통신 격리와 좌표·노드 상태 관리 |
 | Localization | AMCL, wheel odometry, LaserScan, saved `PGM/YAML` map | 지도 기준 실시간 pose 추정 |
 | Global planning | Nav2 BT Navigator, SmacPlanner2D, custom clearance/widest-path optimizer | 목표·순찰 경로 생성 |
-| Motion control | DWB (`main`), Regulated Pure Pursuit (T1·Gen.G branches), axis-aligned P control (`sunil/nav-axis-drive`) | 로봇 측 경로 추종과 속도 명령 생성 |
+| Motion control | DWB (`main`), Regulated Pure Pursuit (T1·Gen.G branches), axis-aligned P control (`main`) | 로봇 측 경로 추종과 속도 명령 생성 |
 | Safety | global/local costmap, obstacle·voxel·inflation layers, Collision Monitor, velocity smoother | 벽·장애물 감속과 정지 |
 | Web operations | Python 3, `rclpy`, HTTP, HTML Canvas, JavaScript Binary Heap A*, MJPEG, SSH/systemd | 설정·진단·맵 제작·실기 주행 |
 | Unity Dashboard | Unity 6.3 LTS, C#, UI Toolkit, ROS-TCP-Connector, RenderTexture | 2D·2.5D·3D 관제와 순찰·출동 UI |

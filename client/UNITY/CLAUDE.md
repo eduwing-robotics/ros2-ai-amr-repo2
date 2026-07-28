@@ -1,7 +1,7 @@
-# unity/ControlRoom/
+# client/UNITY/
 
 > URHYNIX 박물관/미술관 디지털트윈경비로봇 **관제 UI** Unity 프로젝트 루트.
-> `robot_control_system.html`을 Unity C#로 전환하는 정본 위치.
+> 공개 제품명은 Unity Dashboard. 기존 `ControlRoom*` 코드 이름은 직렬화 호환성을 위해 유지한다.
 
 ## 무엇이 들어가는가
 
@@ -25,12 +25,11 @@
 1. **service_role 키 절대 Unity 클라이언트 미반입** — anon key만, `Resources/SupabaseConfig.local.asset` (`.gitignore` 차단).
 2. **새 폴더 만들면 안에 CLAUDE.md 1개 박기** (3~10줄, 폴더 용도 설명).
 3. **새 파일 최상단에 1~5줄 헤더 주석** (파일 역할/기능). JSON 예외.
-4. **검증된 unity-smoke 코드 재활용**: Phase 5에서 `CameraStreamPanel.cs`, `CameraPanelSetup.cs`를 UI Toolkit 베이스에 맞춰 재이식 (단순 copy 금지).
-5. **URDF Importer 호환성**: Unity 6 불안정. Phase 6 진입 전 smoke 1건, fallback은 community fork.
+4. **실주행 알고리즘 경계**: Unity의 demo/animation 코드를 Nav2·실로봇 주행 근거로 사용하지 않는다.
+5. **경로 정본**: 자동화·문서·CLI의 프로젝트 경로는 `client/UNITY`로 통일한다.
 
-## 관련 SSOT
+## 관련 공개 문서
 
-- `../../docs/ref/UNITY-CONTROLROOM-CONVERSION-PLAN.md` — 13절 phase + 검증 체크리스트
-- `../../docs/ref/tech/UNITY.md` — 기술별 ref 진입
-- `../../docs/status/DECISION-LOG.md` 2026-06-02 — 버전/Supabase 결정
-- `README.md` — 사람 진입 안내
+- `../../README.md` — 저장소 전체 구조와 Unity/ROS 역할 경계
+- `README.md` — Unity 프로젝트 진입·설정·안전 지침
+- `BRANCH-AUDIT.md` — 원격 브랜치 Unity 전수조사와 삭제 판정

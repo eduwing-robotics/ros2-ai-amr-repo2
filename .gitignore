@@ -13,7 +13,7 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
-# ── Unity (client/ControlRoom) ──
+# ── Unity (client/UNITY) ──
 client/**/Library/
 client/**/Temp/
 client/**/Obj/

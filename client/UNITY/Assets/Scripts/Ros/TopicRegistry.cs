@@ -14,7 +14,7 @@ namespace URHYNIX.ControlRoom.Ros
         public const string GenjiBatteryState = "/tb3_2/battery_state";
 
         // 2026-06-18 Phase B/C: arduino_bridge_quad.py가 root namespace `/sensors/*`로 4토픽 발행.
-        // default_sensors.json도 `/sensors/*`로 정합. ROS_DOMAIN_ID=210. 현재 tb3_2(젠지)만 결선.
+        // default_sensors.json도 `/sensors/*`로 정합. 현재 tb3_2(젠지, domain 1)만 결선.
         // 4센서: PIR(Bool)·사운드(Int32 swing)·온도(Int32 raw)·레이저(Bool, 수신부 미결선→UI 비활성).
         // 구 LDR/ldr은 회로 폐기로 Phase C에서 제거됨.
         public const string GenjiPirState = "/sensors/pir";

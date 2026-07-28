@@ -2,21 +2,22 @@
 
 > Unity Editor 전용 스크립트. 빌드에 포함 안 됨.
 
-## 예정 파일
+## 현재 주요 파일
 
 | 파일 | 역할 |
 |---|---|
-| `ControlRoomSceneSetup.cs` ✅ | batch mode로 `ControlRoomMain.unity` 생성 + PanelSettings + GameObject hierarchy 자동 조립 |
-| `CameraPanelSetup.cs` | batch mode로 씬에 카메라 패널 자동 추가 (Phase 5에서 unity-smoke 재이식 시) |
-| `UrdfImportHelper.cs` | TurtleBot3 URDF import 자동화 (Phase 6) |
-| `IconsImportSettings.cs` | PNG 아이콘 자동 Sprite import 설정 (필요 시) |
+| `ControlRoomSceneSetup.cs` | `ControlRoomMain.unity`와 UI hierarchy 구성 |
+| `CameraStreamSetup.cs` | 카메라 subscriber와 scene binding 구성 |
+| `ControlRoomCaptureMenu.cs` | 발표·검증용 화면 캡처 |
+| `GalleryRoomUrpUpgrade.cs` | Gallery asset의 URP 호환 보정 |
+| `GalleryCinematicCameraShotBook.cs` | 영상 shot preset |
 
 ## CLI 실행 패턴
 
 ```bash
 /Applications/Unity/Hub/Editor/6000.3.16f1/Unity.app/Contents/MacOS/Unity \
   -batchmode -quit \
-  -projectPath /Users/family/jason/URHYNIX/unity/ControlRoom \
+  -projectPath /path/to/ros2-ai-amr-repo2/client/UNITY \
   -executeMethod <Namespace>.<Class>.<Method> \
   -logFile /tmp/unity_<task>.log
 ```
