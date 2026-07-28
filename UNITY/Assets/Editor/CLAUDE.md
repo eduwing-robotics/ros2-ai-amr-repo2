@@ -17,7 +17,7 @@
 ```bash
 /Applications/Unity/Hub/Editor/6000.3.16f1/Unity.app/Contents/MacOS/Unity \
   -batchmode -quit \
-  -projectPath /path/to/ros2-ai-amr-repo2/client/UNITY \
+  -projectPath /path/to/ros2-ai-amr-repo2/UNITY \
   -executeMethod <Namespace>.<Class>.<Method> \
   -logFile /tmp/unity_<task>.log
 ```

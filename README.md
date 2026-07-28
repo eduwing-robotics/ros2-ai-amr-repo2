@@ -68,7 +68,7 @@ TurtleBot Web Dashboard와 Unity Dashboard는 같은 화면을 복제한 도구�
 | 주행 | 수동 조작, 목표·경유지, A*, 반복 주행, 중단 지점 재개 | 주행 준비, 순찰 경로, 단발 출동, 정지·복귀 |
 | 센서 | LiDAR 안전 반경·회피, odometry, raw/compressed 카메라 | 카메라, LiDAR, 환경 센서, 상태·이벤트 패널 |
 | 운영 강점 | SSH bring-up, OpenCR 검증, Nav2 또는 LiDAR direct fallback | 시나리오 재현, 공간 상황 이해, Supabase audit trail |
-| 소스 | [`ensacom2019/TurtleBot_Dashboard`](https://github.com/ensacom2019/TurtleBot_Dashboard) | 이 저장소의 [`client/UNITY/`](./client/UNITY/) |
+| 소스 | [`ensacom2019/TurtleBot_Dashboard`](https://github.com/ensacom2019/TurtleBot_Dashboard) | 이 저장소의 [`UNITY/`](./UNITY/) |
 
 ### TurtleBot Web Dashboard
 
@@ -83,7 +83,7 @@ TurtleBot Web Dashboard와 Unity Dashboard는 같은 화면을 복제한 도구�
 
 ### Unity Dashboard
 
-[`client/UNITY/`](./client/UNITY/)가 Unity 프로젝트의 공개 정본 경로입니다. 제품명은 **Unity Dashboard**이며, 기존 C# 클래스·씬·namespace의 `ControlRoom*` 이름은 Unity 직렬화 호환성을 위해 유지합니다. 로봇의 위치와 센서, 순찰·출동 흐름을 하나의 공간 안에서 보여주는 Unity 기반 디지털 트윈 대시보드입니다.
+[`UNITY/`](./UNITY/)가 Unity 프로젝트의 공개 정본 경로입니다. 제품명은 **Unity Dashboard**이며, 기존 C# 클래스·씬·namespace의 `ControlRoom*` 이름은 Unity 직렬화 호환성을 위해 유지합니다. 로봇의 위치와 센서, 순찰·출동 흐름을 하나의 공간 안에서 보여주는 Unity 기반 디지털 트윈 대시보드입니다.
 
 - `tb3_1`과 `tb3_2`의 상태를 로봇별 ROS-TCP endpoint로 분리해 수신합니다.
 - 같은 박물관 지도를 2D·2.5D·3D로 전환하며 실제 로봇 위치와 경로를 시각화합니다.
@@ -276,7 +276,7 @@ ros2-ai-amr-repo2/
 │   ├── urhynix_bridge/       # Robot-side Unity↔ROS services
 │   ├── urhynix_slam/         # Mapping and scan validation
 │   └── urhynix_perception/   # Sensors, ArUco, and perception utilities
-├── client/UNITY/             # Unity Dashboard source
+├── UNITY/                    # Unity Dashboard source
 ├── server/                   # Supabase migrations and SQL
 ├── Aduino/                   # Arduino sketches and wiring references
 ├── urhynix.repos             # External ROS 2 dependencies
@@ -341,7 +341,7 @@ chmod +x run_ubuntu.sh stop_dashboard.sh stop_robot.sh check_camera.sh
 
 ### 3B. Open the Unity Dashboard
 
-1. Unity Hub에서 `client/UNITY/`를 엽니다.
+1. Unity Hub에서 `UNITY/`를 엽니다.
 2. `Resources/RosConfig/ros_endpoint.json`에 로봇별 IP와 `10000` 포트를 설정합니다.
 3. 필요한 경우 `.gitignore` 대상인 Supabase 설정 파일에 **anon key만** 입력합니다.
 4. Play 후 주행준비, 순찰, 단발 출동 기능을 사용합니다.

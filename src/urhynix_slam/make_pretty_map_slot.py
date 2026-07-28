@@ -12,7 +12,7 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 
 ROOT = Path(__file__).resolve().parents[2]
-MAP_DIR = ROOT / "client/UNITY/Assets/StreamingAssets/Maps"
+MAP_DIR = ROOT / "UNITY/Assets/StreamingAssets/Maps"
 
 
 def load_slot(slot_id):

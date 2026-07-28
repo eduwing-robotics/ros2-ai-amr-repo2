@@ -1,7 +1,7 @@
 # URHYNIX Unity Dashboard
 
 > 두 대의 TurtleBot3와 ROS 2 데이터를 2D·2.5D·3D 공간에서 관제하는 Unity 프로젝트입니다.
-> 공개 정본 경로는 `client/UNITY/`이며, 기존 `ControlRoom*` 클래스·씬·namespace는 Unity 직렬화 호환성을 위해 유지합니다.
+> 공개 정본 경로는 저장소 루트의 `UNITY/`이며, 기존 `ControlRoom*` 클래스·씬·namespace는 Unity 직렬화 호환성을 위해 유지합니다.
 
 ## 역할 경계
 
@@ -38,7 +38,7 @@ AMCL, Nav2 경로 계획, DWB/RPP 경로 추종, costmap과 Collision Monitor �
 ## 빠른 시작
 
 1. Unity Hub에서 `6000.3.16f1`을 설치합니다.
-2. **Add Project**로 저장소의 `client/UNITY/`를 선택합니다.
+2. **Add Project**로 저장소 루트의 `UNITY/`를 선택합니다.
 3. 첫 import와 package restore가 끝날 때까지 기다립니다.
 4. `Assets/Resources/RobotConfig/default_robots.json`에서 로봇 주소를 확인합니다.
 5. `Assets/Resources/RosConfig/ros_endpoint.json`에서 시작 로봇을 선택합니다.
@@ -49,7 +49,7 @@ AMCL, Nav2 경로 계획, DWB/RPP 경로 추종, costmap과 Collision Monitor �
 ## 현재 화면과 데이터 경로
 
 ```text
-client/UNITY/
+UNITY/
 ├── Assets/
 │   ├── Scenes/                    # ControlRoomMain, Demo
 │   ├── Scripts/
@@ -112,9 +112,9 @@ python3 -m py_compile \
   src/urhynix_slam/make_pretty_map_slot.py \
   src/urhynix_slam/pgm_to_map_slot.py
 
-rg -n 'client/ControlRoom|unity/ControlRoom' . \
-  --glob '!client/UNITY/README.md' \
-  --glob '!client/UNITY/BRANCH-AUDIT.md'
+rg -n 'client/UNITY|client/ControlRoom|unity/ControlRoom' . \
+  --glob '!UNITY/README.md' \
+  --glob '!UNITY/BRANCH-AUDIT.md'
 git diff --check
 ```
 

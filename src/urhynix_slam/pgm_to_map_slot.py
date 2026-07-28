@@ -8,7 +8,7 @@ from PIL import Image
 from make_pretty_map_slot import create_pretty_slot, write_unity_meta
 
 ROOT = Path(__file__).resolve().parents[2]
-MAP_DIR = ROOT / "client/UNITY/Assets/StreamingAssets/Maps"
+MAP_DIR = ROOT / "UNITY/Assets/StreamingAssets/Maps"
 
 def load_pgm(path):
     with open(path, 'rb') as f: d = f.read()

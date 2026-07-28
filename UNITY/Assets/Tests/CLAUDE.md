@@ -32,7 +32,7 @@
 # CLI batch mode (Unity 6.3 LTS)
 /Applications/Unity/Hub/Editor/6000.3.16f1/Unity.app/Contents/MacOS/Unity \
   -batchmode -nographics -quit \
-  -projectPath /Users/family/jason/URHYNIX/unity/ControlRoom \
+  -projectPath /path/to/ros2-ai-amr-repo2/UNITY \
   -runTests \
   -testPlatform EditMode \
   -logFile /tmp/unity-tests-editmode.log

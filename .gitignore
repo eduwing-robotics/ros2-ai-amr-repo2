@@ -13,15 +13,15 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
-# ── Unity (client/UNITY) ──
-client/**/Library/
-client/**/Temp/
-client/**/Obj/
-client/**/Logs/
-client/**/Build/
-client/**/Builds/
-client/**/UserSettings/
-client/**/MemoryCaptures/
+# ── Unity (UNITY) ──
+UNITY/Library/
+UNITY/Temp/
+UNITY/Obj/
+UNITY/Logs/
+UNITY/Build/
+UNITY/Builds/
+UNITY/UserSettings/
+UNITY/MemoryCaptures/
 *.csproj
 *.sln
 *.unityproj

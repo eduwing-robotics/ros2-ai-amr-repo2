@@ -6,7 +6,7 @@
 
 ## 결론
 
-- 공개 Unity 프로젝트 정본은 `main`의 `client/UNITY/` 하나로 둡니다.
+- 공개 Unity 프로젝트 정본은 `main`의 저장소 루트 `UNITY/` 하나로 둡니다.
 - feature branch는 Git 스냅샷이므로 정본 파일이 함께 보이는 것이 정상입니다. 폴더만 삭제하면 이후 merge에서 `main`의 Unity 프로젝트까지 삭제하는 충돌을 만들 수 있습니다.
 - 고유 주행·비전 커밋이 있는 브랜치는 Unity 폴더 유무만 보고 삭제하지 않습니다.
 - 완전히 `main`에 포함된 과거 브랜치는 원격 branch 삭제 후보입니다. 삭제 전 아래 SHA로 복구 가능성을 보존합니다.
@@ -15,7 +15,7 @@
 
 | 브랜치 | Unity 관련 트리 | main 대비 | 판정 |
 |---|---:|---:|---|
-| `main` · `fee2cb983920` | `client/ControlRoom` 1,531 files · tree `29052828a3e8` | 기준 | `client/UNITY`로 rename |
+| `main` · `fee2cb983920` | `client/ControlRoom` 1,531 files · tree `29052828a3e8` | 기준 | 최종적으로 루트 `UNITY`로 rename |
 | `feature/geng-rpp-patrol-aruco-dock` · `996d8fed4ed1` | `client/ControlRoom` 1,531 files · 동일 tree | 8 unique commits | 유지 · Gen.G RPP/ArUco package 고유 |
 | `feature/t1-rpp-patrol2-aruco-dock` · `e481e9bfe38a` | `client/ControlRoom` 1,531 files · 동일 tree | 6 unique commits | 유지 · T1 RPP/ArUco package 고유 |
 | `backup/genji-drive-20260710` · `bca844c39dd6` | `unity/ControlRoom` 1,529 files, `unity-smoke` 84, `vendor/unityctl-plugin` 743 | 2 unique commits | 보류 · Gen.G drive 고유 커밋 보존 |
