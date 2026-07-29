@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="URHYNIX-AMR 다중 TurtleBot3 박물관 경비 프로젝트 영상">
+    <meta name="theme-color" content="#07111f">
+    <title>URHYNIX-AMR · Project Film</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, Pretendard, "Noto Sans KR", system-ui, sans-serif;
+        background: #07111f;
+        color: #e7eef8;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 32px 18px;
+        background:
+          radial-gradient(circle at top, rgba(30, 136, 229, 0.2), transparent 38rem),
+          #07111f;
+      }
+
+      main {
+        width: min(1120px, 100%);
+        text-align: center;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: #61b7ff;
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 6vw, 4rem);
+        letter-spacing: -0.04em;
+      }
+
+      .summary {
+        max-width: 720px;
+        margin: 14px auto 26px;
+        color: #aebdd0;
+        line-height: 1.7;
+      }
+
+      .player {
+        overflow: hidden;
+        border: 1px solid rgba(148, 184, 220, 0.28);
+        border-radius: 18px;
+        background: #02070d;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+      }
+
+      video {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background: #000;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 22px;
+      }
+
+      a {
+        color: #dcecff;
+      }
+
+      .button {
+        display: inline-flex;
+        min-height: 44px;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 16px;
+        border: 1px solid rgba(148, 184, 220, 0.36);
+        border-radius: 999px;
+        text-decoration: none;
+      }
+
+      .button:hover,
+      .button:focus-visible {
+        border-color: #61b7ff;
+        background: rgba(97, 183, 255, 0.12);
+        outline: none;
+      }
+
+      .note {
+        margin: 18px auto 0;
+        color: #7f91a8;
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">URHYNIX-AMR Project Film</p>
+      <h1>두 대의 로봇, 하나의 관제 흐름</h1>
+      <p class="summary">
+        실제 TurtleBot3 자율 순찰부터 Web 관제, ArUco 도킹,
+        Unity 디지털 트윈과 AI 비전까지 2분 53초로 확인하세요.
+      </p>
+
+      <div class="player">
+        <video
+          controls
+          playsinline
+          preload="metadata"
+          poster="https://raw.githubusercontent.com/eduwing-robotics/ros2-ai-amr-repo2/docs/portfolio-readme/assets/readme/urhynix-project-film-poster.jpg"
+        >
+          <source
+            src="https://github.com/eduwing-robotics/ros2-ai-amr-repo2/releases/download/portfolio-film-v1/urhynix-project-film-720p.mp4"
+            type="video/mp4"
+          >
+          현재 브라우저가 HTML5 동영상 재생을 지원하지 않습니다.
+        </video>
+      </div>
+
+      <div class="actions" aria-label="영상 관련 링크">
+        <a class="button" href="https://github.com/eduwing-robotics/ros2-ai-amr-repo2">← 저장소로 돌아가기</a>
+        <a
+          class="button"
+          href="https://github.com/eduwing-robotics/ros2-ai-amr-repo2/releases/download/portfolio-film-v1/urhynix-project-film-720p.mp4"
+        >MP4 직접 열기</a>
+      </div>
+
+      <p class="note">실제 로봇 장면과 Unity 시뮬레이션 장면을 함께 사용한 연구·시연 영상입니다.</p>
+    </main>
+  </body>
+</html>

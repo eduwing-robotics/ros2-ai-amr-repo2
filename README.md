@@ -57,14 +57,14 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 
 **실제 AMR과 디지털 트윈을 연결한 다중 로봇 박물관 경비 시스템**입니다. T1(`tb3_1`)과 Gen.G(`tb3_2`) TurtleBot3 Burger가 같은 박물관 지도에서 독립적으로 순찰·출동하고, Web Dashboard와 Unity Dashboard가 실제 로봇 운용과 공간 기반 관제를 나누어 담당합니다.
 
-<a href="https://youtu.be/WU3v9wZHXu4">
+<a href="https://eduwing-robotics.github.io/ros2-ai-amr-repo2/project-film/">
   <img src="./assets/readme/urhynix-project-film-poster.jpg" alt="URHYNIX 프로젝트 영상: 실제 박물관 경기장, 자율 순찰, Unity 대시보드 및 디지털 트윈 시나리오" width="100%">
 </a>
 
 <p align="center">
-  <strong>▶ 2분 53초 프로젝트 영상 보기</strong><br>
+  <strong>▶ GitHub에서 2분 53초 프로젝트 영상 재생</strong><br>
   실제 로봇 · 자율 순찰 · 웹 관제 · ArUco 도킹 · Unity 디지털 트윈 · AI 비전<br>
-  <a href="https://youtu.be/WU3v9wZHXu4">YouTube에서 보기</a>
+  <a href="https://eduwing-robotics.github.io/ros2-ai-amr-repo2/project-film/">GitHub Pages 플레이어 열기</a>
 </p>
 
 <table style="width: 100%;" width="100%">
@@ -315,51 +315,32 @@ Unity의 ROS-TCP 계층은 Nav2 action을 직접 실행하지 않습니다. 로�
 경로 계획·추종·충돌 판단은 Unity나 Web UI가 아닌 **로봇 측 ROS 2 코드**가 수행합니다. 두 대시보드는 좌표와 명령을 전달하고, 상태를 시각화하는 관제 계층입니다.
 
 ```mermaid
-flowchart TD
-    UI["Unity · Web · CLI"] --> OWNER{"하나의 command owner"}
-    OWNER --> GOAL["목표 또는 순찰 waypoint"]
-    GOAL --> BRIDGE["Robot-side ROS 2 bridge"]
-    BRIDGE --> LOCALIZE["AMCL · LiDAR · odometry · TF"]
-    LOCALIZE --> PLAN["Nav2 global planner"]
-    PLAN --> CONTROL["DWB / Regulated Pure Pursuit"]
-    CONTROL --> SAFE["costmap · Collision Monitor<br/>velocity smoother"]
-    SAFE --> DRIVE["OpenCR · Dynamixel wheels"]
+flowchart LR
+    INPUT["① 명령 입력<br/>Unity · Web · CLI<br/><b>command owner 1개</b>"]
+    NAV["② 위치 · 경로<br/>AMCL · clearance<br/>Nav2 global planner"]
+    CONTROL["③ 추종 · 안전<br/>DWB / RPP · costmap<br/>Collision Monitor"]
+    DRIVE["④ 구동 · 피드백<br/>OpenCR · Dynamixel<br/>pose · run logs"]
+
+    INPUT --> NAV --> CONTROL --> DRIVE
 ```
 
-<table style="width: 100%;" width="100%">
-  <thead>
-    <tr>
-      <th width="24%" nowrap style="white-space: nowrap;">단계</th>
-      <th>구현 내용</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td width="24%" nowrap style="white-space: nowrap;"><strong>위치 추정</strong></td>
-      <td>저장된 <code>PGM/YAML</code> 지도에서 AMCL이 LiDAR scan, wheel odometry, TF를 결합해 <code>map</code> 기준 pose를 추정합니다. 시작 시 <code>/initialpose</code> 재시딩으로 수렴을 돕습니다.</td>
-    </tr>
-    <tr>
-      <td width="24%" nowrap style="white-space: nowrap;"><strong>순찰 경로 생성</strong></td>
-      <td>점유격자에 clearance field를 생성하고, 구역 간 경로는 벽과 장애물에서 더 멀리 떨어지는 widest-path 기준으로 선택합니다.</td>
-    </tr>
-    <tr>
-      <td width="24%" nowrap style="white-space: nowrap;"><strong>전역 경로 계획</strong></td>
-      <td>Nav2의 SmacPlanner2D 또는 환경에 맞는 planner가 costmap을 고려해 목표 지점까지의 전역 경로를 계산합니다.</td>
-    </tr>
-    <tr>
-      <td width="24%" nowrap style="white-space: nowrap;"><strong>로컬 제어</strong></td>
-      <td>TurtleBot3의 DWB와 순찰 실험의 Regulated Pure Pursuit가 경로를 추종하며, 속도·가감속·lookahead를 로봇 특성에 맞춰 제한합니다.</td>
-    </tr>
-    <tr>
-      <td width="24%" nowrap style="white-space: nowrap;"><strong>안전 계층</strong></td>
-      <td>footprint, obstacle/voxel/inflation layer, Collision Monitor, velocity smoother가 벽·장애물 주변 감속과 정지를 담당합니다.</td>
-    </tr>
-    <tr>
-      <td width="24%" nowrap style="white-space: nowrap;"><strong>복구와 도킹</strong></td>
-      <td>costmap clear, 후진 재시도, map-aware 축 정렬을 수행합니다. 정밀 접근은 ArUco bearing 정렬과 후방 LiDAR 벽 거리 측정을 조합합니다.</td>
-    </tr>
-  </tbody>
-</table>
+| 단계 | 핵심 구성 | 역할 |
+| :---: | :---: | :--- |
+| **① 명령 입력** | Unity · Web · CLI | 하나의 command owner가 목표 또는 순찰 waypoint를 로봇 측 ROS 2 bridge로 전달 |
+| **② 위치·경로** | AMCL · LiDAR · Nav2 | 저장 지도에서 pose를 추정하고, clearance와 costmap을 고려한 전역 경로 생성 |
+| **③ 추종·안전** | DWB · RPP · Collision Monitor | 경로를 추종하면서 footprint·장애물·속도 제한에 따라 감속 또는 정지 |
+| **④ 구동·피드백** | OpenCR · Dynamixel · run logs | 바퀴를 구동하고 pose·레그·랩·주차 결과를 관제 화면과 로그로 반환 |
+
+<details>
+<summary><strong>세부 알고리즘과 복구·도킹 방식 보기</strong></summary>
+
+- **위치 추정** — AMCL이 LiDAR scan, wheel odometry, TF를 결합해 `map` 기준 pose를 추정하고, 시작 시 `/initialpose` 재시딩으로 수렴을 돕습니다.
+- **안전 순찰 경로** — 점유격자의 clearance field와 widest-path 기준으로 벽과 장애물에서 더 멀리 떨어지는 경로를 선택합니다.
+- **경로 계획·제어** — SmacPlanner2D 등 환경에 맞는 planner가 전역 경로를 만들고, DWB 또는 Regulated Pure Pursuit가 이를 추종합니다.
+- **안전 계층** — footprint, obstacle/voxel/inflation layer, Collision Monitor, velocity smoother가 벽·장애물 주변 감속과 정지를 담당합니다.
+- **복구·도킹** — costmap clear, 후진 재시도, map-aware 축 정렬을 사용합니다. 정밀 접근은 ArUco bearing 정렬과 후방 LiDAR 벽 거리 측정을 조합합니다.
+
+</details>
 
 > [!CAUTION]
 > 실제 로봇 주행 전 배터리, 비상 정지, 주변 장애물, 로봇 namespace와 ROS domain을 반드시 확인하세요.
