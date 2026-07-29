@@ -373,38 +373,35 @@ flowchart LR
   </thead>
   <tbody>
     <tr>
-      <td align="center"><strong>① 이동 요청</strong></td>
+      <td align="center"><strong>1</strong></td>
       <td align="center">Unity · Web · CLI</td>
       <td align="left">운영자가 목표 지점이나 순찰 경로를 입력합니다. 같은 로봇에는 한 번에 하나의 도구만 명령을 보냅니다.</td>
     </tr>
     <tr>
-      <td align="center"><strong>② 위치 확인·경로 생성</strong></td>
+      <td align="center"><strong>2</strong></td>
       <td align="center">AMCL · LiDAR · Nav2</td>
       <td align="left">LiDAR와 바퀴 이동 정보를 이용해 지도 위 현재 위치를 확인하고, 목적지까지 갈 경로를 만듭니다.</td>
     </tr>
     <tr>
-      <td align="center"><strong>③ 주행·장애물 대응</strong></td>
+      <td align="center"><strong>3</strong></td>
       <td align="center">DWB · RPP · Collision Monitor</td>
       <td align="left">만들어진 경로를 따라 이동하면서 벽이나 장애물이 가까우면 속도를 줄이거나 멈춥니다.</td>
     </tr>
     <tr>
-      <td align="center"><strong>④ 바퀴 구동·결과 기록</strong></td>
+      <td align="center"><strong>4</strong></td>
       <td align="center">OpenCR · Dynamixel · run logs</td>
       <td align="left">모터를 움직이고, 현재 위치와 주행 결과를 관제 화면과 로그에 남깁니다.</td>
     </tr>
   </tbody>
 </table>
 
-<details>
-<summary><strong>주행 방식 자세히 보기</strong></summary>
+### 주행 방식
 
 - **현재 위치 확인** — LiDAR와 바퀴 이동 정보를 이용해 로봇이 지도 위 어디에 있는지와 방향을 계산합니다. 시작 위치가 불확실하면 관제 화면에서 초기 위치를 지정할 수 있습니다.
 - **안전한 순찰 경로** — 벽과 장애물에서 충분히 떨어지도록 순찰 경로를 만듭니다.
 - **목적지까지 이동** — Nav2가 목적지까지의 경로를 계산하고, DWB 또는 Regulated Pure Pursuit가 그 경로를 따라가도록 속도와 방향을 조절합니다.
 - **충돌 방지** — 로봇 크기, 장애물, 안전 반경을 계속 확인해 가까워지면 감속하거나 정지합니다.
 - **복구와 도킹** — 길이 막히면 주변 정보를 다시 확인하고 후진·재시도를 수행합니다. 정밀 도킹에서는 ArUco 마커와 후방 LiDAR 거리를 함께 사용합니다.
-
-</details>
 
 > [!CAUTION]
 > 실제 로봇 주행 전에는 배터리, 비상 정지, 주변 장애물, 선택한 로봇과 ROS domain 설정을 반드시 확인하세요.
