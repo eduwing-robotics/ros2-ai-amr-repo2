@@ -1,6 +1,9 @@
 Exit code: 0
 Wall time: 0.2 seconds
 Output:
+Exit code: 0
+Wall time: 0.2 seconds
+Output:
 <div align="center">
 
 # URHYNIX-AMR
@@ -22,7 +25,7 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 
 ## Team URhynix
 
-<table width="100%">
+<table style="width: 100%;" width="100%">
   <tr>
     <td width="50%" valign="top">
       <strong>🧭 김주영 · Project Lead</strong><br><br>
@@ -70,7 +73,7 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
   <a href="https://youtu.be/WU3v9wZHXu4">YouTube에서 보기</a>
 </p>
 
-<table width="100%">
+<table style="width: 100%;" width="100%">
   <thead>
     <tr>
       <th>구분</th>
@@ -106,7 +109,7 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 
 ## 주제 선정 이유
 
-<table width="100%">
+<table style="width: 100%;" width="100%">
   <thead>
     <tr>
       <th>문제</th>
@@ -136,7 +139,7 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 
 기능 범위는 팀이 정의한 사용자·시스템 요구사항을 기준으로 관리했습니다. 요구사항은 `R(Required)`, `D(Desired)`, `O(Optional)`로 구분해 구현 우선순위를 정했습니다.
 
-<table width="100%">
+<table style="width: 100%;" width="100%">
   <thead>
     <tr>
       <th>요구 영역</th>
@@ -209,7 +212,7 @@ Admin PC의 Unity 디지털 트윈, 메인 서버의 네트워크·작업·DB·�
 
 ### 로봇 프로필
 
-<table width="100%">
+<table style="width: 100%;" width="100%">
   <thead>
     <tr>
       <th>로봇</th>
@@ -238,7 +241,7 @@ Admin PC의 Unity 디지털 트윈, 메인 서버의 네트워크·작업·DB·�
 </table>
 ### 명령과 데이터 흐름
 
-<table width="100%">
+<table style="width: 100%;" width="100%">
   <thead>
     <tr>
       <th>방향</th>
@@ -273,7 +276,7 @@ Unity의 ROS-TCP 계층은 Nav2 action을 직접 실행하지 않습니다. 로�
 
 ## 데이터·하드웨어 연동
 
-<table width="100%">
+<table style="width: 100%;" width="100%">
   <thead>
     <tr>
       <th>영역</th>
@@ -325,7 +328,7 @@ flowchart TD
     SAFE --> DRIVE["OpenCR · Dynamixel wheels"]
 ```
 
-<table width="100%">
+<table style="width: 100%;" width="100%">
   <thead>
     <tr>
       <th>단계</th>
@@ -379,7 +382,7 @@ flowchart LR
     CAM --> RGBD["RGB-D rosbag · RTAB-Map<br/>PLY point cloud"]
 ```
 
-<table width="100%">
+<table style="width: 100%;" width="100%">
   <thead>
     <tr>
       <th>경로</th>
@@ -426,7 +429,7 @@ flowchart LR
 
 TurtleBot Web Dashboard와 Unity Dashboard는 같은 UI를 복제한 도구가 아닙니다. 전자는 실제 로봇을 준비하고 움직이는 운영 콘솔이며, 후자는 다중 로봇과 사건을 공간적으로 이해하는 디지털 트윈입니다.
 
-<table width="100%">
+<table style="width: 100%;" width="100%">
   <thead>
     <tr>
       <th></th>
@@ -502,7 +505,7 @@ T1의 배터리가 30% 이하가 되면 메인 서버가 관제에 위치·잔�
 
 ## 기술 스택
 
-<table width="100%">
+<table style="width: 100%;" width="100%">
   <thead>
     <tr>
       <th>분야</th>
@@ -561,7 +564,7 @@ ros2-ai-amr-repo2/
 └── urhynix.repos            # 외부 ROS 2 의존성 목록
 ```
 
-<table width="100%">
+<table style="width: 100%;" width="100%">
   <thead>
     <tr>
       <th>더 자세히 보기</th>
@@ -640,7 +643,7 @@ chmod +x run_ubuntu.sh stop_dashboard.sh stop_robot.sh check_camera.sh
 
 ## 구현 범위와 안전 고지
 
-<table width="100%">
+<table style="width: 100%;" width="100%">
   <thead>
     <tr>
       <th>영역</th>
@@ -673,3 +676,5 @@ chmod +x run_ubuntu.sh stop_dashboard.sh stop_robot.sh check_camera.sh
 ## License
 
 MIT License. See [LICENSE](./LICENSE).
+
+
