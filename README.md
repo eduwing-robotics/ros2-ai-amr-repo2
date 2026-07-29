@@ -437,6 +437,17 @@ TurtleBot Web Dashboard와 Unity Dashboard는 같은 UI를 복제한 도구가 �
   </thead>
   <tbody>
     <tr>
+      <td>화면</td>
+      <td align="center">
+        <img src="./assets/readme/dashboard-response-integration.png" alt="TurtleBot Web Dashboard의 실기 로봇 통합 운영 화면" width="100%"><br>
+        <sub>실기 로봇·RViz·카메라를 연결한 Web Dashboard 운영 화면</sub>
+      </td>
+      <td align="center">
+        <img src="./assets/readme/unity-dashboard-gallery.png" alt="URHYNIX Unity Dashboard Gallery 관제 화면" width="100%"><br>
+        <sub>박물관 디지털 트윈 기반 Unity Dashboard</sub>
+      </td>
+    </tr>
+    <tr>
       <td>핵심 역할</td>
       <td>실제 TurtleBot의 설정·진단·지도·주행 운영</td>
       <td>다중 로봇 디지털 트윈·상황 관제·기록</td>
@@ -472,21 +483,6 @@ TurtleBot Web Dashboard와 Unity Dashboard는 같은 UI를 복제한 도구가 �
       <td>이 저장소의 <a href="./UNITY/"><code>UNITY/</code></a></td>
     </tr>
   </tbody>
-</table>
-
-### 관제 화면
-
-<table style="width: 100%;" width="100%">
-  <tr>
-    <td width="50%" align="center">
-      <img src="./assets/readme/dashboard-response-integration.png" alt="TurtleBot Web Dashboard, Unity Dashboard, RViz와 실시간 카메라를 연결한 통합 관제 화면" width="100%"><br>
-      <sub>실기·디지털 트윈·RViz·카메라를 함께 보는 통합 대응 화면</sub>
-    </td>
-    <td width="50%" align="center">
-      <img src="./assets/readme/unity-dashboard-gallery.png" alt="URHYNIX Unity Dashboard Gallery 관제 화면" width="100%"><br>
-      <sub>박물관 디지털 트윈 기반 Unity Dashboard</sub>
-    </td>
-  </tr>
 </table>
 
 ## 시나리오
