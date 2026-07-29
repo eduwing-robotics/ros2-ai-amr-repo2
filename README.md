@@ -362,15 +362,15 @@ flowchart LR
 
 <table align="center" width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
-    <col style="width:20%">
-    <col style="width:25%">
-    <col style="width:55%">
+    <col style="width:12%">
+    <col style="width:28%">
+    <col style="width:60%">
   </colgroup>
   <thead>
     <tr>
-      <th width="20%" align="center">단계</th>
-      <th width="25%" align="center">핵심 구성</th>
-      <th width="55%" align="left">역할</th>
+      <th width="12%" align="center">단계</th>
+      <th width="28%" align="center">핵심 구성</th>
+      <th width="60%" align="left">역할</th>
     </tr>
   </thead>
   <tbody>
