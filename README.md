@@ -116,31 +116,27 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 
 <table align="center" width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
-    <col style="width:35%">
-    <col style="width:65%">
+    <col style="width:30%">
+    <col style="width:70%">
   </colgroup>
   <thead>
     <tr>
-      <th>문제</th>
-      <th>프로젝트의 접근</th>
+      <th>선정 기준</th>
+      <th>선정 이유</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>주행·카메라·관제 화면이 각각 분리된 로봇 데모</td>
-      <td>ROS 2를 중심으로 실제 로봇, Web Dashboard, Unity Dashboard를 하나의 운용 흐름으로 연결</td>
+      <td><strong>현장 수요</strong></td>
+      <td>야간·폐관 시간대의 반복 순찰은 피로 누적과 인력 공백이 발생할 수 있습니다.</td>
     </tr>
     <tr>
-      <td>여러 로봇의 상태를 공간적으로 파악하기 어려움</td>
-      <td>로봇별 namespace·ROS domain·endpoint를 분리하고 공통 지도 위에서 시각화</td>
+      <td><strong>기존 제품과 차별점</strong></td>
+      <td>Unity 디지털 트윈 관제를 통해 로봇과 현장 상황을 공간적으로 확인하고, 사건 발생 시 응급 대응 흐름을 시연합니다.</td>
     </tr>
     <tr>
-      <td>감지 결과가 현장 대응으로 이어지지 않음</td>
-      <td>카메라·환경 센서 이벤트를 운영자 확인, 출동 명령, 기록으로 연결</td>
-    </tr>
-    <tr>
-      <td>시연 후 결과를 추적하기 어려움</td>
-      <td>세션·이벤트·출동·로봇 위치를 Supabase/PostgreSQL에 기록</td>
+      <td><strong>확장 가능성</strong></td>
+      <td>전시품 진위 판별 기능을 바탕으로 박물관 큐레이션 서비스로 확장할 수 있습니다.</td>
     </tr>
   </tbody>
 </table>
