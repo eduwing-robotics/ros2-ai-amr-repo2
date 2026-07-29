@@ -152,33 +152,33 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
   </colgroup>
   <thead>
     <tr>
-      <th width="24%" nowrap style="white-space: nowrap;">요구 영역</th>
+      <th width="22%" nowrap style="white-space: nowrap;">요구 영역</th>
       <th>사용자·시스템 요구사항 반영</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td width="24%" nowrap style="white-space: nowrap;"><strong>순찰과 이동</strong></td>
+      <td width="22%" nowrap style="white-space: nowrap;"><strong>순찰과 이동</strong></td>
       <td>사전 정의 경로를 반복 순찰하고, 장애물을 인지·회피하며, waypoint 기반 출동과 복귀를 수행</td>
     </tr>
     <tr>
-      <td width="24%" nowrap style="white-space: nowrap;"><strong>상태 관제</strong></td>
+      <td width="22%" nowrap style="white-space: nowrap;"><strong>상태 관제</strong></td>
       <td>관리자가 지도에서 로봇 위치·상태·배터리·센서·카메라·동작 로그를 확인하고 수동 조작 가능</td>
     </tr>
     <tr>
-      <td width="24%" nowrap style="white-space: nowrap;"><strong>위험 감지</strong></td>
+      <td width="22%" nowrap style="white-space: nowrap;"><strong>위험 감지</strong></td>
       <td>사람, 화재, 소음, PIR 등 위험 신호를 수집하고 위치·영상·이벤트를 관제 화면에 전달</td>
     </tr>
     <tr>
-      <td width="24%" nowrap style="white-space: nowrap;"><strong>출동과 임무 인계</strong></td>
+      <td width="22%" nowrap style="white-space: nowrap;"><strong>출동과 임무 인계</strong></td>
       <td>T1의 이상 감지 또는 배터리 부족 시 Gen.G에 출동·순찰 인계를 요청</td>
     </tr>
     <tr>
-      <td width="24%" nowrap style="white-space: nowrap;"><strong>데이터 기록</strong></td>
+      <td width="22%" nowrap style="white-space: nowrap;"><strong>데이터 기록</strong></td>
       <td>로봇 상태, 센서 이벤트, 출동, 카메라, 위치, 로그를 서버와 DB에 저장</td>
     </tr>
     <tr>
-      <td width="24%" nowrap style="white-space: nowrap;"><strong>선택 시연 기능</strong></td>
+      <td width="22%" nowrap style="white-space: nowrap;"><strong>선택 시연 기능</strong></td>
       <td>그림 진위 판별, 워터 펌프 모의 진압, 디지털 트윈 알림·신고 상태 표시</td>
     </tr>
   </tbody>
@@ -397,8 +397,8 @@ flowchart LR
 
 <table align="center" width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
-    <col style="width:28%">
-    <col style="width:72%">
+    <col style="width:22%">
+    <col style="width:78%">
   </colgroup>
   <thead>
     <tr>
