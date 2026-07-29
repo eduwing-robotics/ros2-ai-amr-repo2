@@ -7,58 +7,15 @@
 ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI 비전 · 환경 센서를 연결한<br>
 다중 TurtleBot3 기반 박물관 경비 프로젝트
 
-**프로젝트 기간 · 2026. 05. 25. — 2026. 07. 24.**
-
 [![ROS 2 Jazzy](https://img.shields.io/badge/ROS%202-Jazzy-22314E?logo=ros&logoColor=white)](https://docs.ros.org/en/jazzy/)
 [![Unity 6.3 LTS](https://img.shields.io/badge/Unity-6.3%20LTS-000000?logo=unity&logoColor=white)](https://unity.com/)
 [![Nav2](https://img.shields.io/badge/Navigation-Nav2-1E88E5)](https://nav2.org/)
 [![TurtleBot3](https://img.shields.io/badge/Robot-TurtleBot3-00A6D6)](https://emanual.robotis.com/docs/en/platform/turtlebot3/overview/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2EA44F.svg)](./LICENSE)
 
-[프로젝트 영상](#프로젝트-영상) · [프로젝트 개요](#프로젝트-개요) · [팀 소개](#team-urhynix) · [핵심 기능](#핵심-기능) · [요구사항·일정](#요구사항-일정-및-추적) · [시스템 구성](#시스템-구성) · [시나리오](#동작-검증-시나리오) · [실행하기](#실행하기)
+[팀 구성](#team-urhynix) · [프로젝트 주제](#프로젝트-주제) · [요구사항](#요구사항) · [시스템 구성](#시스템-구성) · [주행](#주행) · [비전](#비전) · [시나리오](#시나리오) · [실행하기](#실행하기)
 
 </div>
-
-## 프로젝트 영상
-
-<a href="https://youtu.be/WU3v9wZHXu4">
-  <img src="./assets/readme/urhynix-project-film-poster.jpg" alt="URHYNIX 프로젝트 영상: 실제 박물관 경기장, 자율 순찰, Unity 대시보드 및 디지털 트윈 시나리오" width="100%">
-</a>
-
-<p align="center">
-  <strong>▶ 2분 53초 프로젝트 영상 보기</strong><br>
-  실제 로봇 · 자율 순찰 · 웹 관제 · ArUco 도킹 · Unity 디지털 트윈 · AI 비전<br>
-  <a href="https://youtu.be/WU3v9wZHXu4">YouTube에서 보기</a>
-</p>
-
-> [!NOTE]
-> 실제 로봇 장면과 Unity 시뮬레이션 장면을 함께 사용한 연구·시연 프로젝트입니다.
-
-## 프로젝트 개요
-
-URHYNIX-AMR은 박물관 환경에서 발생할 수 있는 상황을 감지하고, 운영자가 확인한 뒤 로봇을 출동·순찰시키는 흐름을 구현합니다. 두 대의 TurtleBot3는 같은 지도에서 독립적으로 동작하며, Web Dashboard는 실제 로봇 운용을, Unity Dashboard는 공간 기반의 디지털 트윈 관제를 담당합니다.
-
-```text
-감지 → 위치 확인 → 운영자 판단 → 로봇 출동 → 결과 기록
-```
-
-| 구분 | 내용 |
-|---|---|
-| **목표** | 실제 AMR과 디지털 트윈을 연결해 다중 로봇 박물관 경비 시나리오를 구현 |
-| **운영 대상** | T1(`tb3_1`)과 Gen.G(`tb3_2`) TurtleBot3 Burger 2대 |
-| **주행 기반** | ROS 2 Jazzy, AMCL, Nav2, LiDAR, wheel odometry, saved map |
-| **관제 화면** | TurtleBot Web Dashboard와 Unity Dashboard |
-| **비전·센서** | RealSense D435, Pi Camera, YOLO, EfficientNet-B0, Arduino 환경 센서 |
-| **프로젝트 기간** | 2026년 5월 25일 ~ 2026년 7월 24일 |
-
-### 해결하려는 문제
-
-| 문제 | URHYNIX의 접근 |
-|---|---|
-| 주행·카메라·관제 화면이 각각 분리된 로봇 데모 | ROS 2를 중심으로 실제 로봇, Web Dashboard, Unity Dashboard를 하나의 운용 흐름으로 연결 |
-| 여러 로봇의 상태를 공간적으로 파악하기 어려움 | 로봇별 namespace·ROS domain·endpoint를 분리하고 공통 지도 위에서 시각화 |
-| 감지 결과가 현장 대응으로 이어지지 않음 | 카메라·환경 센서 이벤트를 운영자 확인, 출동 명령, 기록으로 연결 |
-| 시연 후 결과를 추적하기 어려움 | 세션·이벤트·출동·로봇 위치를 Supabase/PostgreSQL에 기록 |
 
 ## Team URhynix
 
@@ -96,22 +53,43 @@ URHYNIX-AMR은 박물관 환경에서 발생할 수 있는 상황을 감지하�
   </tr>
 </table>
 
-## 핵심 기능
+## 프로젝트 주제
 
-| 기능 | 구현 내용 |
+**실제 AMR과 디지털 트윈을 연결한 다중 로봇 박물관 경비 시스템**입니다. T1(`tb3_1`)과 Gen.G(`tb3_2`) TurtleBot3 Burger가 같은 박물관 지도에서 독립적으로 순찰·출동하고, Web Dashboard와 Unity Dashboard가 실제 로봇 운용과 공간 기반 관제를 나누어 담당합니다.
+
+<a href="https://youtu.be/WU3v9wZHXu4">
+  <img src="./assets/readme/urhynix-project-film-poster.jpg" alt="URHYNIX 프로젝트 영상: 실제 박물관 경기장, 자율 순찰, Unity 대시보드 및 디지털 트윈 시나리오" width="100%">
+</a>
+
+<p align="center">
+  <strong>▶ 2분 53초 프로젝트 영상 보기</strong><br>
+  실제 로봇 · 자율 순찰 · 웹 관제 · ArUco 도킹 · Unity 디지털 트윈 · AI 비전<br>
+  <a href="https://youtu.be/WU3v9wZHXu4">YouTube에서 보기</a>
+</p>
+
+| 구분 | 내용 |
 |---|---|
-| **다중 로봇 순찰** | `tb3_1`, `tb3_2`를 로봇별 ROS domain·namespace·ROS-TCP endpoint로 분리해 운용 |
-| **자율주행과 안전 경로** | AMCL과 Nav2를 이용한 목표 주행·waypoint 순찰, costmap·footprint 기반 충돌 회피 |
-| **안전 순찰 경로 생성** | 점유격자에서 clearance를 계산하고, 좁은 회랑의 중앙을 우선하는 waypoint 경로를 생성 |
-| **Web 실기 운영** | 로봇 검색·설정, 지도 제작, 카메라·LiDAR 확인, 수동 주행, 목표·경유지 주행, SSH bring-up |
-| **Unity 디지털 트윈** | 2D·2.5D·3D 지도, 로봇·센서 상태, 순찰·출동·정지·복귀 흐름을 한 화면에서 관제 |
-| **AI 비전** | YOLO 객체 감지, 사람/화재/조각상 필터링, 고정 ROI 기반 Bacchus 그림 진위 판별 |
-| **정밀 접근 실험** | ArUco 마커 정렬과 후방 LiDAR 거리 측정을 조합한 도킹 실험 |
-| **운영 기록** | 세션, 이벤트, 출동, 위치, 주행 결과를 Supabase/PostgreSQL과 JSONL 로그에 저장 |
+| **운영 대상** | T1(`tb3_1`)과 Gen.G(`tb3_2`) TurtleBot3 Burger 2대 |
+| **주행 기반** | ROS 2 Jazzy, AMCL, Nav2, LiDAR, wheel odometry, saved map |
+| **관제 화면** | TurtleBot Web Dashboard와 Unity Dashboard |
+| **비전·센서** | RealSense D435, Pi Camera, YOLO, EfficientNet-B0, Arduino 환경 센서 |
+| **운영 흐름** | 감지 → 위치 확인 → 운영자 판단 → 로봇 출동 → 결과 기록 |
 
-## 요구사항, 일정 및 추적
+> [!NOTE]
+> 실제 로봇 장면과 Unity 시뮬레이션 장면을 함께 사용한 연구·시연 프로젝트입니다.
 
-프로젝트의 기능 범위는 팀이 정의한 사용자·시스템 요구사항을 기준으로 관리했습니다. 요구사항은 `R(Required)`, `D(Desired)`, `O(Optional)`로 구분해 구현 우선순위를 정했습니다.
+## 주제 선정 이유
+
+| 문제 | 프로젝트의 접근 |
+|---|---|
+| 주행·카메라·관제 화면이 각각 분리된 로봇 데모 | ROS 2를 중심으로 실제 로봇, Web Dashboard, Unity Dashboard를 하나의 운용 흐름으로 연결 |
+| 여러 로봇의 상태를 공간적으로 파악하기 어려움 | 로봇별 namespace·ROS domain·endpoint를 분리하고 공통 지도 위에서 시각화 |
+| 감지 결과가 현장 대응으로 이어지지 않음 | 카메라·환경 센서 이벤트를 운영자 확인, 출동 명령, 기록으로 연결 |
+| 시연 후 결과를 추적하기 어려움 | 세션·이벤트·출동·로봇 위치를 Supabase/PostgreSQL에 기록 |
+
+## 요구사항
+
+기능 범위는 팀이 정의한 사용자·시스템 요구사항을 기준으로 관리했습니다. 요구사항은 `R(Required)`, `D(Desired)`, `O(Optional)`로 구분해 구현 우선순위를 정했습니다.
 
 | 요구 영역 | 사용자·시스템 요구사항 반영 |
 |---|---|
@@ -121,14 +99,6 @@ URHYNIX-AMR은 박물관 환경에서 발생할 수 있는 상황을 감지하�
 | **출동과 임무 인계** | T1의 이상 감지 또는 배터리 부족 시 Gen.G에 출동·순찰 인계를 요청 |
 | **데이터 기록** | 로봇 상태, 센서 이벤트, 출동, 카메라, 위치, 로그를 서버와 DB에 저장 |
 | **선택 시연 기능** | 그림 진위 판별, 워터 펌프 모의 진압, 디지털 트윈 알림·신고 상태 표시 |
-
-### Jira 일정 관리
-
-Jira로 요구사항 정의, 설계, ROS 2/SLAM·Nav2, Arduino·센서, Unity 관제, 통합 검증 단계를 스프린트 단위로 추적했습니다.
-
-<p align="center">
-  <img src="./assets/readme/jira-schedule.png" alt="URHYNIX Jira 스프린트 일정 관리 화면" width="100%">
-</p>
 
 ## 시스템 구성
 
@@ -151,18 +121,20 @@ flowchart LR
     UNITY --> DB
 ```
 
-### 설계 산출물
+### 하드웨어 아키텍처
 
-소프트웨어 설계는 Admin PC의 Unity 디지털 트윈, 메인 서버의 네트워크·작업·DB·비전 모듈, 두 로봇의 주행·센서 계층을 TCP·UDP·ROS 2 통신으로 연결합니다.
-
-<p align="center">
-  <img src="./assets/readme/software-architecture.webp" alt="URHYNIX 소프트웨어 아키텍처: Admin PC, Main Server, T1 및 Gen.G 로봇 간 TCP, UDP, ROS 2 통신" width="100%">
-</p>
-
-하드웨어는 두 TurtleBot3에 공통으로 LiDAR·OpenCR·Dynamixel·배터리를 구성하고, T1에는 RealSense RGB-D 카메라를, Gen.G에는 Pi Camera와 Arduino 환경 센서를 연결했습니다.
+두 TurtleBot3에는 공통으로 LiDAR·OpenCR·Dynamixel·배터리를 구성하고, T1에는 RealSense RGB-D 카메라를, Gen.G에는 Pi Camera와 Arduino 환경 센서를 연결했습니다.
 
 <p align="center">
   <img src="./assets/readme/hardware-architecture.png" alt="URHYNIX 하드웨어 아키텍처: Admin PC, Main Server, T1과 Gen.G의 라즈베리파이, LiDAR, OpenCR, 카메라 및 Arduino 센서" width="100%">
+</p>
+
+### 소프트웨어 아키텍처
+
+Admin PC의 Unity 디지털 트윈, 메인 서버의 네트워크·작업·DB·비전 모듈, 두 로봇의 주행·센서 계층을 TCP·UDP·ROS 2 통신으로 연결합니다.
+
+<p align="center">
+  <img src="./assets/readme/software-architecture.webp" alt="URHYNIX 소프트웨어 아키텍처: Admin PC, Main Server, T1 및 Gen.G 로봇 간 TCP, UDP, ROS 2 통신" width="100%">
 </p>
 
 ### 로봇 프로필
@@ -183,49 +155,17 @@ flowchart LR
 
 Unity의 ROS-TCP 계층은 Nav2 action을 직접 실행하지 않습니다. 로봇 측 bridge가 Unity 토픽을 받아 Nav2 goal 또는 waypoint 실행으로 변환합니다.
 
-## 두 대시보드
+## 데이터·하드웨어 연동
 
-TurtleBot Web Dashboard와 Unity Dashboard는 같은 UI를 복제한 도구가 아닙니다. 전자는 실제 로봇을 준비하고 움직이는 운영 콘솔이며, 후자는 다중 로봇과 사건을 공간적으로 이해하는 디지털 트윈입니다.
-
-| | **TurtleBot Web Dashboard** | **Unity Dashboard** |
+| 영역 | 구성 | 역할 |
 |---|---|---|
-| 핵심 역할 | 실제 TurtleBot의 설정·진단·지도·주행 운영 | 다중 로봇 디지털 트윈·상황 관제·기록 |
-| 연결 방식 | Browser ↔ HTTP API ↔ `rclpy` ↔ ROS 2 | Unity ↔ ROS-TCP Endpoint ↔ ROS 2 |
-| 지도 | 저장 지도 선택, 벽·장애물 편집, 새 점유지도 제작 | 2D·2.5D·3D 지도와 로봇 위치·경로 시각화 |
-| 주행 | 수동 조작, 목표·경유지, A* 경로, 반복 주행 | 주행 준비, 순찰 waypoint, 단발 출동, 정지·복귀 |
-| 센서 | LiDAR 안전 반경, odometry, raw/compressed 카메라 | 카메라, LiDAR, 환경 센서, 상태·이벤트 패널 |
-| 운영 강점 | SSH bring-up, OpenCR 확인, 현장 진단 | 시나리오 재현, 공간 상황 이해, 운영 이력 |
-| 소스 | [TurtleBot_Dashboard](https://github.com/ensacom2019/TurtleBot_Dashboard) | 이 저장소의 [`UNITY/`](./UNITY/) |
+| **로봇 하드웨어** | TurtleBot3 Burger, Raspberry Pi, OpenCR, LDS LiDAR, Dynamixel | 차동구동, LiDAR 취득, odometry |
+| **카메라** | RealSense D435, Pi Camera v2 | RGB/RGB-D 스트림, 객체 탐지, 마커 인식 |
+| **환경 센서** | Arduino Uno, PIR, 소리, 온도, 거리 센서 | 박물관 상황 이벤트 수집 |
+| **운영 데이터** | Supabase, PostgreSQL, JSONL run logs | 세션·이벤트·출동·pose·주행 결과 기록 |
+| **3D 제작·검증** | Arduino 배선 참고 자료, 로봇 부속 3D 설계·출력 | 실제 센서와 로봇 부속품 연결 검증 |
 
-## 동작 검증 시나리오
-
-시나리오는 팀이 정의한 동작 검증 절차를 기준으로 설계했습니다. 관제 화면의 신고·제압·진압 표시는 **시연용 상태와 모의 동작**이며, 실제 112/119 신고나 사람을 대상으로 한 물리적 조치를 수행하지 않습니다.
-
-### Scenario #1 · 침입자 감지
-
-T1이 순찰 중 사람을 감지하면 위치·영상을 메인 서버와 관제 화면에 전달합니다. 관제는 112 신고 요청 상태를 표시하고, Gen.G는 감지 위치로 출동합니다. Gen.G 도착 후 T1은 순찰을 재개하며, 상황 종료 시 Gen.G는 대기 장소로 복귀하고 이벤트를 저장합니다.
-
-<p align="center">
-  <img src="./assets/readme/scenario-intruder.webp" alt="침입자 감지 시나리오 시퀀스 다이어그램" width="58%">
-</p>
-
-### Scenario #2 · 화재 대응
-
-T1이 순찰 중 화재 징후를 감지하면 위치·영상을 알리고 Gen.G가 현장으로 출동합니다. Gen.G가 도착하면 T1은 순찰을 재개하며, Gen.G는 워터 펌프를 활용한 **모의 진압** 상태를 수행한 뒤 대기 장소로 복귀합니다. 결과는 DB에 저장됩니다.
-
-<p align="center">
-  <img src="./assets/readme/scenario-fire.webp" alt="화재 감지와 모의 진압 시나리오 시퀀스 다이어그램" width="58%">
-</p>
-
-### Scenario #3 · 배터리 부족과 순찰 임무 인계
-
-T1의 배터리가 30% 이하가 되면 메인 서버가 관제에 위치·잔량을 알립니다. Gen.G가 T1 위치로 이동해 순찰 waypoint를 인계받고, T1은 충전 대기 장소로 이동합니다. 충전 후 T1이 Gen.G 위치로 복귀해 다시 임무를 인계받고 Gen.G는 대기 장소로 돌아갑니다.
-
-<p align="center">
-  <img src="./assets/readme/scenario-battery-handover.webp" alt="배터리 부족과 T1 Gen.G 간 순찰 임무 인계 시퀀스 다이어그램" width="58%">
-</p>
-
-## 자율주행과 안전
+## 주행
 
 경로 계획·추종·충돌 판단은 Unity나 Web UI가 아닌 **로봇 측 ROS 2 코드**가 수행합니다. 두 대시보드는 좌표와 명령을 전달하고, 상태를 시각화하는 관제 계층입니다.
 
@@ -253,7 +193,7 @@ flowchart TD
 > [!CAUTION]
 > 실제 로봇 주행 전 배터리, 비상 정지, 주변 장애물, 로봇 namespace와 ROS domain을 반드시 확인하세요.
 
-## 비전과 AI 파이프라인
+## 비전
 
 비전은 실시간 관제, 객체 탐지, 정밀 도킹, 작품 판별, RGB-D 기반 3D 재구성으로 나뉩니다. AI 결과는 경비 판단을 보조하는 증거이며, 사람·화재·작품 이상을 단독으로 확정하지 않고 로봇 pose·LiDAR·환경 센서·운영자 확인과 함께 해석합니다.
 
@@ -280,15 +220,47 @@ flowchart LR
 
 세부 실행 명령과 모델 재학습 방법은 [Vision_AI/README.md](./Vision_AI/README.md)에 정리했습니다.
 
-## 데이터·하드웨어 연동
+## 대시보드
 
-| 영역 | 구성 | 역할 |
+TurtleBot Web Dashboard와 Unity Dashboard는 같은 UI를 복제한 도구가 아닙니다. 전자는 실제 로봇을 준비하고 움직이는 운영 콘솔이며, 후자는 다중 로봇과 사건을 공간적으로 이해하는 디지털 트윈입니다.
+
+| | **TurtleBot Web Dashboard** | **Unity Dashboard** |
 |---|---|---|
-| **로봇 하드웨어** | TurtleBot3 Burger, Raspberry Pi, OpenCR, LDS LiDAR, Dynamixel | 차동구동, LiDAR 취득, odometry |
-| **카메라** | RealSense D435, Pi Camera v2 | RGB/RGB-D 스트림, 객체 탐지, 마커 인식 |
-| **환경 센서** | Arduino Uno, PIR, 소리, 온도, 거리 센서 | 박물관 상황 이벤트 수집 |
-| **운영 데이터** | Supabase, PostgreSQL, JSONL run logs | 세션·이벤트·출동·pose·주행 결과 기록 |
-| **3D 제작·검증** | Arduino 배선 참고 자료, 로봇 부속 3D 설계·출력 | 실제 센서와 로봇 부속품 연결 검증 |
+| 핵심 역할 | 실제 TurtleBot의 설정·진단·지도·주행 운영 | 다중 로봇 디지털 트윈·상황 관제·기록 |
+| 연결 방식 | Browser ↔ HTTP API ↔ `rclpy` ↔ ROS 2 | Unity ↔ ROS-TCP Endpoint ↔ ROS 2 |
+| 지도 | 저장 지도 선택, 벽·장애물 편집, 새 점유지도 제작 | 2D·2.5D·3D 지도와 로봇 위치·경로 시각화 |
+| 주행 | 수동 조작, 목표·경유지, A* 경로, 반복 주행 | 주행 준비, 순찰 waypoint, 단발 출동, 정지·복귀 |
+| 센서 | LiDAR 안전 반경, odometry, raw/compressed 카메라 | 카메라, LiDAR, 환경 센서, 상태·이벤트 패널 |
+| 운영 강점 | SSH bring-up, OpenCR 확인, 현장 진단 | 시나리오 재현, 공간 상황 이해, 운영 이력 |
+| 소스 | [TurtleBot_Dashboard](https://github.com/ensacom2019/TurtleBot_Dashboard) | 이 저장소의 [`UNITY/`](./UNITY/) |
+
+## 시나리오
+
+동작 검증 절차는 침입자 감지, 화재 대응, 배터리 부족 시 임무 인계의 세 시나리오로 구성했습니다. 관제 화면의 신고·제압·진압 표시는 **시연용 상태와 모의 동작**이며, 실제 112/119 신고나 사람을 대상으로 한 물리적 조치를 수행하지 않습니다.
+
+### Scenario #1 · 침입자 감지
+
+T1이 순찰 중 사람을 감지하면 위치·영상을 메인 서버와 관제 화면에 전달합니다. 관제는 112 신고 요청 상태를 표시하고, Gen.G는 감지 위치로 출동합니다. Gen.G 도착 후 T1은 순찰을 재개하며, 상황 종료 시 Gen.G는 대기 장소로 복귀하고 이벤트를 저장합니다.
+
+<p align="center">
+  <img src="./assets/readme/scenario-intruder.webp" alt="침입자 감지 시나리오 시퀀스 다이어그램" width="58%">
+</p>
+
+### Scenario #2 · 화재 대응
+
+T1이 순찰 중 화재 징후를 감지하면 위치·영상을 알리고 Gen.G가 현장으로 출동합니다. Gen.G가 도착하면 T1은 순찰을 재개하며, Gen.G는 워터 펌프를 활용한 **모의 진압** 상태를 수행한 뒤 대기 장소로 복귀합니다. 결과는 DB에 저장됩니다.
+
+<p align="center">
+  <img src="./assets/readme/scenario-fire.webp" alt="화재 감지와 모의 진압 시나리오 시퀀스 다이어그램" width="58%">
+</p>
+
+### Scenario #3 · 배터리 부족과 순찰 임무 인계
+
+T1의 배터리가 30% 이하가 되면 메인 서버가 관제에 위치·잔량을 알립니다. Gen.G가 T1 위치로 이동해 순찰 waypoint를 인계받고, T1은 충전 대기 장소로 이동합니다. 충전 후 T1이 Gen.G 위치로 복귀해 다시 임무를 인계받고 Gen.G는 대기 장소로 돌아갑니다.
+
+<p align="center">
+  <img src="./assets/readme/scenario-battery-handover.webp" alt="배터리 부족과 T1 Gen.G 간 순찰 임무 인계 시퀀스 다이어그램" width="58%">
+</p>
 
 ## 기술 스택
 
@@ -299,6 +271,16 @@ flowchart LR
 | 관제·시각화 | Unity 6.3 LTS, C#, ROS-TCP-Connector, Python, `rclpy`, HTTP, MJPEG |
 | AI·비전 | OpenCV, Ultralytics YOLO, PyTorch, EfficientNet-B0, ArUco, RealSense, RTAB-Map |
 | 데이터·센서 | Supabase, PostgreSQL, Arduino Uno, PIR·소리·온도·거리 센서 |
+
+## 일정 추적
+
+**프로젝트 기간 · 2026년 5월 26일 ~ 2026년 7월 24일**
+
+Jira로 요구사항 정의, 설계, ROS 2/SLAM·Nav2, Arduino·센서, Unity 관제, 통합 검증 단계를 스프린트 단위로 추적했습니다.
+
+<p align="center">
+  <img src="./assets/readme/jira-schedule.png" alt="URHYNIX Jira 스프린트 일정 관리 화면" width="100%">
+</p>
 
 ## 프로젝트 구조와 문서
 
