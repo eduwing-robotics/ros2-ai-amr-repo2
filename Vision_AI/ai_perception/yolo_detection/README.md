@@ -4,7 +4,7 @@
 
 ## 시연 영상
 
-[![T1 YOLO 실시간 감지 GIF 미리보기](media/T1_YOLO_preview_30_45_color.gif)](media/T1_YOLO.mp4)
+[![T1 YOLO 실시간 감지 GIF 미리보기](media/T1_YOLO_preview_30_42_color.gif)](media/T1_YOLO.mp4)
 
 [전체 영상 보기 (MP4)](media/T1_YOLO.mp4)
 
