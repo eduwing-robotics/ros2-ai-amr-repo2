@@ -76,34 +76,34 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 
 <table align="center" width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
-    <col style="width:25%">
-    <col style="width:75%">
+    <col style="width:18%">
+    <col style="width:82%">
   </colgroup>
   <thead>
     <tr>
-      <th width="20%" nowrap style="white-space: nowrap;">구분</th>
+      <th width="18%" nowrap style="white-space: nowrap;">구분</th>
       <th>내용</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td width="20%" nowrap style="white-space: nowrap;"><strong>운영 대상</strong></td>
+      <td width="18%" nowrap style="white-space: nowrap;"><strong>운영 대상</strong></td>
       <td>T1(<code>tb3_1</code>)과 Gen.G(<code>tb3_2</code>) TurtleBot3 Burger 2대</td>
     </tr>
     <tr>
-      <td width="20%" nowrap style="white-space: nowrap;"><strong>주행 기반</strong></td>
+      <td width="18%" nowrap style="white-space: nowrap;"><strong>주행 기반</strong></td>
       <td>ROS 2 Jazzy, AMCL, Nav2, LiDAR, wheel odometry, saved map</td>
     </tr>
     <tr>
-      <td width="20%" nowrap style="white-space: nowrap;"><strong>관제 화면</strong></td>
+      <td width="18%" nowrap style="white-space: nowrap;"><strong>관제 화면</strong></td>
       <td>TurtleBot Web Dashboard와 Unity Dashboard</td>
     </tr>
     <tr>
-      <td width="20%" nowrap style="white-space: nowrap;"><strong>비전·센서</strong></td>
-      <td>RealSense D435, Pi Camera, YOLO, EfficientNet-B0, Arduino 환경 센서</td>
+      <td width="18%" nowrap style="white-space: nowrap;"><strong>비전·센서</strong></td>
+      <td nowrap style="white-space: nowrap;">RealSense D435, Pi Camera, YOLO, EfficientNet-B0, Arduino 환경 센서</td>
     </tr>
     <tr>
-      <td width="20%" nowrap style="white-space: nowrap;"><strong>운영 흐름</strong></td>
+      <td width="18%" nowrap style="white-space: nowrap;"><strong>운영 흐름</strong></td>
       <td>감지 → 위치 확인 → 운영자 판단 → 로봇 출동 → 결과 기록</td>
     </tr>
   </tbody>
