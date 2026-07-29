@@ -10,7 +10,9 @@ T1(ROS Domain 2) **시동 / RealSense JPEG 카메라 / RPP 주행 / 순찰 2회 
 - 카메라: RealSense **JPEG compressed** (`/tb3_1/camera/color/image_raw/compressed`)
 ## 시연 영상
 
-- [T1 순찰 2회 및 ArUco 도킹 영상](media/T1_patrol_twice_docking.mp4)
+[![T1 순찰 및 ArUco 도킹 GIF 미리보기](media/T1_patrol_twice_docking_preview.gif)](media/T1_patrol_twice_docking.mp4)
+
+[전체 영상 보기 (MP4)](media/T1_patrol_twice_docking.mp4)
 
 ---
 

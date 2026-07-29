@@ -10,7 +10,9 @@ Gen.G(ROS Domain 1) **시동 / 카메라 / RPP 주행 / 순찰 / ArUco 도킹 / 
 
 ## 시연 영상
 
-- [Gen.G ArUco 도킹 영상](media/GenG_robot_docking.mp4)
+[![Gen.G ArUco 도킹 GIF 미리보기](media/GenG_robot_docking_preview.gif)](media/GenG_robot_docking.mp4)
+
+[전체 영상 보기 (MP4)](media/GenG_robot_docking.mp4)
 
 ---
 
