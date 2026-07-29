@@ -676,5 +676,3 @@ chmod +x run_ubuntu.sh stop_dashboard.sh stop_robot.sh check_camera.sh
 ## License
 
 MIT License. See [LICENSE](./LICENSE).
-
-
