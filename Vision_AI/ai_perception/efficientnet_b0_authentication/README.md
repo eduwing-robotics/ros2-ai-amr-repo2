@@ -2,6 +2,10 @@
 
 Bacchus 그림을 `GENUINE`, `FAKE`, `RECHECK`로 분류하는 진위 판별 기능입니다.
 
+## 시연 영상
+
+- [EfficientNet-B0 바쿠스와 아리아드네 진위 판정 영상](media/Efficientnet_B0_바쿠스와_아리아드네_진위판정.mp4)
+
 ## 구성
 
 - `models/`: EfficientNet-B0 체크포인트와 평가 메타데이터

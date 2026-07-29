@@ -1,28 +1,16 @@
 # Gen.G RPP 순찰 · ArUco 도킹 패키지
 
 Gen.G(ROS Domain 1) **시동 / 카메라 / RPP 주행 / 순찰 / ArUco 도킹 / 맵** 에 필요한 파일만
-모아 둔 독립 폴더입니다. `main`의 다른 코드와 섞이지 않도록 **전용 브랜치**에 올립니다.
+모아 둔 독립 실행 폴더입니다.
 
 - 로봇: Gen.G (`192.168.20.7`, `ROS_DOMAIN_ID=1`, ns `tb3_2`)
 - 맵: `maps/museum_map.{yaml,pgm}`
 - Nav2: Smac2D + **RPP** (`config/nav2_params_geng_rpp.yaml`)
 - 마커: ArUco ID **12** (`aruco_markers/`)
 
----
+## 시연 영상
 
-## 브랜치 사용법 (다른 파일과 안 섞이게)
-
-```bash
-git clone https://github.com/eduwing-robotics/ros2-ai-amr-repo2.git
-cd ros2-ai-amr-repo2
-
-# 이 작업만 들어 있는 브랜치로 이동
-git fetch origin
-git checkout feature/geng-rpp-patrol-aruco-dock
-```
-
-- **브랜치** = `main`에서 갈라진 작업 줄. 통합 후 `Slam_Nav2/geng_rpp_patrol_dock/`에서 관리됩니다.
-- `main`에는 바로 합치지 않고, 리뷰 후 PR로 병합하면 다른 사람과 충돌을 줄일 수 있습니다.
+- [Gen.G ArUco 도킹 영상](media/GenG_robot_docking.mp4)
 
 ---
 
@@ -100,6 +88,7 @@ ROBOT=geng ./scripts/run_patrol.sh && ROBOT=geng ./scripts/dock_geng_aruco.sh
 ```
 geng_rpp_patrol_dock/
   README.md
+  media/            # 시연 영상
   docs/UNITY_POSE_AND_CONTROL.md
   scripts/          # bringup helpers, Nav2, patrol, dock, camera, aruco
   config/           # nav2_params_geng_rpp.yaml, waypoints.yaml
@@ -165,11 +154,8 @@ python3 scripts/robot_yolo_viewer.py \
 | `_nav2_wait_ready.sh` | Nav2 ready 대기 | |
 | `prep_geng_aruco_dock.sh` | 도킹 사전 점검 | |
 | `aruco_marker_config.py` | `markers.yaml` 로더 | |
-| `aruco_align_geng.py` | 구(legacy) image_error 정렬 | **도킹 경로에서는 사용 안 함** |
 | `aruco_dock_detector.py` | 마커 검출 디버그 | |
-| `rotate_map_yaw.py` | map 절대 yaw 회전 | **현 도킹 경로에서는 사용 안 함** |
 | `odom_tf_relay.py` / `scan_normalize.py` | 옵션 TF/scan | 기본 RPP 경로에서는 OFF |
-| `dock_geng_rear_wall.py` | 후방 도킹 짧은 버전 | 보통 `*_long.py` |
 
 ### 전체 종료
 
@@ -188,21 +174,8 @@ python3 scripts/robot_yolo_viewer.py \
 T1이 더 안정적이어서 Gen.G도 **같은 단순 경로**로 맞춤:
 
 - Nav2: **raw `/scan` + raw odom TF** (`USE_SCAN_NORM=0`, `USE_LOCAL_ODOM_TF=0`)
-- ArUco: **`aruco_align_geng_bearing.py` bearing** (JPEG ROS, ID 12). H.264/image_error 경로 사용 안 함
-- 180°: **`rotate_geng_precise.py`** (odom 상대) — map 절대 yaw/`rotate_map_yaw.py` 사용 안 함
+- ArUco: **`aruco_align_geng_bearing.py` bearing** (JPEG ROS, ID 12)
 - 도킹: `dock_geng_rear_wall_long.py` (Gen.G 전용)
 - 유지: Domain 1, ns `tb3_2`, footprint 30×20, marker ID 12, stage 좌표
 
 `target_bearing_deg`는 현재 `0.0`(정면 중심). face-on에서 오프셋이 있으면 T1처럼 값을 캘리브하세요.
-
-## 종료
-
-```bash
-# YOLO 창 + Nav2/RViz + Pi 카메라 + bringup
-./scripts/stop_all_geng.sh
-
-# 카메라만
-./scripts/stop_geng_camera.sh
-```
-
-노트북에 `~/workspace/robot_project/scripts/ssh_genji.py` 와 `robot_bringup_all.sh` 가 필요합니다.

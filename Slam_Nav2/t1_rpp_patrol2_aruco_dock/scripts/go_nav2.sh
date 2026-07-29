@@ -17,7 +17,6 @@ export NAV2_PARAMS="${NAV2_PARAMS:-${ROOT}/config/nav2_params_t1_patrol_rpp.yaml
 
 if [[ ! -f "${MAP_YAML}" ]]; then
   echo "[FAIL] Map not found: ${MAP_YAML}"
-  echo "       매핑 후: ./scripts/save_map.sh"
   exit 1
 fi
 
@@ -140,7 +139,6 @@ echo "╔═══════════════════════�
 echo "║ Nav2 실행 중 — 이 터미널은 Ctrl+C 로 종료                    ║"
 echo "╠══════════════════════════════════════════════════════════════╣"
 echo "║ 터미널 2: ./scripts/nav2_rviz.sh                           ║"
-echo "║ 터미널 3: ./scripts/nav2_check.sh                            ║"
 echo "╠══════════════════════════════════════════════════════════════╣"
 echo "║  1) 로봇 정지 → RViz '2D Pose Estimate' (실제 위치·방향)     ║"
 echo "║  2) 초록 파티클이 로봇 주변에 모이는지 확인                  ║"

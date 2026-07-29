@@ -14,7 +14,6 @@ ping -c 1 -W 2 192.168.20.7 >/dev/null 2>&1 && echo "[OK] ping 192.168.20.7" || 
 for f in \
   scripts/park_geng_aruco_stage.py \
   scripts/dock_geng_aruco.sh \
-  scripts/aruco_align_geng.py \
   scripts/aruco_marker_config.py \
   scripts/aruco_align_geng_bearing.py \
   scripts/rotate_geng_precise.py \
@@ -43,5 +42,4 @@ echo "  3) ROBOT=geng ${ROOT}/scripts/nav2_rviz.sh   # 2D Pose Estimate"
 echo "  4) Gen.G camera_ros under /tb3_2/camera (+ compressed if needed)"
 echo "  5) ROBOT=geng ${ROOT}/scripts/dock_geng_aruco.sh"
 echo ""
-echo "Detail: ${ROOT}/CURSOR_TASK_GENG_ARUCO_DOCK_2026-07-19.md"
 exit "${fail}"

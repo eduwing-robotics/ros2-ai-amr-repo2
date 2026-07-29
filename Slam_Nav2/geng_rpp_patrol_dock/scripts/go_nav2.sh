@@ -18,7 +18,6 @@ export NAV2_PARAMS="${NAV2_PARAMS:-${ROOT}/config/nav2_params_geng_rpp.yaml}"
 
 if [[ ! -f "${MAP_YAML}" ]]; then
   echo "[FAIL] Map not found: ${MAP_YAML}"
-  echo "       매핑 후: ./scripts/save_map.sh"
   exit 1
 fi
 
@@ -29,8 +28,12 @@ fg_register_trap
 pkill -f 'slam_toolbox|async_slam_toolbox|sync_slam_toolbox' 2>/dev/null || true
 fg_stop_local_ros
 
-if [[ "${START_BRINGUP}" == "1" ]]; then
-  bash "${ROOT}/scripts/_ensure_robot_ready.sh" 90
+if [[ "" == "1" ]]; then
+  if [[ -x "/scripts/_ensure_robot_ready.sh" ]]; then
+    bash "/scripts/_ensure_robot_ready.sh" 90
+  else
+    echo "[WARN] START_BRINGUP=1 이지만 bringup 헬퍼가 없습니다. 로봇 bringup을 직접 확인하세요"
+  fi
 fi
 
 if [[ "${USE_SCAN_NORM}" == "1" ]]; then
@@ -137,7 +140,6 @@ echo "╔═══════════════════════�
 echo "║ Nav2 실행 중 — 이 터미널은 Ctrl+C 로 종료                    ║"
 echo "╠══════════════════════════════════════════════════════════════╣"
 echo "║ 터미널 2: ./scripts/nav2_rviz.sh                           ║"
-echo "║ 터미널 3: ./scripts/nav2_check.sh                            ║"
 echo "╠══════════════════════════════════════════════════════════════╣"
 echo "║  1) 로봇 정지 → RViz '2D Pose Estimate' (실제 위치·방향)     ║"
 echo "║  2) 초록 파티클이 로봇 주변에 모이는지 확인                  ║"

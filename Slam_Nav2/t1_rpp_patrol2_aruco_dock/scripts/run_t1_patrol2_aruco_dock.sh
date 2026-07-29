@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # T1: patrol x2 -> ArUco stage -> JPEG ArUco align -> 180° -> rear-wall dock.
-# Known-good path uses ROS JPEG (not H.264 UDP). H.264 aligner does not sweep-search
+# Uses the verified ROS JPEG ArUco alignment path.
 # when the marker is off-center / out of view.
 set -Eeo pipefail
 
@@ -55,7 +55,7 @@ python3 scripts/park_t1.py --aruco-stage
 echo "===== 4/6 ArUco 몸체 각도 정렬 (JPEG ROS, ID ${MARKER_ID}) ====="
 echo "    image=${IMAGE_TOPIC}"
 echo "    target_bearing=${TARGET_BEARING_DEG}deg"
-echo "    (ArUco/H.264 뷰어가 열려 있으면 먼저 닫으세요)"
+echo "    (ArUco 디버그 뷰어가 열려 있으면 먼저 닫으세요)"
 # Preflight: one compressed frame must arrive
 if ! timeout 6 ros2 topic echo "${IMAGE_TOPIC}" --once >/tmp/t1_aruco_cam_once.txt 2>&1; then
   echo "[FAIL] 카메라 토픽 없음: ${IMAGE_TOPIC}" >&2

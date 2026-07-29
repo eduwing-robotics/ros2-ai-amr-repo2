@@ -56,7 +56,7 @@ echo "==> Nav2 준비 대기 (최대 ${TIMEOUT}s)"
 
 fail=0
 # Robot /scan, /odom, and odom->base_footprint are verified by
-# _ensure_robot_ready.sh before Nav2 starts. Waiting for fresh CLI subscribers
+# Wait for fresh Nav2 CLI subscribers after robot readiness checks.
 # here can consume the whole timeout on Wi-Fi and prevents RViz initial pose.
 for node in map_server amcl controller_server; do
   wait_lifecycle "${node}" || fail=1
