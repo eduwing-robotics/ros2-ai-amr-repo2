@@ -116,26 +116,26 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 
 <table align="center" width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
-    <col style="width:36%">
-    <col style="width:64%">
+    <col style="width:44%">
+    <col style="width:56%">
   </colgroup>
   <thead>
     <tr>
-      <th>선정 기준</th>
+      <th nowrap style="white-space: nowrap;">선정 기준</th>
       <th>선정 이유</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><strong>현장 수요</strong></td>
+      <td nowrap style="white-space: nowrap;"><strong>현장 수요</strong></td>
       <td>야간·폐관 시간대의 반복 순찰은 피로 누적과 인력 공백이 발생할 수 있습니다.</td>
     </tr>
     <tr>
-      <td><strong>기존 제품과 차별점</strong></td>
+      <td nowrap style="white-space: nowrap;"><strong>기존 제품과 차별점</strong></td>
       <td>Unity 디지털 트윈 관제를 통해 로봇과 현장 상황을 공간적으로 확인하고, 사건 발생 시 응급 대응 흐름을 시연합니다.</td>
     </tr>
     <tr>
-      <td><strong>확장 가능성</strong></td>
+      <td nowrap style="white-space: nowrap;"><strong>확장 가능성</strong></td>
       <td>전시품 진위 판별 기능을 바탕으로 박물관 큐레이션 서비스로 확장할 수 있습니다.</td>
     </tr>
   </tbody>
