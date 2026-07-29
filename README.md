@@ -346,14 +346,14 @@ Unity의 ROS-TCP 계층은 Nav2 action을 직접 실행하지 않습니다. 로�
 
 ## 주행
 
-경로 계획·추종·충돌 판단은 Unity나 Web UI가 아닌 **로봇 측 ROS 2 코드**가 수행합니다. 두 대시보드는 좌표와 명령을 전달하고, 상태를 시각화하는 관제 계층입니다.
+로봇은 지도를 바탕으로 현재 위치를 확인하고, 목표 지점까지 안전하게 이동합니다. Web Dashboard와 Unity Dashboard는 이동할 위치나 순찰 경로를 전달하고, 실제 경로 계산과 모터 제어는 로봇 내부의 ROS 2가 맡습니다.
 
 ```mermaid
 flowchart LR
-    INPUT["① 명령 입력<br/>Unity · Web · CLI<br/><b>command owner 1개</b>"]
-    NAV["② 위치 · 경로<br/>AMCL · clearance<br/>Nav2 global planner"]
-    CONTROL["③ 추종 · 안전<br/>DWB / RPP · costmap<br/>Collision Monitor"]
-    DRIVE["④ 구동 · 피드백<br/>OpenCR · Dynamixel<br/>pose · run logs"]
+    INPUT["① 이동 요청<br/>Unity · Web · CLI<br/><b>한 곳에서만 명령</b>"]
+    NAV["② 위치 확인 · 경로 생성<br/>LiDAR · AMCL · Nav2"]
+    CONTROL["③ 주행 · 장애물 대응<br/>DWB / RPP · costmap<br/>Collision Monitor"]
+    DRIVE["④ 바퀴 구동 · 결과 기록<br/>OpenCR · Dynamixel<br/>위치 · 주행 로그"]
 
     INPUT --> NAV --> CONTROL --> DRIVE
 ```
@@ -373,41 +373,41 @@ flowchart LR
   </thead>
   <tbody>
     <tr>
-      <td align="center"><strong>① 명령 입력</strong></td>
+      <td align="center"><strong>① 이동 요청</strong></td>
       <td align="center">Unity · Web · CLI</td>
-      <td align="left">하나의 command owner가 목표 또는 순찰 waypoint를 로봇 측 ROS 2 bridge로 전달</td>
+      <td align="left">운영자가 목표 지점이나 순찰 경로를 입력합니다. 같은 로봇에는 한 번에 하나의 도구만 명령을 보냅니다.</td>
     </tr>
     <tr>
-      <td align="center"><strong>② 위치·경로</strong></td>
+      <td align="center"><strong>② 위치 확인·경로 생성</strong></td>
       <td align="center">AMCL · LiDAR · Nav2</td>
-      <td align="left">저장 지도에서 pose를 추정하고, clearance와 costmap을 고려한 전역 경로 생성</td>
+      <td align="left">LiDAR와 바퀴 이동 정보를 이용해 지도 위 현재 위치를 확인하고, 목적지까지 갈 경로를 만듭니다.</td>
     </tr>
     <tr>
-      <td align="center"><strong>③ 추종·안전</strong></td>
+      <td align="center"><strong>③ 주행·장애물 대응</strong></td>
       <td align="center">DWB · RPP · Collision Monitor</td>
-      <td align="left">경로를 추종하면서 footprint·장애물·속도 제한에 따라 감속 또는 정지</td>
+      <td align="left">만들어진 경로를 따라 이동하면서 벽이나 장애물이 가까우면 속도를 줄이거나 멈춥니다.</td>
     </tr>
     <tr>
-      <td align="center"><strong>④ 구동·피드백</strong></td>
+      <td align="center"><strong>④ 바퀴 구동·결과 기록</strong></td>
       <td align="center">OpenCR · Dynamixel · run logs</td>
-      <td align="left">바퀴를 구동하고 pose·레그·랩·주차 결과를 관제 화면과 로그로 반환</td>
+      <td align="left">모터를 움직이고, 현재 위치와 주행 결과를 관제 화면과 로그에 남깁니다.</td>
     </tr>
   </tbody>
 </table>
 
 <details>
-<summary><strong>세부 알고리즘과 복구·도킹 방식 보기</strong></summary>
+<summary><strong>주행 방식 자세히 보기</strong></summary>
 
-- **위치 추정** — AMCL이 LiDAR scan, wheel odometry, TF를 결합해 `map` 기준 pose를 추정하고, 시작 시 `/initialpose` 재시딩으로 수렴을 돕습니다.
-- **안전 순찰 경로** — 점유격자의 clearance field와 widest-path 기준으로 벽과 장애물에서 더 멀리 떨어지는 경로를 선택합니다.
-- **경로 계획·제어** — SmacPlanner2D 등 환경에 맞는 planner가 전역 경로를 만들고, DWB 또는 Regulated Pure Pursuit가 이를 추종합니다.
-- **안전 계층** — footprint, obstacle/voxel/inflation layer, Collision Monitor, velocity smoother가 벽·장애물 주변 감속과 정지를 담당합니다.
-- **복구·도킹** — costmap clear, 후진 재시도, map-aware 축 정렬을 사용합니다. 정밀 접근은 ArUco bearing 정렬과 후방 LiDAR 벽 거리 측정을 조합합니다.
+- **현재 위치 확인** — LiDAR와 바퀴 이동 정보를 이용해 로봇이 지도 위 어디에 있는지와 방향을 계산합니다. 시작 위치가 불확실하면 관제 화면에서 초기 위치를 지정할 수 있습니다.
+- **안전한 순찰 경로** — 벽과 장애물에서 충분히 떨어지도록 순찰 경로를 만듭니다.
+- **목적지까지 이동** — Nav2가 목적지까지의 경로를 계산하고, DWB 또는 Regulated Pure Pursuit가 그 경로를 따라가도록 속도와 방향을 조절합니다.
+- **충돌 방지** — 로봇 크기, 장애물, 안전 반경을 계속 확인해 가까워지면 감속하거나 정지합니다.
+- **복구와 도킹** — 길이 막히면 주변 정보를 다시 확인하고 후진·재시도를 수행합니다. 정밀 도킹에서는 ArUco 마커와 후방 LiDAR 거리를 함께 사용합니다.
 
 </details>
 
 > [!CAUTION]
-> 실제 로봇 주행 전 배터리, 비상 정지, 주변 장애물, 로봇 namespace와 ROS domain을 반드시 확인하세요.
+> 실제 로봇 주행 전에는 배터리, 비상 정지, 주변 장애물, 선택한 로봇과 ROS domain 설정을 반드시 확인하세요.
 
 ## 비전
 
