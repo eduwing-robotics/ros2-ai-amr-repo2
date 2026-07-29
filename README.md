@@ -129,6 +129,7 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
     </tr>
   </tbody>
 </table>
+
 ## 요구사항
 
 기능 범위는 팀이 정의한 사용자·시스템 요구사항을 기준으로 관리했습니다. 요구사항은 `R(Required)`, `D(Desired)`, `O(Optional)`로 구분해 구현 우선순위를 정했습니다.
@@ -167,6 +168,7 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
     </tr>
   </tbody>
 </table>
+
 ## 시스템 구성
 
 > [!IMPORTANT]
@@ -233,6 +235,7 @@ Admin PC의 Unity 디지털 트윈, 메인 서버의 네트워크·작업·DB·�
     </tr>
   </tbody>
 </table>
+
 ### 명령과 데이터 흐름
 
 <table style="width: 100%;" width="100%">
@@ -306,6 +309,7 @@ Unity의 ROS-TCP 계층은 Nav2 action을 직접 실행하지 않습니다. 로�
     </tr>
   </tbody>
 </table>
+
 ## 주행
 
 경로 계획·추종·충돌 판단은 Unity나 Web UI가 아닌 **로봇 측 ROS 2 코드**가 수행합니다. 두 대시보드는 좌표와 명령을 전달하고, 상태를 시각화하는 관제 계층입니다.
@@ -469,6 +473,7 @@ TurtleBot Web Dashboard와 Unity Dashboard는 같은 UI를 복제한 도구가 �
     </tr>
   </tbody>
 </table>
+
 ## 시나리오
 
 동작 검증 절차는 침입자 감지, 화재 대응, 배터리 부족 시 임무 인계의 세 시나리오로 구성했습니다. 관제 화면의 신고·제압·진압 표시는 **시연용 상태와 모의 동작**이며, 실제 112/119 신고나 사람을 대상으로 한 물리적 조치를 수행하지 않습니다.
@@ -573,6 +578,7 @@ ros2-ai-amr-repo2/
     </tr>
   </tbody>
 </table>
+
 ## 실행하기
 
 ### 요구 환경
