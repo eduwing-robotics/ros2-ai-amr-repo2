@@ -14,9 +14,24 @@ ROS 2 자율주행, Web Dashboard 실기 운영, Unity 디지털 트윈, AI 비�
 [![TurtleBot3](https://img.shields.io/badge/Robot-TurtleBot3-00A6D6)](https://emanual.robotis.com/docs/en/platform/turtlebot3/overview/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2EA44F.svg)](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/main/LICENSE)
 
-[Project Film](#project-film) · [Team](#team-urhynix) · [Dashboards](#two-dashboards) · [Architecture](#architecture) · [Navigation](#driving-navigation--safety) · [Vision](#vision-pipeline) · [Quick Start](#quick-start)
+[프로젝트 영상](#project-film) · [한눈에 보기](#한눈에-보기) · [빠른 시작](#quick-start) · [대시보드](#two-dashboards) · [아키텍처](#architecture) · [주행](#driving-navigation--safety) · [비전](#vision-pipeline) · [구현 상태](#implementation-status)
 
 </div>
+
+## 한눈에 보기
+
+URHYNIX-AMR은 **두 대의 TurtleBot3를 하나의 박물관 지도에서 운영**하는 ROS 2 기반 프로젝트입니다. 실제 로봇 주행은 ROS 2/Nav2가 담당하고, Web Dashboard와 Unity Dashboard는 각각 실기 운영과 디지털 트윈 관제를 맡습니다.
+
+| 하고 싶은 일 | 시작 위치 | 참고 |
+|---|---|---|
+| 로봇을 빌드하고 Nav2 주행하기 | [Quick Start](#quick-start) | 실제 로봇에서는 안전 점검이 먼저 필요합니다. |
+| 카메라·YOLO·그림 판별 실행하기 | [Vision_AI/README.md](./Vision_AI/README.md) | T1/Gen.G 카메라 실행 명령을 구분해 안내합니다. |
+| T1 또는 Gen.G의 순찰·도킹 실험하기 | [Slam_Nav2/README.md](./Slam_Nav2/README.md) | 로봇별 파라미터와 스크립트를 섞지 마세요. |
+| 웹으로 실기 로봇을 제어하기 | [TurtleBot Dashboard](https://github.com/ensacom2019/TurtleBot_Dashboard) | 별도 공개 저장소입니다. |
+| Unity 디지털 트윈 열기 | [`UNITY/`](./UNITY/) | ROS-TCP endpoint와 Supabase 설정이 필요할 수 있습니다. |
+
+> [!IMPORTANT]
+> 실제 주행 중에는 Web Dashboard, Unity Dashboard, CLI 중 **하나만 command owner**로 사용하세요. 둘 이상의 도구가 `/cmd_vel` 또는 Nav2 목표를 발행하면 로봇 명령이 충돌할 수 있습니다.
 
 ## Project Film
 
@@ -211,16 +226,6 @@ flowchart TD
     DRIVE --> DOCK
 ```
 
-### Branch-backed driving paths
-
-| 브랜치 | 실제 코드 경로 | 사용 알고리즘·도구 | 역할과 상태 |
-|---|---|---|---|
-| [`main`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/main) | [`patrol_waypoints_bridge.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/d79535d1270ff9526eca974455a2e03c39e8a2c0/src/urhynix_patrol/patrol_waypoints_bridge.py) | `goToPose`, 레그별 watchdog, costmap clear, 탈출 후진, 독 복귀·Spin 정렬, JSONL 오차 기록 | 단발 출동과 연속 순찰 · ✅ |
-| [`main`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/main) | [`patrol_route_optimizer.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/d79535d1270ff9526eca974455a2e03c39e8a2c0/src/urhynix_patrol/patrol_route_optimizer.py), [`patrol_safe_clearance.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/d79535d1270ff9526eca974455a2e03c39e8a2c0/src/urhynix_patrol/patrol_safe_clearance.py) | 다중소스 clearance BFS, maximin widest path, 벽 안전여유 보정 | 안전 순찰 경로 전처리 · ✅ |
-| [`Slam_Nav2 · T1`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/Slam_Nav2/robot_navigation/t1_rpp_patrol2_aruco_dock) | [`nav2_params_t1_patrol_rpp.yaml`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/Slam_Nav2/robot_navigation/t1_rpp_patrol2_aruco_dock/config/nav2_params_t1_patrol_rpp.yaml), [`run_patrol.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/Slam_Nav2/robot_navigation/t1_rpp_patrol2_aruco_dock/scripts/run_patrol.py) | SmacPlanner2D, Regulated Pure Pursuit, velocity-scaled lookahead, `FollowWaypoints` | T1 순찰·정밀 접근 · 🧪 |
-| [`Slam_Nav2 · Gen.G`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/Slam_Nav2/robot_navigation/geng_rpp_patrol_dock) | [`nav2_params_geng_rpp.yaml`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/Slam_Nav2/robot_navigation/geng_rpp_patrol_dock/config/nav2_params_geng_rpp.yaml), [`run_patrol.py`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/blob/Slam_Nav2/robot_navigation/geng_rpp_patrol_dock/scripts/run_patrol.py) | Gen.G footprint·inflation 튜닝, SmacPlanner2D, RPP, `FollowWaypoints` | Gen.G 순찰·정밀 접근 · 🧪 |
-| [`main`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2/tree/main/src/urhynix_nav/nav_axis_drive) | [`goto_axis.py`](./src/urhynix_nav/nav_axis_drive/goto_axis.py), [`nav2_goal_v4.py`](./src/urhynix_nav/nav_axis_drive/v2/nav2_goal_v4.py) | X/Y축 정렬 P 제어, map YAML 좌표 변환, Nav2 스턱 감지·탈출 | 병합된 주행 실험 · ✅ |
-
 ### Navigation algorithms
 
 | 단계 | 브랜치 코드에서 확인한 실제 구현 |
@@ -314,7 +319,7 @@ ros2-ai-amr-repo2/
 │   └── urhynix_perception/   # Sensors, ArUco, and perception utilities
 ├── UNITY/                    # Unity Dashboard source
 ├── server/                   # Supabase migrations and SQL
-├── Aduino/                   # Arduino sketches and wiring references
+├── Arduino/                  # Arduino sketches and wiring references
 ├── urhynix.repos             # External ROS 2 dependencies
 └── README.md
 ```
