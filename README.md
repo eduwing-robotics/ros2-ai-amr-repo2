@@ -534,11 +534,11 @@ T1의 배터리가 30% 이하가 되면 메인 서버가 관제에 위치·잔�
 ### Data & Sensors
 
 ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white) ![Arduino](https://img.shields.io/badge/Arduino-00979D?style=for-the-badge&logo=arduino&logoColor=white) ![LiDAR](https://img.shields.io/badge/LiDAR-Sensing-546E7A?style=for-the-badge)
-## 일정 추적
+## 일정 관리
 
 **프로젝트 기간 · 2026년 5월 26일 ~ 2026년 7월 24일**
 
-Jira로 요구사항 정의, 설계, ROS 2/SLAM·Nav2, Arduino·센서, Unity 관제, 통합 검증 단계를 스프린트 단위로 추적했습니다.
+Jira로 요구사항 정의, 설계, ROS 2/SLAM·Nav2, Arduino·센서, Unity 관제, 통합 검증 단계를 스프린트 단위로 관리했습니다.
 
 <p align="center">
   <img src="./assets/readme/jira-schedule.png" alt="URHYNIX Jira 스프린트 일정 관리 화면" width="100%">
