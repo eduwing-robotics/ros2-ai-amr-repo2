@@ -94,7 +94,7 @@ namespace URHYNIX.ControlRoom.Map
             };
 
             Debug.Log($"[Map25DView] {slotId} 빌드: 벽 {n}개, 맵 {wm:F1}×{hm:F1}m");
-            robotMarkers = new Map25DRobotMarkerLayer(transform);
+            robotMarkers = new Map25DRobotMarkerLayer(transform, cam);
             patrolMarkers = new Map25DPatrolMarkerLayer(transform, billboardCam: cam);
             SetActive(false);
             return true;

@@ -125,10 +125,11 @@
 
 .map-robot-label {
     position: absolute;
-    top: var(--icon-robot);
     color: var(--color-text-primary);
     font-size: var(--font-size-xs);
     -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: nowrap;
     background-color: var(--color-surface-overlay);
     padding-left: var(--space-xs);
     padding-right: var(--space-xs);

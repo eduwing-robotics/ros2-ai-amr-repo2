@@ -14,7 +14,7 @@ namespace URHYNIX.ControlRoom.Map
 
         readonly Dictionary<string, Marker> markers = new Dictionary<string, Marker>();
 
-        public Map25DRobotMarkerLayer(Transform parent)
+        public Map25DRobotMarkerLayer(Transform parent, Camera billboardCam)
         {
             var robots = ControlRoomState.Instance?.Robots;
             if (robots != null && robots.Count > 0)
@@ -23,12 +23,13 @@ namespace URHYNIX.ControlRoom.Map
                 {
                     if (r == null || string.IsNullOrEmpty(r.robotId) || markers.ContainsKey(r.robotId))
                         continue;
-                    markers[r.robotId] = new Marker(parent, ResolveColor(r));
+                    markers[r.robotId] = new Marker(parent, ResolveColor(r), r.displayName, billboardCam);
                 }
             }
             else
             {
-                markers[ControlRoomState.Instance?.SelectedRobotId ?? "tb3_1"] = new Marker(parent, DefaultColor);
+                string robotId = ControlRoomState.Instance?.SelectedRobotId ?? "tb3_1";
+                markers[robotId] = new Marker(parent, DefaultColor, robotId, billboardCam);
             }
 
             RobotPoseFeed.OnRobotPose += OnRobotPose;
@@ -68,11 +69,12 @@ namespace URHYNIX.ControlRoom.Map
         sealed class Marker
         {
             const float DiscRadius = 0.12f, DiscHeight = 0.008f, NoseSize = 0.06f, NoseDist = 0.16f;
+            const float NameplateHeight = 0.32f;
             static GameObject modelPrefab;
             static bool modelSearched;
             readonly Transform root;
 
-            public Marker(Transform parent, Color color)
+            public Marker(Transform parent, Color color, string displayName, Camera billboardCam)
             {
                 if (!modelSearched)
                 {
@@ -110,6 +112,23 @@ namespace URHYNIX.ControlRoom.Map
                     noseGo.GetComponent<Renderer>().sharedMaterial = MakeMat(Color.white);
                     DestroyCollider(noseGo);
                 }
+
+                var nameGo = new GameObject("RobotNameplate");
+                nameGo.transform.SetParent(root, false);
+                nameGo.transform.localPosition = new Vector3(0f, NameplateHeight, 0f);
+                nameGo.transform.localScale = Vector3.one * 0.12f;
+
+                var name = nameGo.AddComponent<TextMesh>();
+                name.text = string.IsNullOrWhiteSpace(displayName) ? "Robot" : displayName;
+                name.anchor = TextAnchor.LowerCenter;
+                name.alignment = TextAlignment.Center;
+                name.fontSize = 36;
+                name.characterSize = 0.4f;
+                name.fontStyle = FontStyle.Bold;
+                name.color = Color.white;
+
+                var billboard = nameGo.AddComponent<Billboard>();
+                billboard.target = billboardCam;
 
                 root.gameObject.SetActive(false);
             }

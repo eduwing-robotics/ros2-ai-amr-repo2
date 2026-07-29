@@ -31,13 +31,13 @@ namespace URHYNIX.ControlRoom.Map
                 {
                     if (r == null || string.IsNullOrEmpty(r.robotId) || markers.ContainsKey(r.robotId))
                         continue;
-                    markers[r.robotId] = new RobotMarker(viewport, ResolveColor(r));
+                    markers[r.robotId] = new RobotMarker(viewport, ResolveColor(r), r.displayName);
                 }
             }
             else
             {
-                markers[ControlRoomState.Instance?.SelectedRobotId ?? "tb3_1"]
-                    = new RobotMarker(viewport, DefaultColor);
+                string robotId = ControlRoomState.Instance?.SelectedRobotId ?? "tb3_1";
+                markers[robotId] = new RobotMarker(viewport, DefaultColor, robotId);
             }
 
             RobotPoseFeed.OnRobotPose += OnRobotPose;
@@ -86,21 +86,24 @@ namespace URHYNIX.ControlRoom.Map
             RobotPoseFeed.OnRobotPose -= OnRobotPose;
             RobotPoseSubscriber.OnPoseUpdated -= OnGlobalTfPose;
             viewport.OnFrameChanged -= RepositionAll;
+            foreach (var m in markers.Values) m.Dispose();
         }
 
         // 로봇 1대의 화살표 마커. world pose → frame 픽셀 + yaw 회전.
         sealed class RobotMarker
         {
             const float Size = 26f;                       // 마커 박스(px)
+            const float LabelGap = 6f;
 
             readonly MapViewport viewport;
             readonly VisualElement el;
+            readonly Label label;
             readonly Color color;
 
             bool hasPose;
             float poseX, poseY, poseYaw;
 
-            public RobotMarker(MapViewport viewport, Color color)
+            public RobotMarker(MapViewport viewport, Color color, string displayName)
             {
                 this.viewport = viewport;
                 this.color = color;
@@ -115,6 +118,16 @@ namespace URHYNIX.ControlRoom.Map
                 el.style.translate = new Translate(Length.Percent(-50), Length.Percent(-50));
                 el.generateVisualContent += OnGenerateArrow;
                 viewport.Frame.Add(el);
+
+                label = new Label(string.IsNullOrWhiteSpace(displayName) ? "Robot" : displayName)
+                {
+                    name = "robot-marker-label",
+                    pickingMode = PickingMode.Ignore
+                };
+                label.AddToClassList("map-robot-label");
+                label.style.display = DisplayStyle.None;
+                label.style.translate = new Translate(Length.Percent(-50), Length.Percent(-100));
+                viewport.Frame.Add(label);
             }
 
             // 위쪽(정면=북쪽 기준)을 가리키는 화살촉. yaw 회전은 Reposition에서 적용.
@@ -153,8 +166,17 @@ namespace URHYNIX.ControlRoom.Map
                 el.style.display = DisplayStyle.Flex;
                 el.style.left = px.x;   // translate(-50%)로 중심정렬
                 el.style.top = px.y;
+                label.style.display = DisplayStyle.Flex;
+                label.style.left = px.x;
+                label.style.top = px.y - Size * 0.5f - LabelGap;
                 // 화살촉(북쪽 기준)을 yaw(ccw, +x동쪽)에 맞춤: 화면 회전(cw+) = 90 - yawDeg.
                 el.style.rotate = new Rotate(90f - poseYaw * Mathf.Rad2Deg);
+            }
+
+            public void Dispose()
+            {
+                el.RemoveFromHierarchy();
+                label.RemoveFromHierarchy();
             }
         }
     }
