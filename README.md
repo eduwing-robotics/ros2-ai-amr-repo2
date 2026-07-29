@@ -111,7 +111,7 @@ URHYNIX-AMR은 박물관 환경에서 발생할 수 있는 상황을 감지하�
 
 ## 요구사항, 일정 및 추적
 
-프로젝트의 기능 범위는 [사용자 요구사항 정의서 v3](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/48922625/v3)와 [시스템 요구사항 정의서 v3](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/6750216/v3)를 기준으로 관리했습니다. 요구사항은 `R(Required)`, `D(Desired)`, `O(Optional)`로 구분해 구현 우선순위를 정했습니다.
+프로젝트의 기능 범위는 팀이 정의한 사용자·시스템 요구사항을 기준으로 관리했습니다. 요구사항은 `R(Required)`, `D(Desired)`, `O(Optional)`로 구분해 구현 우선순위를 정했습니다.
 
 | 요구 영역 | 사용자·시스템 요구사항 반영 |
 |---|---|
@@ -199,7 +199,7 @@ TurtleBot Web Dashboard와 Unity Dashboard는 같은 UI를 복제한 도구가 �
 
 ## 동작 검증 시나리오
 
-시나리오는 [Confluence 시나리오 계획](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/13860874)을 기준으로 설계했습니다. 관제 화면의 신고·제압·진압 표시는 **시연용 상태와 모의 동작**이며, 실제 112/119 신고나 사람을 대상으로 한 물리적 조치를 수행하지 않습니다.
+시나리오는 팀이 정의한 동작 검증 절차를 기준으로 설계했습니다. 관제 화면의 신고·제압·진압 표시는 **시연용 상태와 모의 동작**이며, 실제 112/119 신고나 사람을 대상으로 한 물리적 조치를 수행하지 않습니다.
 
 ### Scenario #1 · 침입자 감지
 
