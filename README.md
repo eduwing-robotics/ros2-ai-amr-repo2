@@ -260,7 +260,6 @@ flowchart TD
 
     ARUCO["ArUco DICT_4X4_50<br/>marker ID 11 · solvePnP"]
     ALIGN["Bearing alignment<br/>8 stable frames"]
-    REAR["Rear LiDAR wall fit<br/>RANSAC → reverse to 0.173m"]
 
     ROI["Fixed artwork ROI"]
     AUTH["EfficientNet-B0 · 224×224<br/>GENUINE / FAKE / RECHECK"]
@@ -278,7 +277,6 @@ flowchart TD
     FILTER --> EVENT
     D435 --> ARUCO
     ARUCO --> ALIGN
-    ALIGN --> REAR
     D435 --> ROI
     ROI --> AUTH
     D435 --> RGBD
@@ -291,10 +289,9 @@ flowchart TD
 | 경로 | 입력 | 방법·알고리즘 | 출력 | 상태 |
 |---|---|---|---|---|
 | **Dual live camera** | D435와 IMX219 compressed topics | `image_transport`, JPEG, ROS-TCP subscriber, latest-frame MJPEG | 두 로봇 영상과 FPS | ✅ `main` |
-| **Museum detection** | T1 RGB frame | Ultralytics YOLO, 보조 person model, class-aware NMS, 연속 프레임 확인, 저해상도 CLAHE·sharpen | box overlay와 `/detect/status` | 🧪 [`Vision_AI/`](./Vision_AI/) |
-| **ArUco alignment** | D435 compressed image + camera info | OpenCV `DICT_4X4_50`, marker ID `11`, IPPE square `solvePnP`; calibration이 없으면 image-center bearing | 목표 bearing 오차와 회전 명령 | 🧪 [`Slam_Nav2/`](./Slam_Nav2/) |
-| **Rear docking** | 후방 ±60° LiDAR points | 600회 RANSAC line fit, 벽 법선 각도 정렬, 거리·각도 폐루프 후진 | 약 `0.173m` 후방 간격 | 🧪 [`Slam_Nav2/`](./Slam_Nav2/) |
-| **Artwork authenticity** | 고정 pose에서 자른 Bacchus ROI | ImageNet pretrained EfficientNet-B0, 224×224, genuine/fake 분류, 확률 차가 작으면 `RECHECK` | `GENUINE` / `FAKE` / `RECHECK` | 🧪 [`Vision_AI/`](./Vision_AI/) |
+| **Museum detection** | T1 RGB frame | Ultralytics YOLO, 보조 person model, class-aware NMS, 연속 프레임 확인, 저해상도 CLAHE·sharpen | box overlay와 `/detect/status` | ✅ [`YOLO README`](./Vision_AI/ai_perception/yolo_detection/README.md) |
+| **ArUco alignment** | D435 compressed image + camera info | OpenCV `DICT_4X4_50`, marker ID `11`, IPPE square `solvePnP`; calibration이 없으면 image-center bearing | 목표 bearing 오차와 회전 명령 | ✅ [`Slam_Nav2 README`](./Slam_Nav2/README.md) |
+| **Artwork authenticity** | 고정 pose에서 자른 Bacchus ROI | ImageNet pretrained EfficientNet-B0, 224×224, genuine/fake 분류, 확률 차가 작으면 `RECHECK` | `GENUINE` / `FAKE` / `RECHECK` | ✅ [`EfficientNet-B0 README`](./Vision_AI/ai_perception/efficientnet_b0_authentication/README.md) |
 | **3D reconstruction** | D435 RGB-D rosbag | RTAB-Map, map↔odom SE(2) alignment, crop·outlier filtering, PLY/PCX import | Unity Dashboard의 orbit 가능한 3D 점군 | 🧪 제한적 검증 |
 
 AI 결과는 경비 판단을 보조하는 증거입니다. 사람·화재·작품 이상을 단독으로 확정하지 않고, 로봇 pose·LiDAR·환경 센서·운영자 확인과 함께 해석합니다.
@@ -401,12 +398,12 @@ chmod +x run_ubuntu.sh stop_dashboard.sh stop_robot.sh check_camera.sh
 |---|---|---|
 | ROS 2·Nav2·Unity·Supabase 기본 구조 | ✅ `main` | [`main`](https://github.com/eduwing-robotics/ros2-ai-amr-repo2) |
 | TurtleBot Web Dashboard | ✅ separate public repo | [`TurtleBot_Dashboard`](https://github.com/ensacom2019/TurtleBot_Dashboard) |
-| 저장 지도·AMCL·순찰·복귀 흐름 | ✅ `main` | `src/urhynix_nav`, `src/urhynix_patrol` |
-| T1 ArUco 도킹 | 🧪 `main` | [`Slam_Nav2/t1_rpp_patrol2_aruco_dock`](./Slam_Nav2/t1_rpp_patrol2_aruco_dock/) |
-| Gen.G ArUco 도킹 | 🧪 `main` | [`Slam_Nav2/geng_rpp_patrol_dock`](./Slam_Nav2/geng_rpp_patrol_dock/) |
+| T1·Gen.G 저장 지도·AMCL·RPP 순찰·복귀/도킹 흐름 | ✅ `main` | [`Slam_Nav2`](./Slam_Nav2/README.md) |
+| T1 ArUco 도킹 | ✅ `main` | [`Slam_Nav2/t1_rpp_patrol2_aruco_dock`](./Slam_Nav2/t1_rpp_patrol2_aruco_dock/README.md) |
+| Gen.G ArUco 도킹 | ✅ `main` | [`Slam_Nav2/geng_rpp_patrol_dock`](./Slam_Nav2/geng_rpp_patrol_dock/README.md) |
 | 축 정렬·map-aware Nav2 주행 실험 | ✅ `main` | [`src/urhynix_nav/nav_axis_drive`](./src/urhynix_nav/nav_axis_drive/) |
-| 박물관 YOLO finetune·실시간 필터 | 🧪 `main` | [`Vision_AI/ai_perception/yolo_detection`](./Vision_AI/ai_perception/yolo_detection/) |
-| 고정 ROI 진위 판정 | 🧪 `main` | [`Vision_AI/ai_perception/efficientnet_b0_authentication`](./Vision_AI/ai_perception/efficientnet_b0_authentication/) |
+| 박물관 YOLO finetune·실시간 필터 | ✅ `main` | [`YOLO README`](./Vision_AI/ai_perception/yolo_detection/README.md) |
+| 고정 ROI 진위 판정 | ✅ `main` | [`EfficientNet-B0 README`](./Vision_AI/ai_perception/efficientnet_b0_authentication/README.md) |
 | Unity Dashboard 화재·침입 시나리오 | 🎬 simulation | 프로젝트 영상과 Unity demo scene |
 
 ### Scope notes
