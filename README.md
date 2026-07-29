@@ -494,7 +494,7 @@ TurtleBot Web Dashboard와 Unity Dashboard는 같은 UI를 복제한 도구가 �
 T1이 순찰 중 사람을 감지하면 위치·영상을 메인 서버와 관제 화면에 전달합니다. 관제는 112 신고 요청 상태를 표시하고, Gen.G는 감지 위치로 출동합니다. Gen.G 도착 후 T1은 순찰을 재개하며, 상황 종료 시 Gen.G는 대기 장소로 복귀하고 이벤트를 저장합니다.
 
 <p align="center">
-  <img src="./assets/readme/scenario-intruder.jpg" alt="침입자 감지 시나리오 시퀀스 다이어그램" width="58%">
+  <img src="./assets/readme/scenario-intruder.jpg" alt="침입자 감지 시나리오 시퀀스 다이어그램" width="72%">
 </p>
 
 ### Scenario #2 · 화재 대응
@@ -502,7 +502,7 @@ T1이 순찰 중 사람을 감지하면 위치·영상을 메인 서버와 관�
 T1이 순찰 중 화재 징후를 감지하면 위치·영상을 알리고 Gen.G가 현장으로 출동합니다. Gen.G가 도착하면 T1은 순찰을 재개하며, Gen.G는 워터 펌프를 활용한 **모의 진압** 상태를 수행한 뒤 대기 장소로 복귀합니다. 결과는 DB에 저장됩니다.
 
 <p align="center">
-  <img src="./assets/readme/scenario-fire.jpg" alt="화재 감지와 모의 진압 시나리오 시퀀스 다이어그램" width="58%">
+  <img src="./assets/readme/scenario-fire.jpg" alt="화재 감지와 모의 진압 시나리오 시퀀스 다이어그램" width="72%">
 </p>
 
 ### Scenario #3 · 배터리 부족과 순찰 임무 인계
@@ -510,7 +510,7 @@ T1이 순찰 중 화재 징후를 감지하면 위치·영상을 알리고 Gen.G
 T1의 배터리가 30% 이하가 되면 메인 서버가 관제에 위치·잔량을 알립니다. Gen.G가 T1 위치로 이동해 순찰 waypoint를 인계받고, T1은 충전 대기 장소로 이동합니다. 충전 후 T1이 Gen.G 위치로 복귀해 다시 임무를 인계받고 Gen.G는 대기 장소로 돌아갑니다.
 
 <p align="center">
-  <img src="./assets/readme/scenario-battery-handover.jpg" alt="배터리 부족과 T1 Gen.G 간 순찰 임무 인계 시퀀스 다이어그램" width="58%">
+  <img src="./assets/readme/scenario-battery-handover.jpg" alt="배터리 부족과 T1 Gen.G 간 순찰 임무 인계 시퀀스 다이어그램" width="72%">
 </p>
 
 ## 기술 스택
