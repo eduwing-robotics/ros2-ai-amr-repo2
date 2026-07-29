@@ -19,7 +19,7 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 
 ## Team URhynix
 
-<table>
+<table width="100%">
   <tr>
     <td width="50%" valign="top">
       <strong>🧭 김주영 · Project Lead</strong><br><br>
