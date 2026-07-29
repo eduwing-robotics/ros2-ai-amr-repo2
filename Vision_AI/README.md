@@ -167,4 +167,3 @@ python3 ai_perception/yolo_detection/training/train_museum_yolo.py \
 
 - [로봇 사양](./ROBOT_SPECS.md)
 - [박물관 Nav2 통합 TODO](./TODO_NAV2_MUSEUM.md)
-- [팀 통합 가이드](./docs/team-integration.md)
