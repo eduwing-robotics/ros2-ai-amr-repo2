@@ -60,6 +60,42 @@ URHYNIX-AMR은 박물관 환경에서 발생할 수 있는 상황을 감지하�
 | 감지 결과가 현장 대응으로 이어지지 않음 | 카메라·환경 센서 이벤트를 운영자 확인, 출동 명령, 기록으로 연결 |
 | 시연 후 결과를 추적하기 어려움 | 세션·이벤트·출동·로봇 위치를 Supabase/PostgreSQL에 기록 |
 
+## Team URhynix
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>🧭 김주영 · Project Lead</strong><br><br>
+      <code>PM</code> <code>Unity GUI</code> <code>Media</code> <code>AI Tools</code><br><br>
+      프로젝트 운영과 발표 영상 제작·편집<br>
+      Unity GUI 설계·개발·유지보수<br>
+      AI Agent 및 제작 도구 활용
+    </td>
+    <td width="50%" valign="top">
+      <strong>🔧 박태진 · Hardware & Dashboard</strong><br><br>
+      <code>Arduino</code> <code>3D Design</code> <code>Dashboard</code> <code>Map</code><br><br>
+      Arduino 센서 설정 및 연동<br>
+      로봇 부속 기계 3D 설계·출력<br>
+      자율주행 Dashboard 설계·개발·유지보수와 맵 디자인
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>🖥️ 김선일 · GUI & Integration</strong><br><br>
+      <code>GUI Coordinates</code> <code>Layout</code> <code>ROS-TCP</code><br><br>
+      Unity GUI 좌표 체계와 화면 레이아웃<br>
+      관제 UI·ROS-TCP 통신·로봇 통합 협업
+    </td>
+    <td width="50%" valign="top">
+      <strong>🤖 임현찬 · Navigation & Vision</strong><br><br>
+      <code>Nav2</code> <code>ArUco</code> <code>YOLO</code> <code>EfficientNet-B0</code><br><br>
+      자율주행 및 ArUco 정밀 도킹<br>
+      YOLO 비전과 EfficientNet-B0 진품·가품 판별<br>
+      맵 세팅과 로봇 부속품 조립
+    </td>
+  </tr>
+</table>
+
 ## 핵심 기능
 
 | 기능 | 구현 내용 |
@@ -190,42 +226,6 @@ flowchart LR
 | **환경 센서** | Arduino Uno, PIR, 소리, 온도, 거리 센서 | 박물관 상황 이벤트 수집 |
 | **운영 데이터** | Supabase, PostgreSQL, JSONL run logs | 세션·이벤트·출동·pose·주행 결과 기록 |
 | **3D 제작·검증** | Arduino 배선 참고 자료, 로봇 부속 3D 설계·출력 | 실제 센서와 로봇 부속품 연결 검증 |
-
-## Team URhynix
-
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <strong>🧭 김주영 · Project Lead</strong><br><br>
-      <code>PM</code> <code>Unity GUI</code> <code>Media</code> <code>AI Tools</code><br><br>
-      프로젝트 운영과 발표 영상 제작·편집<br>
-      Unity GUI 설계·개발·유지보수<br>
-      AI Agent 및 제작 도구 활용
-    </td>
-    <td width="50%" valign="top">
-      <strong>🔧 박태진 · Hardware & Dashboard</strong><br><br>
-      <code>Arduino</code> <code>3D Design</code> <code>Dashboard</code> <code>Map</code><br><br>
-      Arduino 센서 설정 및 연동<br>
-      로봇 부속 기계 3D 설계·출력<br>
-      자율주행 Dashboard 설계·개발·유지보수와 맵 디자인
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top">
-      <strong>🖥️ 김선일 · GUI & Integration</strong><br><br>
-      <code>GUI Coordinates</code> <code>Layout</code> <code>ROS-TCP</code><br><br>
-      Unity GUI 좌표 체계와 화면 레이아웃<br>
-      관제 UI·ROS-TCP 통신·로봇 통합 협업
-    </td>
-    <td width="50%" valign="top">
-      <strong>🤖 임현찬 · Navigation & Vision</strong><br><br>
-      <code>Nav2</code> <code>ArUco</code> <code>YOLO</code> <code>EfficientNet-B0</code><br><br>
-      자율주행 및 ArUco 정밀 도킹<br>
-      YOLO 비전과 EfficientNet-B0 진품·가품 판별<br>
-      맵 세팅과 로봇 부속품 조립
-    </td>
-  </tr>
-</table>
 
 ## 기술 스택
 
