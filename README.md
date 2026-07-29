@@ -19,7 +19,7 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 
 ## Team URhynix
 
-<table width="100%" cellspacing="0" cellpadding="12">
+<table align="center" width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:50%">
     <col style="width:50%">
@@ -61,9 +61,11 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 
 **실제 AMR과 디지털 트윈을 연결한 다중 로봇 박물관 경비 시스템**입니다. T1(`tb3_1`)과 Gen.G(`tb3_2`) TurtleBot3 Burger가 같은 박물관 지도에서 독립적으로 순찰·출동하고, Web Dashboard와 Unity Dashboard가 실제 로봇 운용과 공간 기반 관제를 나누어 담당합니다.
 
-<a href="https://eduwing-robotics.github.io/ros2-ai-amr-repo2/project-film/">
-  <img src="./assets/readme/urhynix-project-film-poster.jpg" alt="URHYNIX 프로젝트 영상: 실제 박물관 경기장, 자율 순찰, Unity 대시보드 및 디지털 트윈 시나리오" width="100%">
-</a>
+<p align="center">
+  <a href="https://eduwing-robotics.github.io/ros2-ai-amr-repo2/project-film/">
+    <img src="./assets/readme/urhynix-project-film-poster.jpg" alt="URHYNIX 프로젝트 영상: 실제 박물관 경기장, 자율 순찰, Unity 대시보드 및 디지털 트윈 시나리오" width="100%">
+  </a>
+</p>
 
 <p align="center">
   <strong>▶ GitHub에서 2분 53초 프로젝트 영상 재생</strong><br>
@@ -72,7 +74,7 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
   <a href="https://github.com/eduwing-robotics/ros2-ai-amr-repo2/releases/download/portfolio-film-v1/urhynix-project-film-720p.mp4">MP4 직접 열기</a>
 </p>
 
-<table width="100%" cellspacing="0" cellpadding="12">
+<table align="center" width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:25%">
     <col style="width:75%">
@@ -112,7 +114,7 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 
 ## 주제 선정 이유
 
-<table width="100%" cellspacing="0" cellpadding="12">
+<table align="center" width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:35%">
     <col style="width:65%">
@@ -147,7 +149,7 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 
 기능 범위는 팀이 정의한 사용자·시스템 요구사항을 기준으로 관리했습니다. 요구사항은 `R(Required)`, `D(Desired)`, `O(Optional)`로 구분해 구현 우선순위를 정했습니다.
 
-<table width="100%" cellspacing="0" cellpadding="12">
+<table align="center" width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:28%">
     <col style="width:72%">
@@ -225,7 +227,7 @@ Admin PC의 Unity 디지털 트윈, 메인 서버의 네트워크·작업·DB·�
 
 ### 로봇 프로필
 
-<table width="100%" cellspacing="0" cellpadding="12">
+<table align="center" width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:10%">
     <col style="width:18%">
@@ -262,7 +264,7 @@ Admin PC의 Unity 디지털 트윈, 메인 서버의 네트워크·작업·DB·�
 
 ### 명령과 데이터 흐름
 
-<table width="100%" cellspacing="0" cellpadding="12">
+<table align="center" width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:24%">
     <col style="width:40%">
@@ -302,7 +304,7 @@ Unity의 ROS-TCP 계층은 Nav2 action을 직접 실행하지 않습니다. 로�
 
 ## 데이터·하드웨어 연동
 
-<table width="100%" cellspacing="0" cellpadding="12">
+<table align="center" width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:18%">
     <col style="width:42%">
@@ -358,7 +360,7 @@ flowchart LR
     INPUT --> NAV --> CONTROL --> DRIVE
 ```
 
-<table width="100%" cellspacing="0" cellpadding="12">
+<table align="center" width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:20%">
     <col style="width:25%">
@@ -422,7 +424,7 @@ flowchart LR
     CAM --> RGBD["RGB-D rosbag · RTAB-Map<br/>PLY point cloud"]
 ```
 
-<table width="100%" cellspacing="0" cellpadding="12">
+<table align="center" width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:24%">
     <col style="width:40%">
@@ -474,7 +476,7 @@ flowchart LR
 
 TurtleBot Web Dashboard와 Unity Dashboard는 같은 UI를 복제한 도구가 아닙니다. 전자는 실제 로봇을 준비하고 움직이는 운영 콘솔이며, 후자는 다중 로봇과 사건을 공간적으로 이해하는 디지털 트윈입니다.
 
-<table width="100%" cellspacing="0" cellpadding="12">
+<table align="center" width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:14%">
     <col style="width:43%">
@@ -615,7 +617,7 @@ ros2-ai-amr-repo2/
 └── urhynix.repos            # 외부 ROS 2 의존성 목록
 ```
 
-<table width="100%" cellspacing="0" cellpadding="12">
+<table align="center" width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:30%">
     <col style="width:70%">
@@ -699,7 +701,7 @@ chmod +x run_ubuntu.sh stop_dashboard.sh stop_robot.sh check_camera.sh
 
 ## 구현 범위와 안전 고지
 
-<table width="100%" cellspacing="0" cellpadding="12">
+<table align="center" width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:35%">
     <col style="width:65%">
