@@ -70,29 +70,29 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 <table style="width: 100%;" width="100%">
   <thead>
     <tr>
-      <th>구분</th>
+      <th width="20%" nowrap style="white-space: nowrap;">구분</th>
       <th>내용</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><strong>운영 대상</strong></td>
+      <td width="20%" nowrap style="white-space: nowrap;"><strong>운영 대상</strong></td>
       <td>T1(<code>tb3_1</code>)과 Gen.G(<code>tb3_2</code>) TurtleBot3 Burger 2대</td>
     </tr>
     <tr>
-      <td><strong>주행 기반</strong></td>
+      <td width="20%" nowrap style="white-space: nowrap;"><strong>주행 기반</strong></td>
       <td>ROS 2 Jazzy, AMCL, Nav2, LiDAR, wheel odometry, saved map</td>
     </tr>
     <tr>
-      <td><strong>관제 화면</strong></td>
+      <td width="20%" nowrap style="white-space: nowrap;"><strong>관제 화면</strong></td>
       <td>TurtleBot Web Dashboard와 Unity Dashboard</td>
     </tr>
     <tr>
-      <td><strong>비전·센서</strong></td>
+      <td width="20%" nowrap style="white-space: nowrap;"><strong>비전·센서</strong></td>
       <td>RealSense D435, Pi Camera, YOLO, EfficientNet-B0, Arduino 환경 센서</td>
     </tr>
     <tr>
-      <td><strong>운영 흐름</strong></td>
+      <td width="20%" nowrap style="white-space: nowrap;"><strong>운영 흐름</strong></td>
       <td>감지 → 위치 확인 → 운영자 판단 → 로봇 출동 → 결과 기록</td>
     </tr>
   </tbody>
@@ -137,33 +137,33 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 <table style="width: 100%;" width="100%">
   <thead>
     <tr>
-      <th>요구 영역</th>
+      <th width="24%" nowrap style="white-space: nowrap;">요구 영역</th>
       <th>사용자·시스템 요구사항 반영</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><strong>순찰과 이동</strong></td>
+      <td width="24%" nowrap style="white-space: nowrap;"><strong>순찰과 이동</strong></td>
       <td>사전 정의 경로를 반복 순찰하고, 장애물을 인지·회피하며, waypoint 기반 출동과 복귀를 수행</td>
     </tr>
     <tr>
-      <td><strong>상태 관제</strong></td>
+      <td width="24%" nowrap style="white-space: nowrap;"><strong>상태 관제</strong></td>
       <td>관리자가 지도에서 로봇 위치·상태·배터리·센서·카메라·동작 로그를 확인하고 수동 조작 가능</td>
     </tr>
     <tr>
-      <td><strong>위험 감지</strong></td>
+      <td width="24%" nowrap style="white-space: nowrap;"><strong>위험 감지</strong></td>
       <td>사람, 화재, 소음, PIR 등 위험 신호를 수집하고 위치·영상·이벤트를 관제 화면에 전달</td>
     </tr>
     <tr>
-      <td><strong>출동과 임무 인계</strong></td>
+      <td width="24%" nowrap style="white-space: nowrap;"><strong>출동과 임무 인계</strong></td>
       <td>T1의 이상 감지 또는 배터리 부족 시 Gen.G에 출동·순찰 인계를 요청</td>
     </tr>
     <tr>
-      <td><strong>데이터 기록</strong></td>
+      <td width="24%" nowrap style="white-space: nowrap;"><strong>데이터 기록</strong></td>
       <td>로봇 상태, 센서 이벤트, 출동, 카메라, 위치, 로그를 서버와 DB에 저장</td>
     </tr>
     <tr>
-      <td><strong>선택 시연 기능</strong></td>
+      <td width="24%" nowrap style="white-space: nowrap;"><strong>선택 시연 기능</strong></td>
       <td>그림 진위 판별, 워터 펌프 모의 진압, 디지털 트윈 알림·신고 상태 표시</td>
     </tr>
   </tbody>
@@ -276,34 +276,34 @@ Unity의 ROS-TCP 계층은 Nav2 action을 직접 실행하지 않습니다. 로�
 <table style="width: 100%;" width="100%">
   <thead>
     <tr>
-      <th>영역</th>
+      <th width="18%" nowrap style="white-space: nowrap;">영역</th>
       <th>구성</th>
       <th>역할</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><strong>로봇 하드웨어</strong></td>
+      <td width="18%" nowrap style="white-space: nowrap;"><strong>로봇 하드웨어</strong></td>
       <td>TurtleBot3 Burger, Raspberry Pi, OpenCR, LDS LiDAR, Dynamixel</td>
       <td>차동구동, LiDAR 취득, odometry</td>
     </tr>
     <tr>
-      <td><strong>카메라</strong></td>
+      <td width="18%" nowrap style="white-space: nowrap;"><strong>카메라</strong></td>
       <td>RealSense D435, Pi Camera v2</td>
       <td>RGB/RGB-D 스트림, 객체 탐지, 마커 인식</td>
     </tr>
     <tr>
-      <td><strong>환경 센서</strong></td>
+      <td width="18%" nowrap style="white-space: nowrap;"><strong>환경 센서</strong></td>
       <td>Arduino Uno, PIR, 소리, 온도, 거리 센서</td>
       <td>박물관 상황 이벤트 수집</td>
     </tr>
     <tr>
-      <td><strong>운영 데이터</strong></td>
+      <td width="18%" nowrap style="white-space: nowrap;"><strong>운영 데이터</strong></td>
       <td>Supabase, PostgreSQL, JSONL run logs</td>
       <td>세션·이벤트·출동·pose·주행 결과 기록</td>
     </tr>
     <tr>
-      <td><strong>3D 제작·검증</strong></td>
+      <td width="18%" nowrap style="white-space: nowrap;"><strong>3D 제작·검증</strong></td>
       <td>Arduino 배선 참고 자료, 로봇 부속 3D 설계·출력</td>
       <td>실제 센서와 로봇 부속품 연결 검증</td>
     </tr>
@@ -329,33 +329,33 @@ flowchart TD
 <table style="width: 100%;" width="100%">
   <thead>
     <tr>
-      <th>단계</th>
+      <th width="24%" nowrap style="white-space: nowrap;">단계</th>
       <th>구현 내용</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><strong>위치 추정</strong></td>
+      <td width="24%" nowrap style="white-space: nowrap;"><strong>위치 추정</strong></td>
       <td>저장된 <code>PGM/YAML</code> 지도에서 AMCL이 LiDAR scan, wheel odometry, TF를 결합해 <code>map</code> 기준 pose를 추정합니다. 시작 시 <code>/initialpose</code> 재시딩으로 수렴을 돕습니다.</td>
     </tr>
     <tr>
-      <td><strong>순찰 경로 생성</strong></td>
+      <td width="24%" nowrap style="white-space: nowrap;"><strong>순찰 경로 생성</strong></td>
       <td>점유격자에 clearance field를 생성하고, 구역 간 경로는 벽과 장애물에서 더 멀리 떨어지는 widest-path 기준으로 선택합니다.</td>
     </tr>
     <tr>
-      <td><strong>전역 경로 계획</strong></td>
+      <td width="24%" nowrap style="white-space: nowrap;"><strong>전역 경로 계획</strong></td>
       <td>Nav2의 SmacPlanner2D 또는 환경에 맞는 planner가 costmap을 고려해 목표 지점까지의 전역 경로를 계산합니다.</td>
     </tr>
     <tr>
-      <td><strong>로컬 제어</strong></td>
+      <td width="24%" nowrap style="white-space: nowrap;"><strong>로컬 제어</strong></td>
       <td>TurtleBot3의 DWB와 순찰 실험의 Regulated Pure Pursuit가 경로를 추종하며, 속도·가감속·lookahead를 로봇 특성에 맞춰 제한합니다.</td>
     </tr>
     <tr>
-      <td><strong>안전 계층</strong></td>
+      <td width="24%" nowrap style="white-space: nowrap;"><strong>안전 계층</strong></td>
       <td>footprint, obstacle/voxel/inflation layer, Collision Monitor, velocity smoother가 벽·장애물 주변 감속과 정지를 담당합니다.</td>
     </tr>
     <tr>
-      <td><strong>복구와 도킹</strong></td>
+      <td width="24%" nowrap style="white-space: nowrap;"><strong>복구와 도킹</strong></td>
       <td>costmap clear, 후진 재시도, map-aware 축 정렬을 수행합니다. 정밀 접근은 ArUco bearing 정렬과 후방 LiDAR 벽 거리 측정을 조합합니다.</td>
     </tr>
   </tbody>
@@ -383,39 +383,39 @@ flowchart LR
 <table style="width: 100%;" width="100%">
   <thead>
     <tr>
-      <th>경로</th>
+      <th width="24%" nowrap style="white-space: nowrap;">경로</th>
       <th>입력과 방법</th>
       <th>결과</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><strong>Dual live camera</strong></td>
+      <td width="24%" nowrap style="white-space: nowrap;"><strong>Dual live camera</strong></td>
       <td>D435·IMX219 compressed topic, <code>image_transport</code>, JPEG, ROS-TCP subscriber, MJPEG</td>
       <td>두 로봇의 영상과 FPS를 Web·Unity 관제 화면에 표시</td>
     </tr>
     <tr>
-      <td><strong>박물관 객체 감지</strong></td>
+      <td width="24%" nowrap style="white-space: nowrap;"><strong>박물관 객체 감지</strong></td>
       <td>Ultralytics YOLO, person 보조 모델, class-aware NMS, 연속 프레임 확인, CLAHE·sharpen</td>
       <td>사람·화재·연기·조각상 overlay와 감지 상태</td>
     </tr>
     <tr>
-      <td><strong>ArUco 정렬</strong></td>
+      <td width="24%" nowrap style="white-space: nowrap;"><strong>ArUco 정렬</strong></td>
       <td><code>DICT_4X4_50</code>, marker ID, IPPE square <code>solvePnP</code>, image-center bearing fallback</td>
       <td>목표 bearing 오차와 회전 명령</td>
     </tr>
     <tr>
-      <td><strong>후방 도킹</strong></td>
+      <td width="24%" nowrap style="white-space: nowrap;"><strong>후방 도킹</strong></td>
       <td>후방 LiDAR 점군의 RANSAC wall fit, 거리·각도 폐루프</td>
       <td>벽 기준 거리 유지 후진 도킹</td>
     </tr>
     <tr>
-      <td><strong>그림 진위 판별</strong></td>
+      <td width="24%" nowrap style="white-space: nowrap;"><strong>그림 진위 판별</strong></td>
       <td>고정 pose에서 자른 Bacchus ROI, ImageNet pretrained EfficientNet-B0, 224×224</td>
       <td><code>GENUINE</code> / <code>FAKE</code> / <code>RECHECK</code></td>
     </tr>
     <tr>
-      <td><strong>3D 재구성</strong></td>
+      <td width="24%" nowrap style="white-space: nowrap;"><strong>3D 재구성</strong></td>
       <td>RealSense RGB-D rosbag, RTAB-Map, crop·outlier filtering, PLY/PCX import</td>
       <td>Unity Dashboard에서 확인 가능한 3D 점군</td>
     </tr>
@@ -430,14 +430,14 @@ TurtleBot Web Dashboard와 Unity Dashboard는 같은 UI를 복제한 도구가 �
 <table style="width: 100%;" width="100%">
   <thead>
     <tr>
-      <th></th>
+      <th width="14%" nowrap style="white-space: nowrap;"></th>
       <th><strong>TurtleBot Web Dashboard</strong></th>
       <th><strong>Unity Dashboard</strong></th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>화면</td>
+      <td width="14%" nowrap style="white-space: nowrap;">화면</td>
       <td align="center">
         <img src="./assets/readme/dashboard-response-integration.png" alt="TurtleBot Web Dashboard의 실기 로봇 통합 운영 화면" width="100%"><br>
         <sub>실기 로봇·RViz·카메라를 연결한 Web Dashboard 운영 화면</sub>
@@ -448,37 +448,37 @@ TurtleBot Web Dashboard와 Unity Dashboard는 같은 UI를 복제한 도구가 �
       </td>
     </tr>
     <tr>
-      <td>핵심 역할</td>
+      <td width="14%" nowrap style="white-space: nowrap;">핵심 역할</td>
       <td>실제 TurtleBot의 설정·진단·지도·주행 운영</td>
       <td>다중 로봇 디지털 트윈·상황 관제·기록</td>
     </tr>
     <tr>
-      <td>연결 방식</td>
+      <td width="14%" nowrap style="white-space: nowrap;">연결 방식</td>
       <td>Browser ↔ HTTP API ↔ <code>rclpy</code> ↔ ROS 2</td>
       <td>Unity ↔ ROS-TCP Endpoint ↔ ROS 2</td>
     </tr>
     <tr>
-      <td>지도</td>
+      <td width="14%" nowrap style="white-space: nowrap;">지도</td>
       <td>저장 지도 선택, 벽·장애물 편집, 새 점유지도 제작</td>
       <td>2D·2.5D·3D 지도와 로봇 위치·경로 시각화</td>
     </tr>
     <tr>
-      <td>주행</td>
+      <td width="14%" nowrap style="white-space: nowrap;">주행</td>
       <td>수동 조작, 목표·경유지, A* 경로, 반복 주행</td>
       <td>주행 준비, 순찰 waypoint, 단발 출동, 정지·복귀</td>
     </tr>
     <tr>
-      <td>센서</td>
+      <td width="14%" nowrap style="white-space: nowrap;">센서</td>
       <td>LiDAR 안전 반경, odometry, raw/compressed 카메라</td>
       <td>카메라, LiDAR, 환경 센서, 상태·이벤트 패널</td>
     </tr>
     <tr>
-      <td>운영 강점</td>
+      <td width="14%" nowrap style="white-space: nowrap;">운영 강점</td>
       <td>SSH bring-up, OpenCR 확인, 현장 진단</td>
       <td>시나리오 재현, 공간 상황 이해, 운영 이력</td>
     </tr>
     <tr>
-      <td>소스</td>
+      <td width="14%" nowrap style="white-space: nowrap;">소스</td>
       <td><a href="https://github.com/ensacom2019/TurtleBot_Dashboard">TurtleBot_Dashboard</a></td>
       <td>이 저장소의 <a href="./UNITY/"><code>UNITY/</code></a></td>
     </tr>
@@ -566,25 +566,25 @@ ros2-ai-amr-repo2/
 <table style="width: 100%;" width="100%">
   <thead>
     <tr>
-      <th>더 자세히 보기</th>
+      <th width="28%" nowrap style="white-space: nowrap;">더 자세히 보기</th>
       <th>문서</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>YOLO 감지·그림 진위 판별</td>
+      <td width="28%" nowrap style="white-space: nowrap;">YOLO 감지·그림 진위 판별</td>
       <td><a href="./Vision_AI/README.md">Vision_AI/README.md</a></td>
     </tr>
     <tr>
-      <td>T1·Gen.G 순찰·도킹</td>
+      <td width="28%" nowrap style="white-space: nowrap;">T1·Gen.G 순찰·도킹</td>
       <td><a href="./Slam_Nav2/README.md">Slam_Nav2/README.md</a></td>
     </tr>
     <tr>
-      <td>로봇 사양과 통합 메모</td>
+      <td width="28%" nowrap style="white-space: nowrap;">로봇 사양과 통합 메모</td>
       <td><a href="./Vision_AI/ROBOT_SPECS.md">Vision_AI/ROBOT_SPECS.md</a> · <a href="./Vision_AI/docs/team-integration.md">team-integration.md</a></td>
     </tr>
     <tr>
-      <td>Web Dashboard</td>
+      <td width="28%" nowrap style="white-space: nowrap;">Web Dashboard</td>
       <td><a href="https://github.com/ensacom2019/TurtleBot_Dashboard">ensacom2019/TurtleBot_Dashboard</a></td>
     </tr>
   </tbody>
@@ -646,25 +646,25 @@ chmod +x run_ubuntu.sh stop_dashboard.sh stop_robot.sh check_camera.sh
 <table style="width: 100%;" width="100%">
   <thead>
     <tr>
-      <th>영역</th>
+      <th width="35%" nowrap style="white-space: nowrap;">영역</th>
       <th>범위</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td>ROS 2·Nav2·대시보드·데이터 기록</td>
+      <td width="35%" nowrap style="white-space: nowrap;">ROS 2·Nav2·대시보드·데이터 기록</td>
       <td>실제 로봇과 관제 화면을 연결하는 프로젝트의 중심 기능</td>
     </tr>
     <tr>
-      <td>ArUco/LiDAR 도킹</td>
+      <td width="35%" nowrap style="white-space: nowrap;">ArUco/LiDAR 도킹</td>
       <td>로봇별 파라미터를 둔 정밀 접근·도킹 실험</td>
     </tr>
     <tr>
-      <td>YOLO·그림 진위 판별</td>
+      <td width="35%" nowrap style="white-space: nowrap;">YOLO·그림 진위 판별</td>
       <td>박물관 시나리오를 위한 AI 비전 프로토타입</td>
     </tr>
     <tr>
-      <td>Unity 사건 시나리오</td>
+      <td width="35%" nowrap style="white-space: nowrap;">Unity 사건 시나리오</td>
       <td>실제 로봇 운용 흐름을 설명·재현하기 위한 디지털 트윈 시뮬레이션</td>
     </tr>
   </tbody>
