@@ -366,31 +366,31 @@ flowchart LR
   </colgroup>
   <thead>
     <tr>
-      <th>단계</th>
-      <th>핵심 구성</th>
-      <th>역할</th>
+      <th width="20%" align="center">단계</th>
+      <th width="25%" align="center">핵심 구성</th>
+      <th width="55%" align="left">역할</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><strong>① 명령 입력</strong></td>
-      <td>Unity · Web · CLI</td>
-      <td>하나의 command owner가 목표 또는 순찰 waypoint를 로봇 측 ROS 2 bridge로 전달</td>
+      <td align="center"><strong>① 명령 입력</strong></td>
+      <td align="center">Unity · Web · CLI</td>
+      <td align="left">하나의 command owner가 목표 또는 순찰 waypoint를 로봇 측 ROS 2 bridge로 전달</td>
     </tr>
     <tr>
-      <td><strong>② 위치·경로</strong></td>
-      <td>AMCL · LiDAR · Nav2</td>
-      <td>저장 지도에서 pose를 추정하고, clearance와 costmap을 고려한 전역 경로 생성</td>
+      <td align="center"><strong>② 위치·경로</strong></td>
+      <td align="center">AMCL · LiDAR · Nav2</td>
+      <td align="left">저장 지도에서 pose를 추정하고, clearance와 costmap을 고려한 전역 경로 생성</td>
     </tr>
     <tr>
-      <td><strong>③ 추종·안전</strong></td>
-      <td>DWB · RPP · Collision Monitor</td>
-      <td>경로를 추종하면서 footprint·장애물·속도 제한에 따라 감속 또는 정지</td>
+      <td align="center"><strong>③ 추종·안전</strong></td>
+      <td align="center">DWB · RPP · Collision Monitor</td>
+      <td align="left">경로를 추종하면서 footprint·장애물·속도 제한에 따라 감속 또는 정지</td>
     </tr>
     <tr>
-      <td><strong>④ 구동·피드백</strong></td>
-      <td>OpenCR · Dynamixel · run logs</td>
-      <td>바퀴를 구동하고 pose·레그·랩·주차 결과를 관제 화면과 로그로 반환</td>
+      <td align="center"><strong>④ 구동·피드백</strong></td>
+      <td align="center">OpenCR · Dynamixel · run logs</td>
+      <td align="left">바퀴를 구동하고 pose·레그·랩·주차 결과를 관제 화면과 로그로 반환</td>
     </tr>
   </tbody>
 </table>
