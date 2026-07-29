@@ -116,8 +116,8 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 
 <table align="center" width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
-    <col style="width:30%">
-    <col style="width:70%">
+    <col style="width:36%">
+    <col style="width:64%">
   </colgroup>
   <thead>
     <tr>
