@@ -121,7 +121,7 @@ geng_rpp_patrol_dock/
 
 | 스크립트 | 역할 | 사용법 |
 |----------|------|--------|
-| `go_nav2_geng_rpp.sh` | Nav2 **RPP** 기동 (MPPI 아님) | `ROBOT=geng ./scripts/go_nav2_geng_rpp.sh` |
+| `go_nav2_geng_rpp.sh` | Nav2 **RPP** 기동 | `ROBOT=geng ./scripts/go_nav2_geng_rpp.sh` |
 | `nav2_rviz.sh` | RViz + Pose Estimate | `ROBOT=geng ./scripts/nav2_rviz.sh` |
 | `run_patrol.sh` / `run_patrol.py` | 웨이포인트 순찰 1회 | `ROBOT=geng ./scripts/run_patrol.sh` |
 | `run_geng_patrol_aruco_dock.sh` | **순찰 1회 → ArUco 도킹** 한 줄 | `ROBOT=geng ./scripts/run_geng_patrol_aruco_dock.sh` |
