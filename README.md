@@ -15,7 +15,7 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 [![TurtleBot3](https://img.shields.io/badge/Robot-TurtleBot3-00A6D6)](https://emanual.robotis.com/docs/en/platform/turtlebot3/overview/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2EA44F.svg)](./LICENSE)
 
-[프로젝트 영상](#프로젝트-영상) · [프로젝트 개요](#프로젝트-개요) · [핵심 기능](#핵심-기능) · [시스템 구성](#시스템-구성) · [팀 소개](#team-urhynix) · [실행하기](#실행하기)
+[프로젝트 영상](#프로젝트-영상) · [프로젝트 개요](#프로젝트-개요) · [팀 소개](#team-urhynix) · [핵심 기능](#핵심-기능) · [요구사항·일정](#요구사항-일정-및-추적) · [시스템 구성](#시스템-구성) · [시나리오](#동작-검증-시나리오) · [실행하기](#실행하기)
 
 </div>
 
@@ -109,10 +109,31 @@ URHYNIX-AMR은 박물관 환경에서 발생할 수 있는 상황을 감지하�
 | **정밀 접근 실험** | ArUco 마커 정렬과 후방 LiDAR 거리 측정을 조합한 도킹 실험 |
 | **운영 기록** | 세션, 이벤트, 출동, 위치, 주행 결과를 Supabase/PostgreSQL과 JSONL 로그에 저장 |
 
-> [!IMPORTANT]
-> 실제 주행 세션에서는 Web Dashboard, Unity Dashboard, CLI 중 **하나만 command owner**로 사용하세요. 여러 도구가 동시에 `/cmd_vel` 또는 Nav2 목표를 발행하면 명령이 충돌할 수 있습니다.
+## 요구사항, 일정 및 추적
+
+프로젝트의 기능 범위는 [사용자 요구사항 정의서 v3](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/48922625/v3)와 [시스템 요구사항 정의서 v3](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/6750216/v3)를 기준으로 관리했습니다. 요구사항은 `R(Required)`, `D(Desired)`, `O(Optional)`로 구분해 구현 우선순위를 정했습니다.
+
+| 요구 영역 | 사용자·시스템 요구사항 반영 |
+|---|---|
+| **순찰과 이동** | 사전 정의 경로를 반복 순찰하고, 장애물을 인지·회피하며, waypoint 기반 출동과 복귀를 수행 |
+| **상태 관제** | 관리자가 지도에서 로봇 위치·상태·배터리·센서·카메라·동작 로그를 확인하고 수동 조작 가능 |
+| **위험 감지** | 사람, 화재, 소음, PIR 등 위험 신호를 수집하고 위치·영상·이벤트를 관제 화면에 전달 |
+| **출동과 임무 인계** | T1의 이상 감지 또는 배터리 부족 시 Gen.G에 출동·순찰 인계를 요청 |
+| **데이터 기록** | 로봇 상태, 센서 이벤트, 출동, 카메라, 위치, 로그를 서버와 DB에 저장 |
+| **선택 시연 기능** | 그림 진위 판별, 워터 펌프 모의 진압, 디지털 트윈 알림·신고 상태 표시 |
+
+### Jira 일정 관리
+
+Jira로 요구사항 정의, 설계, ROS 2/SLAM·Nav2, Arduino·센서, Unity 관제, 통합 검증 단계를 스프린트 단위로 추적했습니다.
+
+<p align="center">
+  <img src="./assets/readme/jira-schedule.png" alt="URHYNIX Jira 스프린트 일정 관리 화면" width="100%">
+</p>
 
 ## 시스템 구성
+
+> [!IMPORTANT]
+> 실제 주행 세션에서는 Web Dashboard, Unity Dashboard, CLI 중 **하나만 command owner**로 사용하세요. 여러 도구가 동시에 `/cmd_vel` 또는 Nav2 목표를 발행하면 명령이 충돌할 수 있습니다.
 
 ```mermaid
 flowchart LR
@@ -129,6 +150,20 @@ flowchart LR
     ROS <--> UNITY
     UNITY --> DB
 ```
+
+### 설계 산출물
+
+소프트웨어 설계는 Admin PC의 Unity 디지털 트윈, 메인 서버의 네트워크·작업·DB·비전 모듈, 두 로봇의 주행·센서 계층을 TCP·UDP·ROS 2 통신으로 연결합니다.
+
+<p align="center">
+  <img src="./assets/readme/software-architecture.webp" alt="URHYNIX 소프트웨어 아키텍처: Admin PC, Main Server, T1 및 Gen.G 로봇 간 TCP, UDP, ROS 2 통신" width="100%">
+</p>
+
+하드웨어는 두 TurtleBot3에 공통으로 LiDAR·OpenCR·Dynamixel·배터리를 구성하고, T1에는 RealSense RGB-D 카메라를, Gen.G에는 Pi Camera와 Arduino 환경 센서를 연결했습니다.
+
+<p align="center">
+  <img src="./assets/readme/hardware-architecture.png" alt="URHYNIX 하드웨어 아키텍처: Admin PC, Main Server, T1과 Gen.G의 라즈베리파이, LiDAR, OpenCR, 카메라 및 Arduino 센서" width="100%">
+</p>
 
 ### 로봇 프로필
 
@@ -161,6 +196,34 @@ TurtleBot Web Dashboard와 Unity Dashboard는 같은 UI를 복제한 도구가 �
 | 센서 | LiDAR 안전 반경, odometry, raw/compressed 카메라 | 카메라, LiDAR, 환경 센서, 상태·이벤트 패널 |
 | 운영 강점 | SSH bring-up, OpenCR 확인, 현장 진단 | 시나리오 재현, 공간 상황 이해, 운영 이력 |
 | 소스 | [TurtleBot_Dashboard](https://github.com/ensacom2019/TurtleBot_Dashboard) | 이 저장소의 [`UNITY/`](./UNITY/) |
+
+## 동작 검증 시나리오
+
+시나리오는 [Confluence 시나리오 계획](https://jason1127.atlassian.net/wiki/spaces/SCRUM/pages/13860874)을 기준으로 설계했습니다. 관제 화면의 신고·제압·진압 표시는 **시연용 상태와 모의 동작**이며, 실제 112/119 신고나 사람을 대상으로 한 물리적 조치를 수행하지 않습니다.
+
+### Scenario #1 · 침입자 감지
+
+T1이 순찰 중 사람을 감지하면 위치·영상을 메인 서버와 관제 화면에 전달합니다. 관제는 112 신고 요청 상태를 표시하고, Gen.G는 감지 위치로 출동합니다. Gen.G 도착 후 T1은 순찰을 재개하며, 상황 종료 시 Gen.G는 대기 장소로 복귀하고 이벤트를 저장합니다.
+
+<p align="center">
+  <img src="./assets/readme/scenario-intruder.webp" alt="침입자 감지 시나리오 시퀀스 다이어그램" width="58%">
+</p>
+
+### Scenario #2 · 화재 대응
+
+T1이 순찰 중 화재 징후를 감지하면 위치·영상을 알리고 Gen.G가 현장으로 출동합니다. Gen.G가 도착하면 T1은 순찰을 재개하며, Gen.G는 워터 펌프를 활용한 **모의 진압** 상태를 수행한 뒤 대기 장소로 복귀합니다. 결과는 DB에 저장됩니다.
+
+<p align="center">
+  <img src="./assets/readme/scenario-fire.webp" alt="화재 감지와 모의 진압 시나리오 시퀀스 다이어그램" width="58%">
+</p>
+
+### Scenario #3 · 배터리 부족과 순찰 임무 인계
+
+T1의 배터리가 30% 이하가 되면 메인 서버가 관제에 위치·잔량을 알립니다. Gen.G가 T1 위치로 이동해 순찰 waypoint를 인계받고, T1은 충전 대기 장소로 이동합니다. 충전 후 T1이 Gen.G 위치로 복귀해 다시 임무를 인계받고 Gen.G는 대기 장소로 돌아갑니다.
+
+<p align="center">
+  <img src="./assets/readme/scenario-battery-handover.webp" alt="배터리 부족과 T1 Gen.G 간 순찰 임무 인계 시퀀스 다이어그램" width="58%">
+</p>
 
 ## 자율주행과 안전
 
