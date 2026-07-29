@@ -152,7 +152,6 @@ t1_rpp_patrol2_aruco_dock/
 | `dock_t1_rear_wall_long.py` | 후방 라이다 저속 도킹 | `python3 scripts/dock_t1_rear_wall_long.py --ros-args -r /cmd_vel:=/cmd_vel_nav` |
 | `launch_t1_realsense.sh` | RealSense JPEG 카메라 (로봇에서) | 로봇: `./scripts/launch_t1_realsense.sh` |
 | `stop_all_t1.sh` | YOLO/Nav2/RViz/카메라/bringup 전부 종료 | `./scripts/stop_all_t1.sh` |
-| `stop_t1_camera.sh` | RealSense만 SSH 종료 | `./scripts/stop_t1_camera.sh` |
 
 ### 카메라 · YOLO (노트북)
 
@@ -191,7 +190,6 @@ python3 scripts/robot_yolo_viewer.py \
 
 ```bash
 ./scripts/stop_all_t1.sh      # YOLO 창 + Nav2 + RViz + RealSense + bringup
-./scripts/stop_t1_camera.sh   # 카메라만
 ```
 
 `stop_*` 는 노트북의 `~/workspace/robot_project/scripts/ssh_t1.py`,

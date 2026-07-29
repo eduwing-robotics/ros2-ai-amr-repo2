@@ -122,7 +122,6 @@ geng_rpp_patrol_dock/
 | `start_geng_camera_remote.sh` | Pi 카메라 원격 기동 (로봇/SSH) | 로봇 또는 노트북→로봇 |
 | `view_geng_aruco.sh` | ArUco 디버그 뷰어 | 도킹 중에는 끄기 |
 | `stop_all_geng.sh` | YOLO/Nav2/RViz/카메라/bringup 전부 종료 | `./scripts/stop_all_geng.sh` |
-| `stop_geng_camera.sh` | Pi 카메라만 SSH 종료 | `./scripts/stop_geng_camera.sh` |
 | `save_current_waypoint.sh` / `.py` | 현재 pose를 waypoints.yaml에 저장 | `python3 scripts/save_current_waypoint.py waiting_geng_aruco_stage` |
 
 ### 카메라 · YOLO (노트북)
@@ -161,7 +160,6 @@ python3 scripts/robot_yolo_viewer.py \
 
 ```bash
 ./scripts/stop_all_geng.sh      # YOLO 창 + Nav2 + RViz + Pi 카메라 + bringup
-./scripts/stop_geng_camera.sh   # 카메라만
 ```
 
 `stop_*` 는 노트북의 `~/workspace/robot_project/scripts/ssh_genji.py`,
