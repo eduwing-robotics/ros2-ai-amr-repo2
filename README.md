@@ -13,7 +13,7 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 [![TurtleBot3](https://img.shields.io/badge/Robot-TurtleBot3-00A6D6)](https://emanual.robotis.com/docs/en/platform/turtlebot3/overview/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2EA44F.svg)](./LICENSE)
 
-[팀 구성](#team-urhynix) · [프로젝트 주제](#프로젝트-주제) · [요구사항](#요구사항) · [시스템 구성](#시스템-구성) · [주행](#주행) · [비전](#비전) · [시나리오](#시나리오) · [실행하기](#실행하기)
+[팀 구성](#team-urhynix) · [프로젝트 주제](#프로젝트-주제) · [요구사항](#요구사항) · [시스템 구성](#시스템-구성) · [주행](#주행) · [비전](#비전) · [시나리오](#시나리오) · [관련 도구](#관련-도구) · [실행하기](#실행하기)
 
 </div>
 
@@ -611,6 +611,36 @@ T1의 배터리가 30% 이하가 되면 메인 서버가 관제에 위치·잔�
 ### Data & Sensors
 
 ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white) ![Arduino](https://img.shields.io/badge/Arduino-00979D?style=for-the-badge&logo=arduino&logoColor=white) ![LiDAR](https://img.shields.io/badge/LiDAR-Sensing-546E7A?style=for-the-badge)
+
+## 관련 도구
+
+URHYNIX와 같은 하드웨어·Unity 문제를 다루며 함께 발전시킨 별도 공개 도구입니다. 프로젝트를 실행하는 데 필요한 런타임 의존성은 아닙니다.
+
+<table align="center" width="100%" cellspacing="0" cellpadding="12">
+  <thead>
+    <tr>
+      <th width="28%" align="center">저장소</th>
+      <th width="72%" align="left">URHYNIX와의 연결</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center">
+        <strong><a href="https://github.com/Jason-hub-star/ArduinoDT">ArduinoDT · PinMate</a></strong><br>
+        <sub>3D Circuit Digital Twin</sub>
+      </td>
+      <td align="left">Next.js·Three.js 기반 3D 브레드보드 디지털 트윈과 한국어 회로 진단 도구입니다. Arduino 센서 배선·부품 구성·회로 오류를 시각적으로 설명하고 검증하는 하드웨어 교육·설계 흐름으로 연결됩니다.</td>
+    </tr>
+    <tr>
+      <td align="center">
+        <strong><a href="https://github.com/Jason-hub-star/unityctl">unityctl</a></strong><br>
+        <sub>Unity CLI · MCP</sub>
+      </td>
+      <td align="left">AI 에이전트가 Unity 장면과 C# 스크립트를 편집하고 컴파일·Play Mode·테스트·빌드·스크린샷을 검증하는 실행 계층입니다. URHYNIX Unity ControlRoom 제작과 반복 검증에 활용했습니다.</td>
+    </tr>
+  </tbody>
+</table>
+
 ## 일정 관리
 
 **프로젝트 기간 · 2026년 5월 26일 ~ 2026년 7월 24일**
