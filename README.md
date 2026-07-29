@@ -64,7 +64,8 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 <p align="center">
   <strong>▶ GitHub에서 2분 53초 프로젝트 영상 재생</strong><br>
   실제 로봇 · 자율 순찰 · 웹 관제 · ArUco 도킹 · Unity 디지털 트윈 · AI 비전<br>
-  <a href="https://eduwing-robotics.github.io/ros2-ai-amr-repo2/project-film/">GitHub Pages 플레이어 열기</a>
+  <a href="https://eduwing-robotics.github.io/ros2-ai-amr-repo2/project-film/">GitHub Pages 플레이어 열기</a> ·
+  <a href="https://github.com/eduwing-robotics/ros2-ai-amr-repo2/releases/download/portfolio-film-v1/urhynix-project-film-720p.mp4">MP4 직접 열기</a>
 </p>
 
 <table style="width: 100%;" width="100%">
