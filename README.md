@@ -61,7 +61,11 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 
 **실제 AMR과 디지털 트윈을 연결한 다중 로봇 박물관 경비 시스템**입니다. T1(`tb3_1`)과 Gen.G(`tb3_2`) TurtleBot3 Burger가 같은 박물관 지도에서 독립적으로 순찰·출동하고, Web Dashboard와 Unity Dashboard가 실제 로봇 운용과 공간 기반 관제를 나누어 담당합니다.
 
+<div align="center">
+
 https://github.com/user-attachments/assets/da79ffc3-13d2-4887-8ba6-5b14babf25fb
+
+</div>
 
 <p align="center">
   <strong>▶ GitHub에서 바로 재생 · 2분 53초</strong><br>
