@@ -396,34 +396,34 @@ flowchart LR
 
 <table width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
-    <col style="width:28%">
-    <col style="width:72%">
+    <col style="width:38%">
+    <col style="width:62%">
   </colgroup>
   <thead>
     <tr>
-      <th>구분</th>
+      <th nowrap style="white-space: nowrap;">구분</th>
       <th>동작 방식</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><strong>현재 위치 확인</strong></td>
+      <td nowrap style="white-space: nowrap;"><strong>현재 위치 확인</strong></td>
       <td>LiDAR와 바퀴 이동 정보를 이용해 로봇이 지도 위 어디에 있는지와 방향을 계산합니다. 시작 위치가 불확실하면 관제 화면에서 초기 위치를 지정할 수 있습니다.</td>
     </tr>
     <tr>
-      <td><strong>안전한 순찰 경로</strong></td>
+      <td nowrap style="white-space: nowrap;"><strong>안전한 순찰 경로</strong></td>
       <td>벽과 장애물에서 충분히 떨어지도록 순찰 경로를 만듭니다.</td>
     </tr>
     <tr>
-      <td><strong>목적지까지 이동</strong></td>
+      <td nowrap style="white-space: nowrap;"><strong>목적지까지 이동</strong></td>
       <td>Nav2가 목적지까지의 경로를 계산하고, DWB 또는 Regulated Pure Pursuit가 그 경로를 따라가도록 속도와 방향을 조절합니다.</td>
     </tr>
     <tr>
-      <td><strong>충돌 방지</strong></td>
+      <td nowrap style="white-space: nowrap;"><strong>충돌 방지</strong></td>
       <td>로봇 크기, 장애물, 안전 반경을 계속 확인해 가까워지면 감속하거나 정지합니다.</td>
     </tr>
     <tr>
-      <td><strong>복구와 도킹</strong></td>
+      <td nowrap style="white-space: nowrap;"><strong>복구와 도킹</strong></td>
       <td>길이 막히면 주변 정보를 다시 확인하고 후진·재시도를 수행합니다. 정밀 도킹에서는 ArUco 마커와 후방 LiDAR 거리를 함께 사용합니다.</td>
     </tr>
   </tbody>
