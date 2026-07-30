@@ -615,7 +615,7 @@ T1의 배터리가 30% 이하가 되면 메인 서버가 관제에 위치·잔�
 
 URHYNIX와 같은 하드웨어·Unity 문제를 다루며 함께 발전시킨 별도 공개 도구입니다. 프로젝트를 실행하는 데 필요한 런타임 의존성은 아닙니다.
 
-<table align="center" width="100%" cellspacing="0" cellpadding="12">
+<table width="100%" cellspacing="0" cellpadding="12">
   <thead>
     <tr>
       <th width="28%" align="center">저장소</th>
