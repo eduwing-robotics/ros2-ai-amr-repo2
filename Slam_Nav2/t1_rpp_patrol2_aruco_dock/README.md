@@ -1,30 +1,18 @@
 # T1 RPP 순찰×2 · ArUco 도킹 패키지
 
 T1(ROS Domain 2) **시동 / RealSense JPEG 카메라 / RPP 주행 / 순찰 2회 / ArUco 도킹 / 맵**에
-필요한 파일만 모아 둔 독립 폴더입니다. `main`의 다른 코드와 섞이지 않도록 **전용 브랜치**에 올립니다.
+필요한 파일만 모아 둔 독립 실행 폴더입니다.
 
 - 로봇: T1 (`192.168.20.101`, `ROS_DOMAIN_ID=2`, ns `tb3_1`)
 - 맵: `maps/t1_map_new.{yaml,pgm}`
 - Nav2: Smac2D + **RPP** (`config/nav2_params_t1_patrol_rpp.yaml`)
 - 마커: ArUco ID **11** (`aruco_markers/markers.yaml`)
 - 카메라: RealSense **JPEG compressed** (`/tb3_1/camera/color/image_raw/compressed`)
-  ※ H.264 UDP 정렬기(`aruco_align_t1_h264.py`)는 사용하지 않습니다. 마커가 화면 밖이면 탐색하지 않습니다.
+## 시연 영상
 
----
+[![T1 순찰 및 ArUco 도킹 GIF 미리보기](media/T1_patrol_twice_docking_preview.gif)](media/T1_patrol_twice_docking.mp4)
 
-## 브랜치 사용법 (다른 파일과 안 섞이게)
-
-```bash
-git clone https://github.com/eduwing-robotics/ros2-ai-amr-repo2.git
-cd ros2-ai-amr-repo2
-
-# 이 작업만 들어 있는 브랜치로 이동
-git fetch origin
-git checkout feature/t1-rpp-patrol2-aruco-dock
-```
-
-- **브랜치** = `main`에서 갈라진 작업 줄. 통합 후 `Slam_Nav2/t1_rpp_patrol2_aruco_dock/`에서 관리됩니다.
-- `main`에는 바로 합치지 않고, 리뷰 후 PR로 병합하면 다른 사람과 충돌을 줄일 수 있습니다.
+[전체 영상 보기 (MP4)](media/T1_patrol_twice_docking.mp4)
 
 ---
 
@@ -85,7 +73,7 @@ ROBOT=t1 ./scripts/nav2_rviz.sh
 
 ### 5) 순찰 2회 + ArUco 도킹 (노트북 터미널 3)
 
-ArUco/H.264 뷰어가 열려 있으면 **먼저 닫으세요**. (카메라 토픽 점유 충돌 방지)
+ArUco 디버그 뷰어가 열려 있으면 **먼저 닫으세요**. (카메라 토픽 점유 충돌 방지)
 
 ```bash
 ROBOT=t1 ./scripts/run_t1_patrol2_aruco_dock.sh
@@ -135,6 +123,7 @@ python3 scripts/dock_t1_rear_wall_long.py --ros-args -r /cmd_vel:=/cmd_vel_nav
 ```
 t1_rpp_patrol2_aruco_dock/
   README.md                 # 이 사용법
+  media/                    # 시연 영상
   scripts/                  # env, Nav2, 순찰, ArUco, 도킹, 카메라 참고
   config/                   # nav2_params_t1_patrol_rpp.yaml, waypoints.yaml
   maps/                     # t1_map_new
@@ -155,7 +144,7 @@ t1_rpp_patrol2_aruco_dock/
 
 | 스크립트 | 역할 | 사용법 |
 |----------|------|--------|
-| `go_nav2_t1_rpp.sh` | Nav2 **RPP** 기동 (MPPI 아님) | `ROBOT=t1 ./scripts/go_nav2_t1_rpp.sh` |
+| `go_nav2_t1_rpp.sh` | Nav2 **RPP** 기동 | `ROBOT=t1 ./scripts/go_nav2_t1_rpp.sh` |
 | `nav2_rviz.sh` | RViz + Pose Estimate | `ROBOT=t1 ./scripts/nav2_rviz.sh` |
 | `run_patrol.py` | 웨이포인트 순찰 1회 | `ROBOT=t1 python3 scripts/run_patrol.py` |
 | `run_t1_patrol2_aruco_dock.sh` | **순찰 2회 → ArUco 도킹** 한 줄 | `ROBOT=t1 ./scripts/run_t1_patrol2_aruco_dock.sh` |
@@ -165,7 +154,6 @@ t1_rpp_patrol2_aruco_dock/
 | `dock_t1_rear_wall_long.py` | 후방 라이다 저속 도킹 | `python3 scripts/dock_t1_rear_wall_long.py --ros-args -r /cmd_vel:=/cmd_vel_nav` |
 | `launch_t1_realsense.sh` | RealSense JPEG 카메라 (로봇에서) | 로봇: `./scripts/launch_t1_realsense.sh` |
 | `stop_all_t1.sh` | YOLO/Nav2/RViz/카메라/bringup 전부 종료 | `./scripts/stop_all_t1.sh` |
-| `stop_t1_camera.sh` | RealSense만 SSH 종료 | `./scripts/stop_t1_camera.sh` |
 
 ### 카메라 · YOLO (노트북)
 
@@ -199,13 +187,11 @@ python3 scripts/robot_yolo_viewer.py \
 | `odom_tf_relay.py` | 로컬 odom TF 릴레이 | `USE_LOCAL_ODOM_TF=1` 일 때만 |
 | `scan_normalize.py` | scan 재스탬프 | `USE_SCAN_NORM=1` 일 때만 (기본 0) |
 | `aruco_marker_config.py` | `markers.yaml` 로더 | |
-| `dock_t1_rear_wall.py` | 후방 도킹 (짧은 버전) | 보통 `*_long.py` 사용 |
 
 ### 전체 종료
 
 ```bash
 ./scripts/stop_all_t1.sh      # YOLO 창 + Nav2 + RViz + RealSense + bringup
-./scripts/stop_t1_camera.sh   # 카메라만
 ```
 
 `stop_*` 는 노트북의 `~/workspace/robot_project/scripts/ssh_t1.py`,
@@ -216,10 +202,9 @@ python3 scripts/robot_yolo_viewer.py \
 ## 주의사항
 
 1. **Domain**: T1은 `ROS_DOMAIN_ID=2`. Gen.G(1)와 동시에 노트북에서 섞지 마세요.
-2. **카메라**: JPEG ROS 토픽 사용. H.264 정렬기는 이 패키지 경로에 포함하지 않습니다.
-3. **Pose Estimate**: 순찰/도킹 전에 LaserScan이 맵 벽에 맞게 잠겼는지 확인하세요.
-4. **중단**: `Ctrl+C`로 멈추면 `/cmd_vel_nav`에 0 속도가 나가도록 스크립트가 정리합니다. 멈춘 뒤에도 움직이면 수동으로 zero pub 하세요.
-5. **경로**: 이 폴더만 있으면 됩니다. `museum_nav_ws` 설치가 없어도 `go_nav2_t1_rpp.sh`가 BT XML 경로를 런타임에 치환합니다.
+2. **Pose Estimate**: 순찰/도킹 전에 LaserScan이 맵 벽에 맞게 잠겼는지 확인하세요.
+3. **중단**: `Ctrl+C`로 멈추면 `/cmd_vel_nav`에 0 속도가 나가도록 스크립트가 정리합니다. 멈춘 뒤에도 움직이면 수동으로 zero pub 하세요.
+4. **경로**: 이 폴더만 있으면 됩니다. `museum_nav_ws` 설치가 없어도 `go_nav2_t1_rpp.sh`가 BT XML 경로를 런타임에 치환합니다.
 
 ---
 
@@ -228,15 +213,3 @@ python3 scripts/robot_yolo_viewer.py \
 - `waiting.t1_aruco_stage`: `waypoints.yaml` 참고
 - ArUco ID **11**, `target_bearing_deg: 3.9`
 - 이미지 토픽: `/tb3_1/camera/color/image_raw/compressed`
-
-## 종료
-
-```bash
-# YOLO 창 + Nav2/RViz + RealSense + bringup
-./scripts/stop_all_t1.sh
-
-# 카메라만
-./scripts/stop_t1_camera.sh
-```
-
-노트북에 `~/workspace/robot_project/scripts/ssh_t1.py` 와 `robot_bringup_all.sh` 가 필요합니다.

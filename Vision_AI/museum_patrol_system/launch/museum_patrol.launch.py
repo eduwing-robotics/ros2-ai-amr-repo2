@@ -1,6 +1,6 @@
 """Launch museum patrol vision stack (YOLO + task manager).
 
-Nav2 / Unity / Arduino / SLAM are owned by the team URHYNIX scripts — see docs/team-integration.md.
+This launch owns the YOLO and task-manager nodes; robot bringup and Nav2 run separately.
 """
 
 import os

@@ -41,15 +41,12 @@ pkill -9 -f robot_yolo_viewer.py 2>/dev/null || true
 echo "==> 노트북 순찰·도킹 헬퍼 종료"
 for pat in \
   run_patrol.py \
-  run_patrol_continuous.py \
   run_patrol.sh \
   run_t1_patrol2_aruco_dock \
   park_t1.py \
   aruco_align_t1.py \
   rotate_t1_precise.py \
-  rotate_map_yaw.py \
   dock_t1_rear_wall \
-  dock_t1_aruco \
   go_nav2.sh \
   nav2_rviz.sh; do
   pkill -f "${pat}" 2>/dev/null || true

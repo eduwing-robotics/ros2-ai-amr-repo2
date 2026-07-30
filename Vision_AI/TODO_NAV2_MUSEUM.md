@@ -38,10 +38,6 @@
   - Test `fire` and intrusion flows without YOLO/sensor hardware.
   - Validate: event -> safe goal -> dispatch -> arrival.
 
-- Keep the old MPPI / Smac path only as fallback.
-  - `museum_patrol_system/config/nav2_burger_arena.yaml` is no longer the default bringup path.
-  - Revisit only if the simple profile proves stable and we intentionally want a second profile.
-
 ## Ambiguous / Decide Later
 
 - Separate patrol speed from dispatch speed.

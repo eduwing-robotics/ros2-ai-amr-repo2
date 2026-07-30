@@ -401,18 +401,6 @@ Visualization Manager:
             Reliability Policy: Reliable
             Value: /local_plan
           Value: true
-        - Class: rviz_default_plugins/MarkerArray
-          Enabled: true
-          Name: MPPI Trajectories
-          Namespaces:
-            {}
-          Topic:
-            Depth: 5
-            Durability Policy: Volatile
-            History Policy: Keep Last
-            Reliability Policy: Reliable
-            Value: /marker
-          Value: true
         - Alpha: 1
           Class: rviz_default_plugins/Polygon
           Color: 25; 255; 0

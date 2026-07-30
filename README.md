@@ -62,16 +62,15 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 **실제 AMR과 디지털 트윈을 연결한 다중 로봇 박물관 경비 시스템**입니다. T1(`tb3_1`)과 Gen.G(`tb3_2`) TurtleBot3 Burger가 같은 박물관 지도에서 독립적으로 순찰·출동하고, Web Dashboard와 Unity Dashboard가 실제 로봇 운용과 공간 기반 관제를 나누어 담당합니다.
 
 <p align="center">
-  <a href="https://eduwing-robotics.github.io/ros2-ai-amr-repo2/project-film/">
+  <a href="https://github.com/eduwing-robotics/ros2-ai-amr-repo2/releases/download/portfolio-film-v1/urhynix-project-film-720p.mp4">
     <img src="./assets/readme/urhynix-project-film-poster.jpg" alt="URHYNIX 프로젝트 영상: 실제 박물관 경기장, 자율 순찰, Unity 대시보드 및 디지털 트윈 시나리오" width="100%">
   </a>
 </p>
 
 <p align="center">
-  <strong>▶ GitHub에서 2분 53초 프로젝트 영상 재생</strong><br>
+  <strong>⬇ 포스터 클릭 시 2분 53초 프로젝트 영상 다운로드</strong><br>
   실제 로봇 · 자율 순찰 · 웹 관제 · ArUco 도킹 · Unity 디지털 트윈 · AI 비전<br>
-  <a href="https://eduwing-robotics.github.io/ros2-ai-amr-repo2/project-film/">GitHub Pages 플레이어 열기</a> ·
-  <a href="https://github.com/eduwing-robotics/ros2-ai-amr-repo2/releases/download/portfolio-film-v1/urhynix-project-film-720p.mp4">MP4 직접 열기</a>
+  <a href="https://github.com/eduwing-robotics/ros2-ai-amr-repo2/releases/download/portfolio-film-v1/urhynix-project-film-720p.mp4">GitHub Release에서 MP4 다운로드</a>
 </p>
 
 <table align="center" width="100%" cellspacing="0" cellpadding="12">
@@ -691,8 +690,8 @@ ros2-ai-amr-repo2/
       <td><a href="./Slam_Nav2/README.md">Slam_Nav2/README.md</a></td>
     </tr>
     <tr>
-      <td width="28%" nowrap style="white-space: nowrap;">로봇 사양과 통합 메모</td>
-      <td><a href="./Vision_AI/ROBOT_SPECS.md">Vision_AI/ROBOT_SPECS.md</a> · <a href="./Vision_AI/docs/team-integration.md">team-integration.md</a></td>
+      <td width="28%" nowrap style="white-space: nowrap;">로봇 사양</td>
+      <td><a href="./Vision_AI/ROBOT_SPECS.md">Vision_AI/ROBOT_SPECS.md</a></td>
     </tr>
     <tr>
       <td width="28%" nowrap style="white-space: nowrap;">Web Dashboard</td>

@@ -2,6 +2,12 @@
 
 박물관 순찰 중 화재·연기·사람·조각상을 감지하는 YOLO 기능입니다.
 
+## 시연 영상
+
+[![T1 YOLO 실시간 감지 GIF 미리보기](media/T1_YOLO_preview_30_42_color.gif)](media/T1_YOLO.mp4)
+
+[전체 영상 보기 (MP4)](media/T1_YOLO.mp4)
+
 ## 구성
 
 - `models/`: 파인튜닝 및 화재·연기 가중치
