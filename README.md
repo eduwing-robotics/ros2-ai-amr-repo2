@@ -63,7 +63,7 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 
 <div align="center">
 
-https://github.com/user-attachments/assets/1cf2e6c0-c861-48a4-8e6c-a37d8f5169a3
+https://github.com/user-attachments/assets/da79ffc3-13d2-4887-8ba6-5b14babf25fb
 
 </div>
 
