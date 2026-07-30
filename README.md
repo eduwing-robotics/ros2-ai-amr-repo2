@@ -19,7 +19,7 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 
 ## Team URhynix
 
-<table align="left" width="100%" cellspacing="0" cellpadding="12">
+<table width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:50%">
     <col style="width:50%">
@@ -73,7 +73,7 @@ https://github.com/user-attachments/assets/5631da62-741a-4f38-b708-19ce22511e8d
   <a href="https://github.com/eduwing-robotics/ros2-ai-amr-repo2/releases/download/portfolio-film-v1/urhynix-project-film-720p.mp4">고화질 MP4 다운로드</a>
 </p>
 
-<table align="left" width="100%" cellspacing="0" cellpadding="12">
+<table width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:18%">
     <col style="width:82%">
@@ -113,7 +113,7 @@ https://github.com/user-attachments/assets/5631da62-741a-4f38-b708-19ce22511e8d
 
 ## 주제 선정 이유
 
-<table align="left" width="100%" cellspacing="0" cellpadding="12">
+<table width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:44%">
     <col style="width:56%">
@@ -144,7 +144,7 @@ https://github.com/user-attachments/assets/5631da62-741a-4f38-b708-19ce22511e8d
 
 기능 범위는 팀이 정의한 사용자·시스템 요구사항을 기준으로 관리했습니다. 요구사항은 `R(Required)`, `D(Desired)`, `O(Optional)`로 구분해 구현 우선순위를 정했습니다.
 
-<table align="left" width="100%" cellspacing="0" cellpadding="12">
+<table width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:22%">
     <col style="width:78%">
@@ -222,7 +222,7 @@ Admin PC의 Unity 디지털 트윈, 메인 서버의 네트워크·작업·DB·�
 
 ### 로봇 프로필
 
-<table align="left" width="100%" cellspacing="0" cellpadding="12">
+<table width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:10%">
     <col style="width:18%">
@@ -259,7 +259,7 @@ Admin PC의 Unity 디지털 트윈, 메인 서버의 네트워크·작업·DB·�
 
 ### 명령과 데이터 흐름
 
-<table align="left" width="100%" cellspacing="0" cellpadding="12">
+<table width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:24%">
     <col style="width:40%">
@@ -299,7 +299,7 @@ Unity의 ROS-TCP 계층은 Nav2 action을 직접 실행하지 않습니다. 로�
 
 ## 데이터·하드웨어 연동
 
-<table align="left" width="100%" cellspacing="0" cellpadding="12">
+<table width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:18%">
     <col style="width:42%">
@@ -355,7 +355,7 @@ flowchart LR
     INPUT --> NAV --> CONTROL --> DRIVE
 ```
 
-<table align="left" width="100%" cellspacing="0" cellpadding="12">
+<table width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:12%">
     <col style="width:28%">
@@ -394,7 +394,7 @@ flowchart LR
 
 ### 주행 방식
 
-<table align="left" width="100%" cellspacing="0" cellpadding="12">
+<table width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:28%">
     <col style="width:72%">
@@ -448,7 +448,7 @@ flowchart LR
     CAM --> RGBD["RGB-D rosbag · RTAB-Map<br/>PLY point cloud"]
 ```
 
-<table align="left" width="100%" cellspacing="0" cellpadding="12">
+<table width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:24%">
     <col style="width:40%">
@@ -500,7 +500,7 @@ flowchart LR
 
 TurtleBot Web Dashboard와 Unity Dashboard는 같은 UI를 복제한 도구가 아닙니다. 전자는 실제 로봇을 준비하고 움직이는 운영 콘솔이며, 후자는 다중 로봇과 사건을 공간적으로 이해하는 디지털 트윈입니다.
 
-<table align="left" width="100%" cellspacing="0" cellpadding="12">
+<table width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:14%">
     <col style="width:43%">
@@ -669,7 +669,7 @@ ros2-ai-amr-repo2/
 └── urhynix.repos            # 외부 ROS 2 의존성 목록
 ```
 
-<table align="left" width="100%" cellspacing="0" cellpadding="12">
+<table width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:30%">
     <col style="width:70%">
@@ -753,7 +753,7 @@ chmod +x run_ubuntu.sh stop_dashboard.sh stop_robot.sh check_camera.sh
 
 ## 구현 범위와 안전 고지
 
-<table align="left" width="100%" cellspacing="0" cellpadding="12">
+<table width="100%" cellspacing="0" cellpadding="12">
   <colgroup>
     <col style="width:35%">
     <col style="width:65%">
