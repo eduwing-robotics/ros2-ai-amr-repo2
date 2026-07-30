@@ -1,7 +1,3 @@
-
-
-https://github.com/user-attachments/assets/5631da62-741a-4f38-b708-19ce22511e8d
-
 <div align="center">
 
 # URHYNIX-AMR
@@ -67,7 +63,7 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
 
 <div align="center">
 
-https://github.com/user-attachments/assets/da79ffc3-13d2-4887-8ba6-5b14babf25fb
+https://github.com/user-attachments/assets/5631da62-741a-4f38-b708-19ce22511e8d
 
 </div>
 
