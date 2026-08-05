@@ -44,7 +44,8 @@ ROS 2 자율주행 · Web 기반 실기 운영 · Unity 디지털 트윈 · AI �
     <td width="50%" valign="top">
       <strong>🖥️ 김선일 · GUI & Integration</strong><br><br>
       <code>system Architecture</code> <code>GUI</code> <code></code> <code>ROS2-TCP</code><br><br>
-      S/W, H/W Architecture 작성 및 state 다이어그램 작성<br>
+      S/W, H/W Architecture 작성 <br>  
+      state 다이어그램 작성<br>
       Unity GUI 좌표 체계와 화면 레이아웃 계획<br>
       알고리즘 활용 주행 코드 작성<br>
       관제 UI·ROS2-TCP 통신·로봇 통합 협업
